@@ -46,6 +46,8 @@ When two devices communicate over a network, they establish a connection by spec
 # Common Gateway Interface (CGI)
 CGI is a protocol to facilitate communication betweenn a webserver with other programs such as databases, scripting languages, and other applications. This allows web pages to be generated dynamically based on user input or other parameters.
 
+
+# Workflow ([Credit:Neosizzle](https://github.com/neosizzle/webserv))
 ```mermaid
 sequenceDiagram
 
@@ -87,3 +89,5 @@ deactivate select()
 6. [Beej](https://beej.us/guide/bgnet/)
 7. [Webserv](https://github.com/Jibus22/webserv/wiki)
 8. [TLS/SSL](https://www.youtube.com/watch?v=LJDsdSh1CYM)
+9. [Trugam reference](https://github.com/trungams/http-server)
+9. [Trugam blog](https://github.com/trungams/http-server)
