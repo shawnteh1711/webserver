@@ -46,7 +46,37 @@ When two devices communicate over a network, they establish a connection by spec
 # Common Gateway Interface (CGI)
 CGI is a protocol to facilitate communication betweenn a webserver with other programs such as databases, scripting languages, and other applications. This allows web pages to be generated dynamically based on user input or other parameters.
 
+```mermaid
+sequenceDiagram
 
+Client ->> select() : connection handshake (tcp)
+activate select()
+loop  x seconds
+select()->Server code: waiting for accepting connection..
+end
+Server code -->> select() : Connection accepted
+select() -->> Client : handshake confirmed (tcp)
+deactivate select()
+
+loop  x seconds
+Client-->select(): waiting for data...
+end
+
+activate select()
+Client ->> select() : request (http)
+select()->>Server code: Request carried  
+Server code ->> fs / CGI : Unchunk and parses request 
+fs / CGI -->> Server code : Returns primitive value / data
+Server code -->> select() : parses response
+deactivate select()
+loop  x seconds
+Client-->select(): waiting for write avail...
+end
+
+activate select()
+select() -->> Client : response (http)
+deactivate select()
+```
 
 ## References
 1. [Build webserver from scratch c++](https://www.youtube.com/watch?v=bEsRapsPAWI)
@@ -56,3 +86,4 @@ CGI is a protocol to facilitate communication betweenn a webserver with other pr
 5. [OSI model](https://www.cloudflare.com/en-gb/learning/ddos/glossary/open-systems-interconnection-model-osi/)
 6. [Beej](https://beej.us/guide/bgnet/)
 7. [Webserv](https://github.com/Jibus22/webserv/wiki)
+8. [TLS/SSL](https://www.youtube.com/watch?v=LJDsdSh1CYM)
