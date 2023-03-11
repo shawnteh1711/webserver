@@ -50,33 +50,29 @@ CGI is a protocol to facilitate communication betweenn a webserver with other pr
 # Workflow ([Credit:Neosizzle](https://github.com/neosizzle/webserv))
 ```mermaid
 sequenceDiagram
-
-Client ->> select() : connection handshake (tcp)
-activate select()
-loop  x seconds
-select()->Server code: waiting for accepting connection..
+Client->>+select(): tcp handshake connection
+loop x seconds
+select()->>Webserver: waiting to accept connection...
 end
-Server code -->> select() : Connection accepted
-select() -->> Client : handshake confirmed (tcp)
+Webserver-->>select(): accept connection
+select()-->>-Client: confirm handshake
+
+loop x seconds
+Client->>select(): waiting for data...
+end
+
+Client->>+select(): http request
+select()->>Webserver: request accepted
+Webserver->>CGI: unchunk and parses request
+CGI-->>Webserver: returns primitive data
+Webserver-->>select(): parses response
 deactivate select()
-
-loop  x seconds
-Client-->select(): waiting for data...
+loop x seconds
+Client-->select(): waiting for write available
 end
 
 activate select()
-Client ->> select() : request (http)
-select()->>Server code: Request carried  
-Server code ->> fs / CGI : Unchunk and parses request 
-fs / CGI -->> Server code : Returns primitive value / data
-Server code -->> select() : parses response
-deactivate select()
-loop  x seconds
-Client-->select(): waiting for write avail...
-end
-
-activate select()
-select() -->> Client : response (http)
+select()-->Client: http response
 deactivate select()
 ```
 
@@ -90,4 +86,6 @@ deactivate select()
 7. [Webserv](https://github.com/Jibus22/webserv/wiki)
 8. [TLS/SSL](https://www.youtube.com/watch?v=LJDsdSh1CYM)
 9. [Trugam reference](https://github.com/trungams/http-server)
-9. [Trugam blog](https://github.com/trungams/http-server)
+10. [Trugam blog](https://github.com/trungams/http-server)
+11. [Request and response message](https://en.wikipedia.org/wiki/HTTP#HTTP/1.1_request_messages)
+12. [Rhymu TCP/IP](https://www.youtube.com/watch?v=C7CpfL1p6y0&list=PLbtjxiXev6lqCUaPWVMXaKxrJtHRRxcpM)
