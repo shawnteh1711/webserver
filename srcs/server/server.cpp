@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/11 17:43:00 by steh              #+#    #+#             */
-/*   Updated: 2023/03/11 18:08:35 by steh             ###   ########.fr       */
+/*   Updated: 2023/03/11 18:13:58 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ server::server()
 server::server(ifstream& config_file)
 {
     (void)config_file;
-    cout << "server constructor" << endl;
+    cout << "server config constructor" << endl;
 }
 
 void    server::parse(ifstream& config_file)

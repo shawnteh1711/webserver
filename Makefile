@@ -6,7 +6,7 @@
 #    By: steh <steh@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/03/10 21:12:27 by steh              #+#    #+#              #
-#    Updated: 2023/03/11 18:11:17 by steh             ###   ########.fr        #
+#    Updated: 2023/03/11 18:13:42 by steh             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,7 +23,9 @@ CXXFLAGS			=	-Wall -Wextra -Werror -std=c++98 -pedantic -fsanitize=address
 CXX					=	c++
 INCLUDES			=	-I$(SRCS_DIR) \
 						-I$(SRCS_DIR)/server \
-						-I$(SRCS_DIR)/logger 
+						-I$(SRCS_DIR)/logger \
+						-I$(SRCS_DIR)/request \
+						-I$(SRCS_DIR)/response \
 
 all					:	$(NAME)
 						./$(NAME) ./config/nginx.conf
