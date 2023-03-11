@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/11 20:05:53 by steh              #+#    #+#             */
-/*   Updated: 2023/03/11 21:09:54 by steh             ###   ########.fr       */
+/*   Updated: 2023/03/11 21:17:51 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,8 @@ m_socket::m_socket() : _socket_fd(-1), _connection(-1)
     _address.sin_port = htons(0);
     _socket_fd = create_socket(AF_INET, SOCK_STREAM, 0);
     test_create_socket(_socket_fd);
-    bind_socket(_socket_fd, get_address());
+    // bind_socket(_socket_fd, get_address());
+    bind_socket(_socket_fd, _address);
     return ;
 }
 
@@ -68,7 +69,7 @@ int     m_socket::create_socket(int domain, int type, int protocol)
 
 int     m_socket::bind_socket(int sockfd, struct sockaddr_in address)
 {
-    return(bind(sockfd, (struct sockaddr*)&address, sizeof(address)));
+    return(bind(sockfd, (struct sockaddr*)&address, (int)sizeof(address)));
 }
 
 void    m_socket::test_create_socket(int socket_fd)
