@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/11 17:41:34 by steh              #+#    #+#             */
-/*   Updated: 2023/03/11 17:43:36 by steh             ###   ########.fr       */
+/*   Updated: 2023/03/11 21:13:43 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,16 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <vector>
 
 using namespace std;
+
+#include "config.hpp"
+#include "socket.hpp"
+#include "server.hpp"
+
+
 
 #endif

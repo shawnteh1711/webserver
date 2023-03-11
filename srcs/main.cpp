@@ -6,17 +6,15 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/10 20:55:27 by steh              #+#    #+#             */
-/*   Updated: 2023/03/11 18:10:15 by steh             ###   ########.fr       */
+/*   Updated: 2023/03/11 19:42:05 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "server.hpp"
 #include "webserv.hpp"
 
 int main(int argc, char* argv[])
 {
     string  config;
-    // server  server;
 
     if (argc < 2 || argc > 2)
     {
@@ -34,7 +32,6 @@ int main(int argc, char* argv[])
     {
         cout << "reading...." << endl;
         server server(config_file);
-        // server.parse(config_file);
     }
     
     // Parse configuration file

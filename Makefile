@@ -6,26 +6,33 @@
 #    By: steh <steh@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/03/10 21:12:27 by steh              #+#    #+#              #
-#    Updated: 2023/03/11 18:13:42 by steh             ###   ########.fr        #
+#    Updated: 2023/03/11 19:23:35 by steh             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 
 NAME				=	webserv
 SRCS_DIR			=	srcs
-SRCS				=	$(wildcard $(SRCS_DIR)/*.cpp) \
-						$(wildcard $(SRCS_DIR)/server/*.cpp)
+SRCS				=	$(wildcard $(SRCS_DIR)/*.cpp) $(wildcard $(SRCS_DIR)/*/*.cpp)
+
+# SRCS				=	$(wildcard $(SRCS_DIR)/*.cpp) \
+# 						$(wildcard $(SRCS_DIR)/server/*.cpp) \
+# 						$(wildcard $(SRCS_DIR)/config/*.cpp) \
+
 OBJS_DIR			=	objs
 OBJS				=	$(patsubst $(SRCS_DIR)/%.cpp, $(OBJS_DIR)/%.o, $(SRCS))
 DEPENDS_DIR			=	dependencies
 DEPENDS				=	$(patsubst $(SRCS_DIR)/%.cpp, $(OBJS_DIR)/%.d, $(SRCS))
 CXXFLAGS			=	-Wall -Wextra -Werror -std=c++98 -pedantic -fsanitize=address
 CXX					=	c++
-INCLUDES			=	-I$(SRCS_DIR) \
-						-I$(SRCS_DIR)/server \
-						-I$(SRCS_DIR)/logger \
-						-I$(SRCS_DIR)/request \
-						-I$(SRCS_DIR)/response \
+INCLUDES			=	-I$(SRCS_DIR) $(patsubst %, -I%, $(wildcard $(SRCS_DIR)/*/))
+
+# INCLUDES			=	-I$(SRCS_DIR) \
+# 						-I$(SRCS_DIR)/server \
+# 						-I$(SRCS_DIR)/logger \
+# 						-I$(SRCS_DIR)/request \
+# 						-I$(SRCS_DIR)/response \
+# 						-I$(SRCS_DIR)/config \
 
 all					:	$(NAME)
 						./$(NAME) ./config/nginx.conf

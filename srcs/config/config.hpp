@@ -1,36 +1,31 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   server.hpp                                         :+:      :+:    :+:   */
+/*   config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/03/11 16:24:54 by steh              #+#    #+#             */
-/*   Updated: 2023/03/11 21:07:27 by steh             ###   ########.fr       */
+/*   Created: 2023/03/11 18:27:16 by steh              #+#    #+#             */
+/*   Updated: 2023/03/11 18:51:05 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#ifndef CONFIG_HPP
+# define CONFIG_HPP
 
 #include "webserv.hpp"
 
-class server
+class config
 {
     public:
-        server();
-        server(ifstream& config_file);
-        server(const server& other);
-        ~server();
-        server& operator=(const server& other);
+        config();
+        config(ifstream& config_file);
+        config(const config& other);
+        ~config();
+        config& operator=(const config& other);
 
-        // Member function
-        void    setup();
-    
     private:
-        config                  _config;
-        vector<m_socket>        _sockets;
-
+        ifstream*       _config_file;
 };
 
-# endif
+#endif
