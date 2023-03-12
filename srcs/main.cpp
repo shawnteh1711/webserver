@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/10 20:55:27 by steh              #+#    #+#             */
-/*   Updated: 2023/03/11 19:42:05 by steh             ###   ########.fr       */
+/*   Updated: 2023/03/12 11:32:43 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,18 @@ int main(int argc, char* argv[])
         server server(config_file);
     }
     
+    // Create a new socket for incoming connections
+    m_socket listen_socket;
+
+    // Start listening for incoming connections
+    // if (listen(listen_socket.get_socket_fd(), 10) < 0)
+    // {
+    //     cerr << "Failed to listen for incoming connections" << endl;
+    //     return 1;
+    // }
+    // else
+    //     cout << "Listening" << endl;
+
     // Parse configuration file
     // TODO: implement configuration file parsing
 
