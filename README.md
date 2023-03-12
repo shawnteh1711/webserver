@@ -101,6 +101,32 @@ J --> C;
 K --> D;
 
 ```
+# A TCP server-client interaction with function
+```mermaid
+graph TD;
+
+subgraph Server
+    A["socket()"] --> B["bind()"]
+    B --> C["listen()"]
+    C --> D["accept()"]
+    D -- Blocks until connection from client --> E["read()"]
+    E -- Process request --> F["write()"]
+    F --> G["close()"]
+end
+
+subgraph Client
+    I["socket()"] --> J["Connect()"]
+    J --> K["write()"]
+    K --> L["read()"]
+    L --> M["close()"]
+end
+
+J -- Connection establishment --> D
+K -- "Data (request)" --> E
+L -- "Data (reply) " --> F
+
+```
+
 
 # Multiclient server handling
 ```mermaid
@@ -147,34 +173,6 @@ subgraph Clients
     Q -->|Closes connection| AB["close()"]
     S -->|Closes connection| AC["close()"]
 end
-
-
-```
-
-# A TCP server-client interaction with function
-```mermaid
-graph TD;
-
-subgraph Server
-    A["socket()"] --> B["bind()"]
-    B --> C["listen()"]
-    C --> D["accept()"]
-    D -- Blocks until connection from client --> E["read()"]
-    E -- Process request --> F["write()"]
-    F --> G["close()"]
-end
-
-subgraph Client
-    I["socket()"] --> J["Connect()"]
-    J --> K["write()"]
-    K --> L["read()"]
-    L --> M["close()"]
-end
-
-J -- Connection establishment --> D
-K -- "Data (request)" --> E
-L -- "Data (reply) " --> F
-
 ```
 
 ## References
