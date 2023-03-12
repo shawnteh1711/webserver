@@ -96,7 +96,7 @@ subgraph Server
     K --> L[Close connection]
 end
 
-B --> G;
+B --> H;
 J --> C;
 K --> D;
 
@@ -194,3 +194,4 @@ L -- "Data (reply) " --> F
 14. [free code camp socket](https://www.youtube.com/watch?v=8ARodQ4Wlf4)
 15. [multiple client on server handle](https://www.geeksforgeeks.org/socket-programming-in-cc-handling-multiple-clients-on-server-without-multi-threading/)
 16. [Socket Programming basic presentation The security tube](https://www.youtube.com/watch?v=eVYsIolL2gE)
+17. [Jibus22 webser](https://github.com/Jibus22/webserv/wiki/CGI#-documentation)
