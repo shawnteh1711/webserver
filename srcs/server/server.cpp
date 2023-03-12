@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/11 17:43:00 by steh              #+#    #+#             */
-/*   Updated: 2023/03/12 11:06:38 by steh             ###   ########.fr       */
+/*   Updated: 2023/03/12 21:59:59 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,18 +42,52 @@ server& server::operator=(const server& other)
 
 void    server::setup(void)
 {
-    // for (size_t i = 0; i < _config.get_server_count(); ++i)
-    // {
-    //     // Create a socket object
-    //     m_socket socket(_config.get_domain(), _config.get_service(), _config.get_protocol(), _config.get_port(), _config.get_interface());
+    int             server_count;
+    int             max_fd;
+    int             ret;
+    fd_set          read_fds, write_fds, except_fds;
+    struct timeval  tv;
 
-    //     // Bind the socket to an address
-    //     socket.bind_socket(socket.get_fd(), socket.get_address());
+    // server_count = _config.get_server_count();
+    server_count = 3;
+    for (int i = 0; i < server_count; ++i)
+    {
+        // m_socket socket(_config.get_domain(), _config.get_service(), _config.get_protocol(), _config.get_port(), _config.get_interface());
+        m_socket    sock;
 
-    //     // Listen to incoming connections
-    //     socket.listen();
-        
-    //     // Add the socket object to the vector of sockets
-    //     _sockets.push_back(socket);
-    // }
+        _sockets.push_back(sock);
+    }
+    FD_ZERO(&read_fds);
+    FD_ZERO(&write_fds);
+    FD_ZERO(&except_fds);
+
+    max_fd = -1;
+    for (size_t i = 0; i < _sockets.size(); ++i)
+    {
+        FD_SET(_sockets[i].get_socket_fd(), &read_fds);
+        if (_sockets[i].get_socket_fd() > max_fd)
+            max_fd = _sockets[i].get_socket_fd();
+    }
+
+    while (true)
+    {
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
+        ret = select(max_fd + 1, &read_fds, &write_fds, &except_fds, &tv);
+        if (ret == -1)
+        {
+            perror("select");
+            exit(EXIT_FAILURE);
+        }
+        else if (ret > 0)
+        {
+            for (size_t i = 0; i < _sockets.size(); ++i)
+            {
+                if (FD_ISSET(_sockets[i].get_socket_fd(), &read_fds))
+                {
+                    _sockets[i].accepter();
+                }
+            }
+        }
+    }
 }

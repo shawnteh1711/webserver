@@ -128,7 +128,7 @@ L -- "Data (reply) " --> F
 ```
 
 
-# Multiclient server handling
+# Multiclient server handling non-blocking model
 ```mermaid
 graph TD;
 

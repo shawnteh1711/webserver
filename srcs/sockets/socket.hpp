@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/11 19:57:41 by steh              #+#    #+#             */
-/*   Updated: 2023/03/12 15:42:12 by steh             ###   ########.fr       */
+/*   Updated: 2023/03/12 19:01:08 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ class m_socket
         int                 _socket_fd;
         int                 _accept_socket_fd;
         int                 _connection;
-        int                 _log;
+        int                 _bklog;
         int                 _yes;
         char                _buffer[buffer_size];
 

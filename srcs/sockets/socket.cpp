@@ -6,13 +6,13 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/11 20:05:53 by steh              #+#    #+#             */
-/*   Updated: 2023/03/12 15:49:45 by steh             ###   ########.fr       */
+/*   Updated: 2023/03/12 19:00:59 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
 
-m_socket::m_socket() : _socket_fd(-1), _connection(-1), _log(SOMAXCONN), _yes(1)
+m_socket::m_socket() : _socket_fd(-1), _connection(-1), _bklog(SOMAXCONN), _yes(1)
 {
     cout << "socker default constructor" << endl;
     memset(&_address, 0, sizeof(_address));
@@ -40,10 +40,10 @@ m_socket::m_socket(int domain, int service, int protocol, int port, u_long inter
     _address.sin_addr.s_addr = htonl(interface);
     _address.sin_port = htons(port);
     _socket_fd = create_socket(domain, service, protocol);
-    _log = log;
+    _bklog = log;
     _yes = 1;
     if (log == 0)
-        _log = SOMAXCONN;
+        _bklog = SOMAXCONN;
     test_create_socket();
     set_socket_opt();
     _connection = bind_socket();
@@ -131,7 +131,7 @@ void    m_socket::test_bind_socket()
 int    m_socket::listen_socket()
 {
     // Start listening for incoming connections
-    if (listen(_socket_fd, _log) < 0)
+    if (listen(_socket_fd, _bklog) < 0)
     {
         perror("In listen");
         exit(EXIT_FAILURE);
