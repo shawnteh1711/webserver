@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/11 20:05:53 by steh              #+#    #+#             */
-/*   Updated: 2023/03/12 15:44:09 by steh             ###   ########.fr       */
+/*   Updated: 2023/03/12 15:49:45 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,23 +143,6 @@ int    m_socket::listen_socket()
     }
 }
 
-// while(1)
-// {
-//     printf("\n+++++++ Waiting for new connection ++++++++\n\n");
-//     if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
-//     {
-//         perror("In accept");
-//         exit(EXIT_FAILURE);
-//     }
-    
-//     char buffer[30000] = {0};
-//     valread = read( new_socket , buffer, 30000);
-//     printf("%s\n",buffer );
-//     write(new_socket , hello , strlen(hello));
-//     printf("------------------Hello message sent-------------------\n");
-//     close(new_socket);
-// }
-
 void    m_socket::accepter()
 {
     int     addrlen;
@@ -198,7 +181,6 @@ void    m_socket::launch()
         cout << "++++++++Done+++++++" << endl;
     }
 }
-
 
 struct sockaddr_in m_socket::get_address() const
 {

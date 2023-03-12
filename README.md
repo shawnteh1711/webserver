@@ -76,6 +76,107 @@ select()-->Client: http response
 deactivate select()
 ```
 
+# A TCP server-client interaction
+```mermaid
+graph TD;
+
+subgraph Client
+    A[Create socket] --> B[Connect to server]
+    B --> C[Send request]
+    C --> D[Receive response]
+    D --> E[Close socket]
+end
+
+subgraph Server
+    F[Create socket] --> G[Bind socket to address and port]
+    G --> H[Listen for connections]
+    H --> I[Accept client connection]
+    I --> J[Receive request]
+    J --> K[Send response]
+    K --> L[Close connection]
+end
+
+B --> G;
+J --> C;
+K --> D;
+
+```
+
+# Multiclient server handling
+```mermaid
+graph TD;
+
+subgraph Server
+    A["Socket()"] --> B["Bind()"]
+    B --> C["Listen()"]
+    subgraph Accept Loop
+        C -- Non-blocking --> D["Accept()"]
+        D -->|New client| E(( ))
+        E -->|New client| F(( ))
+        F -->|New client| G(( ))
+        G -->|New client| H(( ))
+        H --> D
+    end
+    subgraph Client Handlers
+        E -- Process request --> I["read()"]
+        I -- Response --> J["write()"]
+        J --> H
+        F -- Process request --> K["read()"]
+        K -- Response --> L["write()"]
+        L --> H
+        G -- Process request --> M["read()"]
+        M -- Response --> N["write()"]
+        N --> H
+    end
+end
+
+subgraph Clients
+    O["socket()"] --> P["Connect()"]
+    Q["socket()"] --> R["Connect()"]
+    S["socket()"] --> T["Connect()"]
+    P -->|Sends data to server| U(( ))
+    Q -->|Sends data to server| V(( ))
+    S -->|Sends data to server| W(( ))
+    U -- Receives data from server --> X["read()"]
+    X -- Response --> P
+    V -- Receives data from server --> Y["read()"]
+    Y -- Response --> Q
+    W -- Receives data from server --> Z["read()"]
+    Z -- Response --> S
+    P -->|Closes connection| AA["close()"]
+    Q -->|Closes connection| AB["close()"]
+    S -->|Closes connection| AC["close()"]
+end
+
+
+```
+
+# A TCP server-client interaction with function
+```mermaid
+graph TD;
+
+subgraph Server
+    A["socket()"] --> B["bind()"]
+    B --> C["listen()"]
+    C --> D["accept()"]
+    D -- Blocks until connection from client --> E["read()"]
+    E -- Process request --> F["write()"]
+    F --> G["close()"]
+end
+
+subgraph Client
+    I["socket()"] --> J["Connect()"]
+    J --> K["write()"]
+    K --> L["read()"]
+    L --> M["close()"]
+end
+
+J -- Connection establishment --> D
+K -- "Data (request)" --> E
+L -- "Data (reply) " --> F
+
+```
+
 ## References
 1. [Build webserver from scratch c++](https://www.youtube.com/watch?v=bEsRapsPAWI)
 2. [Medium Blog](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa)
@@ -91,4 +192,5 @@ deactivate select()
 12. [Rhymu TCP/IP](https://www.youtube.com/watch?v=C7CpfL1p6y0&list=PLbtjxiXev6lqCUaPWVMXaKxrJtHRRxcpM)
 13. [Neso academy socket](https://www.youtube.com/watch?v=uagKTbohimU)
 14. [free code camp socket](https://www.youtube.com/watch?v=8ARodQ4Wlf4)
-15. (multiple client on server handle)(https://www.geeksforgeeks.org/socket-programming-in-cc-handling-multiple-clients-on-server-without-multi-threading/)
+15. [multiple client on server handle](https://www.geeksforgeeks.org/socket-programming-in-cc-handling-multiple-clients-on-server-without-multi-threading/)
+16. [Socket Programming basic presentation The security tube](https://www.youtube.com/watch?v=eVYsIolL2gE)
