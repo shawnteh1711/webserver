@@ -205,3 +205,4 @@ end
 15. [multiple client on server handle](https://www.geeksforgeeks.org/socket-programming-in-cc-handling-multiple-clients-on-server-without-multi-threading/)
 16. [Socket Programming basic presentation The security tube](https://www.youtube.com/watch?v=eVYsIolL2gE)
 17. [Jibus22 webser](https://github.com/Jibus22/webserv/wiki/CGI#-documentation)
+18. [Socket Programming functions Chirag Bhalodia](https://www.youtube.com/watch?v=k_P2E7ZvhYs)

@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/11 16:24:54 by steh              #+#    #+#             */
-/*   Updated: 2023/03/11 21:07:27 by steh             ###   ########.fr       */
+/*   Updated: 2023/03/13 12:00:15 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,6 @@ class server
     private:
         config                  _config;
         vector<m_socket>        _sockets;
-
 };
 
 # endif
