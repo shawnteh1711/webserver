@@ -1,18 +1,20 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <map>
 #include <vector>
+#include <sstream>
 
 using namespace std;
 
-int main() {
-    // Open the nginx configuration file
-    ifstream confFile("./config/nginx.conf");
-
-    // Read the file line by line
+int main()
+{
+    ifstream file("./config/nginx.conf");
     string line;
     vector<string> lines;
-    while (getline(confFile, line)) {
+    multimap<string, string> config;
+
+    while (getline(file, line)) {
         // Ignore comments and empty lines
         if (!line.empty() && line[0] != '#') {
             // Remove any trailing whitespace
@@ -24,40 +26,41 @@ int main() {
             lines.push_back(line);
         }
     }
-    confFile.close();
+    file.close();
 
-    // Parse the configuration file
-    bool inServerBlock = false;
-    string listenPort;
-    for (vector<string>::const_iterator it = lines.begin(); it != lines.end(); ++it) {
-        const string& line = *it;
-        // Check if the line is a configuration directive
-        if (line.find("server {") != string::npos) {
-            inServerBlock = true;
-            cout << "Found server block" << endl;
-        } else if (inServerBlock && line.find("listen ") != string::npos) {
-            cout << "Found listen directive" << endl;
-            // Extract the port number from the listen directive
-            size_t startpos = line.find(" ");
-            if (startpos != string::npos) {
-                listenPort = line.substr(startpos + 1);
-                cout << "before substr: " << listenPort << endl;
-                // Find the semicolon character after the port number
-                size_t endpos = listenPort.find(";");
-                cout << "endpos: " << endpos << endl;
-                if (endpos != string::npos) {
-                    listenPort = listenPort.substr(0, endpos);
-                }
-                // Print out the port number
-                cout << "Port number: " << listenPort << endl;
+    // Parse the configuration options
+    for (vector<string>::iterator it = lines.begin(); it != lines.end(); ++it)
+    {
+        // Parse each line of the configuration file
+        // For example, extract the server name from a line like "server_name example.com;"
+        size_t pos = it->find("server_name ");
+        if (pos != string::npos)
+        {
+            string serverNames = it->substr(pos + 12);
+            size_t endpos = serverNames.find_first_of(";#");
+            if (endpos != string::npos)
+            {
+                serverNames = serverNames.substr(0, endpos);
             }
-        } else if (inServerBlock && line.find("server_name ") != string::npos) {
-            cout << "Found server_name directive" << endl;
-        } else {
-            // Handle unrecognized directives or other lines
-            // ...
+            // serverName.erase(serverName.find_last_not_of(" \n\r\t") + 1);
+            // config.insert(make_pair("server_name", serverName));
+             // Split the server name string based on whitespace
+            std::istringstream iss(serverNames);
+            std::string serverName;
+            while (iss >> serverName)
+            {
+                // Add each server name as a separate value in the multimap
+                config.insert(std::make_pair("server_name", serverName));
+            }
         }
     }
 
+    // Print the parsed information
+    multimap<string, string>::iterator it = config.find("server_name");
+    while (it != config.end() && it->first == "server_name")
+    {
+        cout << it->first << ":" << it->second << endl;
+        ++it;
+    }
     return 0;
 }
