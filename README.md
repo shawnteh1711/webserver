@@ -1,5 +1,17 @@
-OSI is a conceptual framework that describe how data is transmitted over a network. It is divided into 7 layers, each with a specific function:
+# Introduction
+This projects aims to implements a `http web server` from scratch without using `boost` library. The server should be able to handle multiple connections and responde to HTTP/1.1 requests, including GET, POST, PUT, DELETE and others for serving static files and also dynamically generated content using CGI scripts. It parses the HTTP message, retrieves the requested resource if available, generates a HTTP response, and sends it back to client.
+
+The project should includes a configuration file  that allows users to specify various settings such as port number, root directory, supported MIME types, and more.
+
+In addition to handling HTTP request,the server also implement WebSocket to enable bidirectional communication between client and server over a single, long-lived TCP connection. WebSockets keep the connection open, enabling real-time communication between client and server. That is to say, client and server must remain close
+connection until a handshake connection is establish and then they can exchange messages in either direction. 
+
+The server should be designed to handle multiple simultaneous connections and uses a non-blocking I/O multiplexing technique with select() function. It is use to monitor multiple sockets for imcoming data or connection and then process the data or accept connections as they become available, without locking the entire application waiting got I/O. This allows the server to handle multiple connections efficiently without having to dedicate a seperated thread or process for each connection.
+
+Through this project, learners will gain experience in network programming, socket programming, HTTP protocol and server administration.
+
 # Open System Interconnection (OSI)
+OSI is a conceptual framework that describe how data is transmitted over a network. It is divided into 7 layers, each with a specific function:
 
 1. Physical Layer: This layer deals with the physical transmission of data, including the cables, connectors, and other hardware used to transmit data.
 
