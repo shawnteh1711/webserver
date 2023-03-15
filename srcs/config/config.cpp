@@ -1,4 +1,4 @@
-/* ************************************************************************** */
+ /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
 /*   config.cpp                                         :+:      :+:    :+:   */
@@ -19,7 +19,6 @@ config::config() : _config_file(nullptr)
 
 config::config(ifstream& config_file) : _config_file(&config_file)
 {
-    is_valid();
     cout << "config file constructor" << endl;
     return ;
 }

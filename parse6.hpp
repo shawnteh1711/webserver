@@ -16,50 +16,6 @@ using namespace std;
 // Directives types: Normal , Array, Action
 
 
-struct DIRECTIVE
-{
-    enum Type
-    {
-        NORMAL,
-        ARRAY,
-        ACTION
-    };
-    
-    string name;
-    Type type;
-    string value;
-    
-    DIRECTIVE(string name, Type type, string value)
-        : name(name), type(type), value(value)
-    {}
-};
-
-struct CONTEXT
-{
-    enum Type
-    {
-        MAIN,
-        EVENTS,
-        HTTP,
-        SERVER,
-        LOCATION,
-        UPSTREAM,
-        MAIL,
-        IF,
-        LIMIT_EXCEPT,
-        MISC
-    };
-    
-    Type type;
-    vector<CONTEXT> contexts;
-    
-    CONTEXT(Type type) : type(type) {}
-    
-    void addDirective(CONTEXT context) {
-        contexts.push_back(context);
-    }
-};
-
 struct CGI
 {
     string      extension;
@@ -77,18 +33,15 @@ struct CGI
     }
 };
 
-struct ROUTE
-{
-    vector<string>  methods;
-    string          redirectUrl;
-    string          filePath;
-    bool            directoryListing;
+struct Directive {
+    string name;
+    string parameter;
 };
 
 enum TokenType 
 {
     CONTEXT,
-    DIRECTIVE,
+    KEY,
     VALUE,
     SEMICOLON,
     OPEN_BRACE,
@@ -99,11 +52,11 @@ enum TokenType
 
 const char* tokenTypeNames[] = {
     "CONTEXT",
-    "DIRECTIVE",
+    "KEY",
+    "VALUE",
     "SEMICOLON",
     "OPEN_BRACE",
     "CLOSE_BRACE",
-    "VALUE",
     "ROUTE",
     "CGI",
     "UNKNOWN"
@@ -120,13 +73,24 @@ class Token
         TokenType getType() const;
         string getValue() const;
         string getTypeName() const;
-        map<string, pair<TokenType, string> > getKeywordContextMap();
+        void   initContext();
+        void   initDirective();
+        vector<Directive> setDirective(vector<Token> tokens);
         vector<Token> tokenizeLine(string line);
         vector<Token> readConfigFile(string filename);
+        void printTokens(const std::vector<Token>& tokens);
+
 
     private:
-        TokenType   _type;
-        string      _value;      
+        TokenType               _type;
+        string                  _value;
+        map<string, TokenType>  _contextMap;
+        // map<string, pair<TokenType, string> > _contextMap;
+        map<string, TokenType>  _directiveMap;
+        vector<string>          _contextStack;
+        vector<Token>           _tokens;
+        vector<Directive>       _directives;
+    
 };
 
 

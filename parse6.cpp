@@ -2,7 +2,8 @@
 
 Token::Token(void)
 {
-    // cout << "Default token constructor" << endl;
+    initContext();
+    initDirective();
 }
 
 Token::Token(TokenType type, string value) : _type(type), _value(value)
@@ -34,136 +35,92 @@ Token::~Token(void)
     // cout << "token destructor" << endl;
 }
 
-map<string, pair<TokenType, string> > Token::getKeywordContextMap()
+void   Token::initContext()
 {
-    std::map<std::string, std::pair<TokenType, std::string> > keywordMap;
-
-    // Main context
-    keywordMap["user"] = std::make_pair(CONTEXT, "main");
-    keywordMap["worker_processes"] = std::make_pair(CONTEXT, "main");
-    keywordMap["error_log"] = std::make_pair(CONTEXT, "main");
-    keywordMap["pid"] = std::make_pair(CONTEXT, "main");
-    keywordMap["worker_rlimit_nofile"] = std::make_pair(CONTEXT, "main");
-
-    // Directives in main context
-    // keywordMap["user_directive"] = make_pair(DIRECTIVE, "user");
-    // keywordMap["worker_processes_directive"] = make_pair(DIRECTIVE, "worker_processes");
-    // keywordMap["error_log_directive"] = make_pair(DIRECTIVE, "error_log");
-    // keywordMap["pid_directive"] = make_pair(DIRECTIVE, "pid");
-    // keywordMap["worker_rlimit_nofile_directive"] = make_pair(DIRECTIVE, "worker_rlimit_nofile");
-
-    keywordMap["events"] = std::make_pair(CONTEXT, "events");
-    keywordMap["worker_connections"] = std::make_pair(DIRECTIVE, "");
-
-    keywordMap["http"] = std::make_pair(CONTEXT, "http");
-
-    keywordMap["server"] = std::make_pair(CONTEXT, "server");
-    keywordMap["listen"] = std::make_pair(DIRECTIVE, "");
-    keywordMap["server_name"] = std::make_pair(DIRECTIVE, "");
-    keywordMap["root"] = std::make_pair(DIRECTIVE, "");
-    keywordMap["index"] = std::make_pair(DIRECTIVE, "");
-
-    keywordMap["location"] = std::make_pair(CONTEXT, "location");
-    keywordMap["proxy_pass"] = std::make_pair(DIRECTIVE, "");
-    keywordMap["proxy_set_header"] = std::make_pair(DIRECTIVE, "");
-    keywordMap["proxy_http_version"] = std::make_pair(DIRECTIVE, "");
-    keywordMap["proxy_set_header"] = std::make_pair(DIRECTIVE, "");
-
-    keywordMap["route"] = std::make_pair(ROUTE, "");
-    keywordMap["cgi"] = std::make_pair(CGI, "");
-
-    return keywordMap;
+    _contextMap["http"] = CONTEXT;
+    _contextMap["server"] = CONTEXT;
+    _contextMap["location"] = CONTEXT;
 }
 
+void   Token::initDirective()
+{
+    // main context
+    _directiveMap["user"] = KEY;
+    _directiveMap["worker_processes"] = KEY;
+    _directiveMap["error_log"] = KEY;
+    _directiveMap["pid"] = KEY;
+    _directiveMap["worker_rlimit_nofile"] = KEY;
 
-// vector<Token> tokenizeLine(string line)
-// {
-//     vector<Token> tokens;
-//     stringstream ss(line);
-//     string word;
-//     while (ss >> word) {
-//         if (word == "user" || word == "worker_processes" || word == "error_log" || word == "pid" || word == "worker_rlimit_nofile") {
-//             tokens.push_back(Token(CONTEXT, "main"));
-//             tokens.push_back(Token(DIRECTIVE, word));
-//             ss >> word;
-//             tokens.push_back(Token(VALUE, word));
-//             tokens.push_back(Token(VALUE, word));
-//             tokens.push_back(Token(SEMICOLON, ";"));
-//         } else if (word == "events" || word == "worker_connections"){
-//             tokens.push_back(Token(CONTEXT, "events"));
-//             tokens.push_back(Token(DIRECTIVE, word));
-//             ss >> word;
-//             tokens.push_back(Token(OPEN_BRACE, "{"));
-//             tokens.push_back(Token(VALUE, word));
-//         } else if (word == "http") {
-//             tokens.push_back(Token(CONTEXT, "http"));
-//             tokens.push_back(Token(DIRECTIVE, word));
-//             tokens.push_back(Token(OPEN_BRACE, "{"));
-//         } else if (word == "server") {
-//             tokens.push_back(Token(CONTEXT, "server"));
-//             tokens.push_back(Token(DIRECTIVE, word));
-//             ss >> word;
-//             tokens.push_back(Token(VALUE, word));
-//             tokens.push_back(Token(OPEN_BRACE, "{"));
-//         } else if (word == "location") {
-//             tokens.push_back(Token(CONTEXT, "location"));
-//             tokens.push_back(Token(DIRECTIVE, word));
-//             ss >> word;
-//             tokens.push_back(Token(VALUE, word));
-//             tokens.push_back(Token(OPEN_BRACE, "{"));
-//         } else if (word == "}") {
-//             tokens.push_back(Token(CLOSE_BRACE, "}"));
-//         } else if (word == ";") {
-//             tokens.push_back(Token(SEMICOLON, ";"));
-//         }
-//     }
-//     return tokens;
-// }
+    // server context
+    _directiveMap["server_name"] = KEY;
+    _directiveMap["listen"] = KEY;
+    _directiveMap["root"] = KEY;
+    _directiveMap["try_files"] = KEY;
+    _directiveMap["proxy_pass"] = KEY;
+    _directiveMap["fastcgi_pass"] = KEY;
+}
 
 vector<Token> Token::tokenizeLine(string line)
 {
     vector<Token> tokens;
     stringstream ss(line);
     string word;
-    map<string, pair<TokenType, string> > keywordMap = getKeywordContextMap();
-    while (ss >> word) {
-        if (keywordMap.count(word)) {
-            pair<TokenType, string> tokenInfo = keywordMap[word];
-            tokens.push_back(Token(tokenInfo.first, tokenInfo.second));
-            if (tokenInfo.first == CONTEXT) {
-                tokens.push_back(Token(CONTEXT, word));
-            }
-            if (tokenInfo.first == DIRECTIVE) {
-                tokens.push_back(Token(DIRECTIVE, word));
-                ss >> word;
-                tokens.push_back(Token(VALUE, word));
-                tokens.push_back(Token(SEMICOLON, ";"));
-            }
-        } else if (word == "{") {
+    while (ss >> word)
+    {
+        if (word.find('#') != string::npos)
+            break ;
+        if (_contextMap.count(word))
+        {
+            TokenType context_type = _contextMap[word];
+            tokens.push_back(Token(CONTEXT, word));
+            if (context_type == CONTEXT)
+                _contextStack.push_back(word);
+        }
+        else if (_directiveMap.count(word))
+            tokens.push_back(Token(_directiveMap[word], word));
+        else if (word == "{")
             tokens.push_back(Token(OPEN_BRACE, word));
-        } else if (word == "}") {
+        else if (word == "}")
+        {
             tokens.push_back(Token(CLOSE_BRACE, word));
-        } else if (word == ";") {
+            if (!_contextStack.empty())
+                _contextStack.pop_back();
+        }
+        else if (word == ";")
             tokens.push_back(Token(SEMICOLON, word));
+        else
+        {
+            string value = word;
+
+            if (word.front() == '"' && word.back() != '"')
+            {
+                while (ss >> word && word.back() != '"')
+                    value += " " + word;
+                value += " " + word;                
+            }
+            tokens.push_back(Token(VALUE, value));
         }
     }
-    return tokens;
+    return (tokens);
 }
 
 vector<Token> Token::readConfigFile(string filename)
 {
-    vector<Token> tokens;
+    // vector<Token> tokens;
     ifstream file(filename);
-    if (file.is_open()) {
+    if (file.is_open())
+    {
         string line;
-        while (getline(file, line)) {
-            // Tokenize the line and add the resulting tokens to the vector
+        while (getline(file, line))
+        {
+            if (line.empty() || line[0] == '#')
+                continue ;
             vector<Token> lineTokens = tokenizeLine(line);
-            tokens.insert(tokens.end(), lineTokens.begin(), lineTokens.end());
+            _tokens.insert(_tokens.end(), lineTokens.begin(), lineTokens.end());
         }
         file.close();
     }
-    return tokens;
+    return (_tokens);
 }
 
 TokenType Token::getType() const
@@ -178,30 +135,41 @@ string Token::getValue() const
 
 string Token::getTypeName() const
 {
-    int index;
+    unsigned long index;
     
-    index = static_cast<int>(_type);
+    index = static_cast< unsigned long>(_type);
     if (index >= 0 && index < sizeof(tokenTypeNames)/sizeof(*tokenTypeNames))
         return (tokenTypeNames[index]);
     else
         return (tokenTypeNames[sizeof(tokenTypeNames)/sizeof(*tokenTypeNames) - 1]);
 }
 
-#include "parse6.hpp"
-
-void printTokens(const std::vector<Token>& tokens)
+vector<Directive> Token::setDirective(vector<Token> tokens)
 {
-    // bool inMainContext = false;
-    // for (std::vector<Token>::const_iterator it = tokens.begin(); it != tokens.end(); ++it)
-    // {
-    //     if (it->getTypeName() == "CONTEXT" && it->getValue() == "events") {
-    //         inMainContext = true;
-    //     } else if (it->getTypeName() == "CONTEXT") {
-    //         inMainContext = false;
-    //     } else if (inMainContext && (it->getTypeName() == "DIRECTIVE" || it->getTypeName() == "VALUE")) {
-    //         std::cout << "Type: " << it->getTypeName() << " | Value: " << it->getValue() << std::endl;
-    //     }
-    // }
+    for (size_t i = 0; i < tokens.size(); i++)
+    {
+        if (tokens[i].getType() == KEY)
+        {
+            Directive directive;
+            directive.name = tokens[i].getValue();
+            if (i + 1 < tokens.size() && tokens[i + 1].getType() == VALUE)
+            {
+                directive.parameter = tokens[i + 1].getValue();
+                i++;
+            }
+            _directives.push_back(directive);
+        }
+    }
+
+    for (vector<Directive>::iterator it = _directives.begin(); it < _directives.end(); ++it)
+    {
+        std::cout << "name: " << std::setw(12) << std::left << it->name << " | parameter: " << it->parameter << endl;
+    }
+    return (_directives);
+}
+
+void Token::printTokens(const std::vector<Token>& tokens)
+{
     for (std::vector<Token>::const_iterator it = tokens.begin(); it != tokens.end(); ++it)
     {
         std::cout << "Type: " << it->getTypeName() << " | Value: " << it->getValue() << std::endl;
@@ -211,13 +179,19 @@ void printTokens(const std::vector<Token>& tokens)
 
 int main(int argc, char const *argv[])
 {
-    // string configLine = "user www www;";
-
+    (void)argc;
+    (void)argv;
     // vector<Token> tokens = readConfigFile(configLine);
     Token   token;
-    vector<Token> tokens = token.readConfigFile("./config/nginx.conf");
+    // vector<Token> tokens = token.readConfigFile("./config/nginx.conf");
+    vector<Token> tokens = token.readConfigFile("./config/minimal.conf");
 
-    printTokens(tokens);
+    // token.printTokens(tokens);
+
+    vector<Directive> directives;
+    directives = token.setDirective(tokens);
+
+
  
     return 0;
 }
