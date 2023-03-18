@@ -61,3 +61,23 @@
 //         }
 //     }
 // }
+
+// for (vector<Server>::iterator server_it = config.servers.begin(); server_it != config.servers.end(); server_it++)
+// {
+//     cout << "Server Name: " << server_it->serverName << endl;
+//     cout << "Port: " << server_it->port << endl;
+//     cout << "Client Max Body Size: " << server_it->clientMaxBodySize << endl;
+//     cout << "Error Page: " << server_it->errorPage << endl;
+//     for (vector<Directive>::iterator location_it = server_it->locations.begin(); location_it != server_it->locations.end(); location_it++)
+//     {
+//         for (vector<string>::iterator arg_it = location_it->args.begin(); arg_it != location_it->args.end(); arg_it++)
+//         {
+//             cout << "path: " << *arg_it << endl;
+//         }
+//         for (vector<Directive>::iterator directive_it = location_it->block.begin(); directive_it != location_it->block.end(); directive_it++)
+//         {
+//             cout << "Name: " << directive_it->directive << " | Value: " << directive_it->args[0] << endl;
+//         }
+//         cout << endl;
+//     }
+// }

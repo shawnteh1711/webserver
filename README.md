@@ -207,3 +207,4 @@ end
 17. [Jibus22 webser](https://github.com/Jibus22/webserv/wiki/CGI#-documentation)
 18. [Socket Programming functions Chirag Bhalodia](https://www.youtube.com/watch?v=k_P2E7ZvhYs)
 19. [NGINX directives](https://www.javatpoint.com/nginx-directive-and-context)
+20. [NGINX freecodecamp](https://www.freecodecamp.org/news/the-nginx-handbook/#how-to-install-nginx)
