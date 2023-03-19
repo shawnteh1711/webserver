@@ -17,8 +17,10 @@ struct Server
 {
     string              serverName;
     string              port;
-    int                 clientMaxBodySize;
+    string              clientMaxBodySize;
     string              errorPage;
+    string              root;
+    string              index;
     vector<Directive>   locations;
 };
 
@@ -31,13 +33,15 @@ struct Config
 
     Config              parseConfigFile(string filename);
     vector<Directive*>  findDirective(Config& config, string directiveName);
+    vector<Server>      setServer(Config& config);
+    void                printServer(vector<Server>& servers);
     void                print(Config config);
 };
 
 struct configItem
 {
     string              file;
-    string              directive;
+    // string              directive;
     vector<string>      errors;
     vector<Directive>   parsed;
 };
