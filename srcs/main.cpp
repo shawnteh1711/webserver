@@ -6,13 +6,18 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/20 12:36:05 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/20 12:56:14 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/20 20:41:01 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "server.hpp"
 
+# define MAX 80
+# define PORT 8080
+
 int	main(void)
 {
-	cout << "hello" << endl;
+	Server test("0.0.0.0", 8080);
+	test.listening();
+	return (0);
 }
