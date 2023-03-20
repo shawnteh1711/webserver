@@ -1,18 +1,24 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   lib.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/03/20 12:36:05 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/20 12:56:14 by leng-chu         ###   ########.fr       */
+/*   Created: 2023/03/20 12:53:24 by leng-chu          #+#    #+#             */
+/*   Updated: 2023/03/20 13:10:13 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "server.hpp"
+#ifndef LIB_HPP
+# define LIB_HPP
 
-int	main(void)
-{
-	cout << "hello" << endl;
-}
+#include <iostream>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
+using std::cout;
+using std::cin;
+using std::endl;
+
+#endif
