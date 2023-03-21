@@ -16,6 +16,7 @@
 #include "lib.hpp"
 
 #define BUF_SIZE 30720
+#define LIMIT_SIZE 1000 // for limit client body size
 
 class	Server
 {
@@ -32,12 +33,19 @@ class	Server
 	void			acceptConnection(int &new_socket);
 	string			buildResponse();
 	void			sendResponse(int client_fd);
+	void			sendErrorResponse(int client_fd, int statuscode);
+
+	// static non-member
+	static Server		*server_instance;
 	
 	public:
 		Server(std::string ip_address, int port);
 		~Server();
 
 		void	startListen();
+	
+		// static non-member
+		static void		sig_handler(int signo);
 };
 
 #endif

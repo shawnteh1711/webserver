@@ -15,6 +15,8 @@
 int	main()
 {
 	Server	server = Server("0.0.0.0", 8080);
+	signal(SIGINT, Server::sig_handler);
+	signal(SIGTSTP, Server::sig_handler);
 	server.startListen();
 	return (0);
 }

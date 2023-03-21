@@ -19,8 +19,10 @@
 #include <unistd.h> // for read & write
 #include <sstream> // for ostringstream
 #include <stdlib.h>
-#include <string.h>
+#include <string>
+#include <cstring>
 #include <poll.h> // for poll()
+#include <csignal>
 
 using std::cout;
 using std::cin;
