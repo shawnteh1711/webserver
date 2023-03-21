@@ -109,7 +109,7 @@ void	Server::startListen()
 			if (fds[i].revents & POLLIN)
 			{
 				bzero(buffer, BUF_SIZE);
-				bytes = read(fds[i].fd, buffer, BUF_SIZE);
+				bytes = recv(fds[i].fd, buffer, BUF_SIZE, 0);
 				if (bytes < 0)
 					N_LOG::ErrorExit("Failed to read bytes from client socket connection");
 				N_LOG::msg("--- Received Request from client ---");
@@ -148,7 +148,7 @@ void Server::sendResponse(int client_fd)
 {
 	long	bytesSent;
 
-	bytesSent = write(client_fd, _serverMsg.c_str(), _serverMsg.size());
+	bytesSent = send(client_fd, _serverMsg.c_str(), _serverMsg.size(), 0);
 	if (bytesSent == (long)_serverMsg.size())
 		N_LOG::msg("------ Server Response sent to client -----\n\n");
 	else
