@@ -51,10 +51,12 @@ Server::~Server()
 
 int	Server::startServer()
 {
+	int	reuse = 1;
 	_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (_sockfd < 0)
 		return N_LOG::ErrorExit("Cannot create socket");
-
+	if (setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
+		return N_LOG::ErrorExit("Cannot set socket option");
 	if (bind(_sockfd, (sockaddr*)&_socketAddr, _socketAddr_len) < 0)
 		return N_LOG::ErrorExit("Cannot connect socket to address");
 	return (0);
