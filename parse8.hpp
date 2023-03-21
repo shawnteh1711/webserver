@@ -38,6 +38,8 @@ struct Config
     void                    printServer(vector<Server>& servers);
     void                    print(Config config);
     const vector<Server>&   getServers() const;
+    Server                  createServer(const Directive& directive);
+
 };
 
 struct configItem
