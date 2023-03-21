@@ -1,23 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/03/20 12:36:05 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/20 20:41:01 by leng-chu         ###   ########.fr       */
+/*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
+/*   Updated: 2023/03/17 19:31:29 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "server.hpp"
 
-# define MAX 80
-# define PORT 8080
-
-int	main(void)
+int	main()
 {
-	Server test("0.0.0.0", 8080);
-	test.listening();
+	Server	server = Server("0.0.0.0", 8080);
+	server.startListen();
 	return (0);
 }

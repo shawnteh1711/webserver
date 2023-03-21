@@ -18,6 +18,9 @@
 #include <arpa/inet.h>
 #include <unistd.h> // for read & write
 #include <sstream> // for ostringstream
+#include <stdlib.h>
+#include <string.h>
+#include <poll.h> // for poll()
 
 using std::cout;
 using std::cin;
