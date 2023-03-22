@@ -156,9 +156,11 @@ string   Response::getReasonPhrase(int code)
     }
 }
 
-int create_server_socket(void)
+int create_server_socket()
 {
     int server_socket;
+
+    // struct sockaddr_in server_address;
     struct sockaddr_in server_address;
 
     // create socket
@@ -192,7 +194,6 @@ int main()
     int client_socket;
     int server_socket;
     struct sockaddr_in client_address;
-
 
     server_socket = create_server_socket();
     socklen_t client_address_len = sizeof(client_address);
@@ -263,8 +264,8 @@ int main()
                 cout << "Child process exit status" << WIFEXITED(status) << endl;
                   // Get the output of the CGI script from the pipe
                 char buffer[4096];
-                int num_read = read(out_pipe[0], buffer, sizeof(buffer));
-                // int num_read = read(client_socket, buffer, sizeof(buffer));
+                // int num_read = read(out_pipe[0], buffer, sizeof(buffer));
+                int num_read = read(client_socket, buffer, sizeof(buffer));
                 // int num_read = recv(out_pipe[0], buffer, sizeof(buffer), 0);
                 if (num_read == -1)
                 {
@@ -282,4 +283,5 @@ int main()
             }
         }
     }
+    // system("leaks a.out");
 }

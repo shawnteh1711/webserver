@@ -261,14 +261,15 @@ vector<Server> Config::setServer(Config& config)
     {
         for (directive_it = item_it->parsed.begin(); directive_it != item_it->parsed.end(); ++directive_it)
         {
-            // if (directive_it->directive != "server")
-            //     continue;
-            // servers.push_back(createServer(*directive_it));
-            for (nested_directive_it = directive_it->block.begin(); nested_directive_it != directive_it->block.end(); ++nested_directive_it)
+            if (directive_it->directive == "server")
+                servers.push_back(createServer(*directive_it));
+            else
             {
-                if (nested_directive_it->directive != "server")
-                    continue;
-                servers.push_back(createServer(*nested_directive_it));
+                for (nested_directive_it = directive_it->block.begin(); nested_directive_it != directive_it->block.end(); ++nested_directive_it)
+                {
+                    if (nested_directive_it->directive == "server")
+                        servers.push_back(createServer(*nested_directive_it));
+                }
             }
         }
     }
