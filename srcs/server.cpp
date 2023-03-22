@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   tcpserver.cpp                                      :+:      :+:    :+:   */
+/*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/20 20:51:49 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/22 18:58:10 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ Server::Server(string ip_address, int port)
 	_socketAddr(), _socketAddr_len(sizeof(_socketAddr))
 {
 	_socketAddr.sin_family = AF_INET;
-	_socketAddr.sin_port = htons(port);
+	_socketAddr.sin_port = htons(_port);
 	_socketAddr.sin_addr.s_addr = inet_addr(_ip.c_str());
 
 	if (startServer() != 0)
@@ -127,7 +127,10 @@ void	Server::startListen()
 				if (bodySize <= LIMIT_SIZE)
 				{
 					size_t methodPos = clientRequest.find(" ");
-					if (methodPos == string::npos)
+					cout << "methodPos: " << methodPos << endl;
+				//	if (methodPos == string::npos)
+				//		sendErrorResponse(fds[i].fd, 400); 
+					if (methodPos != 10)
 						sendErrorResponse(fds[i].fd, 400); 
 					else
 					{
@@ -186,6 +189,7 @@ void Server::sendResponse(int client_fd)
 
 void Server::sendErrorResponse(int client_fd, int statuscode)
 {
+	string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><center><h1> Bad Request </h1><c/center></body></html>";
 	ostringstream ss;
 	ss << "HTTP/1.1 " << statuscode << " ";
 	string statusMessage;
@@ -205,10 +209,12 @@ void Server::sendErrorResponse(int client_fd, int statuscode)
 		default:
 			statusMessage = "Unknown Status Code";
 	}
-	ss << statusMessage << "\r\n";
-	ss << "Content-Length: 0";
-	ss << "\r\n\r\n";
+	ss << statusMessage << "\r\n"
+	   << "Content-Length: " << htmlFile.size()
+	   << "\r\n\r\n"
+	   << htmlFile;
 	string response = ss.str();
+	cout << response << endl;
 	bytesSent = send(client_fd, response.c_str(), response.size(), 0);
 	if (bytesSent == (long)response.size())
 		N_MY::msg("---- Server Error Response sent to client ---- \n\n");
