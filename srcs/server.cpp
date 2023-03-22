@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/22 18:58:10 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/22 20:55:09 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,12 @@ Server::Server(string ip_address, int port)
 {
 	_socketAddr.sin_family = AF_INET;
 	_socketAddr.sin_port = htons(_port);
-	_socketAddr.sin_addr.s_addr = inet_addr(_ip.c_str());
+	_socketAddr.sin_addr.s_addr = inet_addr(_ip.c_str()); // s_addr is string
+	// ip is string, s_addr is unsigned int
+	// because of dot. so need inet_addr. 
+	cout << "!!!!!!!!!!!!!!!!!!!!!!!!!IPADDRESS: " << _ip << endl;
+	cout << "!!!!!!!!!!!!!!!!!!!!!!!!!S_ADDR: " << _socketAddr.sin_addr.s_addr << endl;
+	cout << "convert back to: " << inet_ntoa(_socketAddr.sin_addr) << endl;
 
 	if (startServer() != 0)
 	{
@@ -61,7 +66,10 @@ int	Server::startServer()
 	if (setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
 		return N_MY::ErrorExit("Cannot set socket option");
 	if (bind(_sockfd, (sockaddr*)&_socketAddr, _socketAddr_len) < 0)
+	{
+		std::perror(std::strerror(errno));
 		return N_MY::ErrorExit("Cannot connect socket to address");
+	}
 	return (0);
 }
 
@@ -220,6 +228,11 @@ void Server::sendErrorResponse(int client_fd, int statuscode)
 		N_MY::msg("---- Server Error Response sent to client ---- \n\n");
 	else
 		N_MY::msg("Error sending response to client");
+}
+
+int	Server::get_port(void) const
+{
+	return (this->_port);
 }
 
 void	Server::sig_handler(int signo)

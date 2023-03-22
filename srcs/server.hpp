@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/17 19:32:12 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/22 19:46:00 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,9 @@ class	Server
 		~Server();
 
 		void	startListen();
+
+		// getter
+		int	get_port(void) const; // mine string
 	
 		// static non-member
 		static void		sig_handler(int signo);
