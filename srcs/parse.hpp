@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/22 19:32:16 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/22 19:53:19 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/23 15:37:14 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,21 +32,26 @@ struct Server_Detail
     vector<Directive>   locations;
 };
 
-struct Config
+class	Config
 {
-    string              status;
-    string              file;
-    vector<string>      errors;
-    vector<configItem>  configItems;
-    vector<Server_Detail>      servers;
-    Config                  parseConfigFile(string filename);
-    vector<Directive*>      findDirective(Config& config, string directiveName);
-    vector<Server_Detail>          setServer(Config& config);
-    void                    printServer(vector<Server_Detail>& servers);
-    void                    print(Config config);
-    const vector<Server_Detail>&   getServers() const;
-    Server_Detail                  createServer(const Directive& directive);
+    string							status;
+    string							file;
+    vector<string>					errors;
+    vector<configItem>				configItems;
+    vector<Server_Detail>			servers;
 
+	public:
+		Config(void);
+		~Config(void);
+
+		// member functions
+    	Config							parseConfigFile(string filename);
+    	vector<Directive*>				findDirective(Config& config, string directiveName);
+    	vector<Server_Detail>			setServer(Config& config);
+    	void							printServer(vector<Server_Detail>& servers);
+    	void							print(Config config);
+    	const vector<Server_Detail>&	getServers() const;
+    	Server_Detail					createServer(const Directive& directive);
 };
 
 struct configItem

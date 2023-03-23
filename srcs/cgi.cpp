@@ -182,106 +182,106 @@ int create_server_socket()
     return (server_socket);
 }
 
-int main()
-{
-    string request = "POST /cgi-bin/hello.cgi HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&age=30";
-
-    Request req(request);
-    bool    is_cgi_request;
-    string  cgi_path;
-    int in_pipe[2];
-    int out_pipe[2];
-    int client_socket;
-    int server_socket;
-    struct sockaddr_in client_address;
-
-    server_socket = create_server_socket();
-    socklen_t client_address_len = sizeof(client_address);
-
-    client_socket = accept(server_socket, (struct sockaddr*)&client_address, &client_address_len);
-    if (client_socket < 0)
-    {
-        perror("In accept");
-        exit(EXIT_FAILURE);
-    }
-    cout << "Client connected from " << inet_ntoa(client_address.sin_addr) << ":" << ntohs(client_address.sin_port) << endl;
-    cgi_path = parse_cgi_path(request);
-    is_cgi_request = req.isCgiRequest();
-
-    if (is_cgi_request)
-    {
-        pid_t   pid = fork();
-        if (pid == -1)
-        {
-            perror("fork failed");
-            exit(EXIT_FAILURE);
-        }
-        else if (pid == 0)
-        {
-            // Set up input and output streams for the child process
-   
-            if (pipe(in_pipe) == -1 || pipe(out_pipe) == -1)
-            {
-                perror("pipe failed");
-                exit(EXIT_FAILURE);
-            }
-            // Redirect standard input and output of child process to pipes
-            if (dup2(in_pipe[0], STDIN_FILENO) == -1 || dup2(out_pipe[1], STDOUT_FILENO) == -1)
-            {
-                perror("dup2 failed");
-                exit(EXIT_FAILURE);
-            }
-            close(in_pipe[1]);
-            close(out_pipe[0]);
-            char* args[2];
-
-            // Set environment variables for the child process
-            setenv("REQUEST_METHOD", req.getMethod().c_str(), 1);
-            setenv("QUERY_STRING", req.getQueryString().c_str(), 1);
-            setenv("CONTENT_TYPE", req.getHeader("Content-Type").c_str(), 1);
-            setenv("CONTENT_LENGTH", req.getHeader("Content-Length").c_str(), 1);
-            setenv("REMOTE_ADDR", req.getAddress().c_str(), 1);
-            setenv("SCRIPT_NAME", cgi_path.c_str(), 1);
-
-            args[0] = const_cast<char*>(cgi_path.c_str());
-            args[1] = NULL;
-            if (execv(args[0], args) == -1)
-            {
-                cerr <<  "Error: " << strerror(errno) << endl;
-                exit(EXIT_FAILURE);
-            }
-        }
-        else
-        {
-            int status;
-            if (waitpid(pid, &status, 0) == -1)
-            {
-                perror("waitpid failed");
-                exit(EXIT_FAILURE);
-            }
-            if (WIFEXITED(status))
-            {
-                cout << "Child process exit status" << WIFEXITED(status) << endl;
-                  // Get the output of the CGI script from the pipe
-                char buffer[4096];
-                // int num_read = read(out_pipe[0], buffer, sizeof(buffer));
-                int num_read = read(client_socket, buffer, sizeof(buffer));
-                // int num_read = recv(out_pipe[0], buffer, sizeof(buffer), 0);
-                if (num_read == -1)
-                {
-                    perror("read failed");
-                    exit(EXIT_FAILURE);
-                }
-
-                // Send the HTTP response back to the client
-                Response res;
-                res.setStatusCode(200);
-                res.setContentType(req.getHeader("Content-Type").c_str());
-                res.setContent(buffer, num_read);
-                string response_str = res.toString();
-                write(client_socket, response_str.c_str(), response_str.length());
-            }
-        }
-    }
-    // system("leaks a.out");
-}
+//int main()
+//{
+//    string request = "POST /cgi-bin/hello.cgi HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John&age=30";
+//
+//    Request req(request);
+//    bool    is_cgi_request;
+//    string  cgi_path;
+//    int in_pipe[2];
+//    int out_pipe[2];
+//    int client_socket;
+//    int server_socket;
+//    struct sockaddr_in client_address;
+//
+//    server_socket = create_server_socket();
+//    socklen_t client_address_len = sizeof(client_address);
+//
+//    client_socket = accept(server_socket, (struct sockaddr*)&client_address, &client_address_len);
+//    if (client_socket < 0)
+//    {
+//        perror("In accept");
+//        exit(EXIT_FAILURE);
+//    }
+//    cout << "Client connected from " << inet_ntoa(client_address.sin_addr) << ":" << ntohs(client_address.sin_port) << endl;
+//    cgi_path = parse_cgi_path(request);
+//    is_cgi_request = req.isCgiRequest();
+//
+//    if (is_cgi_request)
+//    {
+//        pid_t   pid = fork();
+//        if (pid == -1)
+//        {
+//            perror("fork failed");
+//            exit(EXIT_FAILURE);
+//        }
+//        else if (pid == 0)
+//        {
+//            // Set up input and output streams for the child process
+//   
+//            if (pipe(in_pipe) == -1 || pipe(out_pipe) == -1)
+//            {
+//                perror("pipe failed");
+//                exit(EXIT_FAILURE);
+//            }
+//            // Redirect standard input and output of child process to pipes
+//            if (dup2(in_pipe[0], STDIN_FILENO) == -1 || dup2(out_pipe[1], STDOUT_FILENO) == -1)
+//            {
+//                perror("dup2 failed");
+//                exit(EXIT_FAILURE);
+//            }
+//            close(in_pipe[1]);
+//            close(out_pipe[0]);
+//            char* args[2];
+//
+//            // Set environment variables for the child process
+//            setenv("REQUEST_METHOD", req.getMethod().c_str(), 1);
+//            setenv("QUERY_STRING", req.getQueryString().c_str(), 1);
+//            setenv("CONTENT_TYPE", req.getHeader("Content-Type").c_str(), 1);
+//            setenv("CONTENT_LENGTH", req.getHeader("Content-Length").c_str(), 1);
+//            setenv("REMOTE_ADDR", req.getAddress().c_str(), 1);
+//            setenv("SCRIPT_NAME", cgi_path.c_str(), 1);
+//
+//            args[0] = const_cast<char*>(cgi_path.c_str());
+//            args[1] = NULL;
+//            if (execv(args[0], args) == -1)
+//            {
+//                cerr <<  "Error: " << strerror(errno) << endl;
+//                exit(EXIT_FAILURE);
+//            }
+//        }
+//        else
+//        {
+//            int status;
+//            if (waitpid(pid, &status, 0) == -1)
+//            {
+//                perror("waitpid failed");
+//                exit(EXIT_FAILURE);
+//            }
+//            if (WIFEXITED(status))
+//            {
+//                cout << "Child process exit status" << WIFEXITED(status) << endl;
+//                  // Get the output of the CGI script from the pipe
+//                char buffer[4096];
+//                // int num_read = read(out_pipe[0], buffer, sizeof(buffer));
+//                int num_read = read(client_socket, buffer, sizeof(buffer));
+//                // int num_read = recv(out_pipe[0], buffer, sizeof(buffer), 0);
+//                if (num_read == -1)
+//                {
+//                    perror("read failed");
+//                    exit(EXIT_FAILURE);
+//                }
+//
+//                // Send the HTTP response back to the client
+//                Response res;
+//                res.setStatusCode(200);
+//                res.setContentType(req.getHeader("Content-Type").c_str());
+//                res.setContent(buffer, num_read);
+//                string response_str = res.toString();
+//                write(client_socket, response_str.c_str(), response_str.length());
+//            }
+//        }
+//    }
+//    // system("leaks a.out");
+//}
