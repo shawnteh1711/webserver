@@ -6,12 +6,12 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/24 13:39:08 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/24 15:50:27 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 //#include "server.hpp"
-#include "parse.hpp"
+#include "parse8.hpp"
 
 //int	main()
 //{
@@ -26,6 +26,10 @@ void	alecprintf(vector<Server_Detail> *d_servers)
 {
 	vector<Server_Detail>::iterator it = d_servers->begin();
 	vector<Server_Detail>::iterator ite = d_servers->end();
+	vector<string>::iterator sit;
+	vector<string>::iterator site;
+//	vector<Direcrive>::iterator dit;
+//	vector<Directive>::iterator dite;
 	int i = 1;
 	while (it != ite)
 	{
@@ -33,7 +37,16 @@ void	alecprintf(vector<Server_Detail> *d_servers)
 		cout << "serverName: " << it->serverName << endl;
 		cout << "port: " << it->port << endl;
 		cout << "clientMaxBodySize: " << it->clientMaxBodySize << endl;
-		cout << "errorPage: " << it->errorPage << endl;
+		//cout << "errorPage: " << it->errorPage << endl;
+		sit = it->errorPage.begin();
+		site = it->errorPage.end();
+		cout << "errorPage: " << it->errorPage[0] << endl;
+		// errorPage vector got problem.
+		while (sit != site)
+		{
+			cout << "errorPage: " << *sit << endl;
+			sit++;
+		}
 		cout << "root: " << it->root << endl;
 		cout << "index: " << it->index << endl;
 
@@ -156,8 +169,8 @@ void	test(char **argv)
 	config = config.parseConfigFile(filename);
 	config.print(config);
 	d_servers = config.setServer(config); 
-//	config.printServer(d_servers);
-	alecprintf(&d_servers);
+	config.printServer(d_servers);
+//	alecprintf(&d_servers);
 
 //	get_ip();
 //	get_ip2();
