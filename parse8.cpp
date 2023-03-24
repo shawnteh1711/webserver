@@ -329,7 +329,7 @@ Server Config::createServer(const Directive& directive)
 void    Config::printServer(vector<Server>& servers)
 {
     vector<Server>::const_iterator server_it;
-    vector<Directive>::const_iterator location_it, directive_it;
+    vector<Directive>::const_iterator location_it, directive_it, inner_directive_it;
     vector<string>::const_iterator arg_it, error_it;
 
     for (server_it = servers.begin(); server_it != servers.end(); ++server_it)
@@ -357,6 +357,13 @@ void    Config::printServer(vector<Server>& servers)
             for (directive_it = location_it->block.begin(); directive_it != location_it->block.end(); ++directive_it) 
             {
                 cout << "\t\t" << directive_it->directive << " " << directive_it->args[0] << ";" << endl;
+                if (directive_it->block.size() > 0) // check if inner block exists
+                {
+                    for (inner_directive_it = directive_it->block.begin(); inner_directive_it != directive_it->block.end(); ++inner_directive_it)
+                    {
+                        cout << "\t\t\t" << inner_directive_it->directive << " " << inner_directive_it->args[0] << ";" << endl;
+                    }
+                }
             }
         }
         cout << "\t" << "}" << endl;
