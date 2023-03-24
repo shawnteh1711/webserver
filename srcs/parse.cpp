@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/22 19:32:08 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/23 16:51:02 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/24 12:26:24 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,6 +179,7 @@ void print_config_item(const Directive& item, size_t depth = 0)
     }
 
     std::cout << std::endl;
+	
 
     for (std::vector<Directive>::const_iterator it = item.block.begin(); it != item.block.end(); ++it)
     {
@@ -315,13 +316,15 @@ void    Config::print(Config config)
     {
         std::cout << "error: " << *it << std::endl;
     }
-    for (std::vector<configItem>::const_iterator it = config.configItems.begin(); it != config.configItems.end(); ++it)
-    {
+	std::vector<configItem>::const_iterator it = config.configItems.begin();
+   // for (std::vector<configItem>::const_iterator it = config.configItems.begin(); it != config.configItems.end(); ++it)
+   // {
+		cout << "==================LOOP START=====================" << endl;
         for (std::vector<Directive>::const_iterator it2 = it->parsed.begin(); it2 != it->parsed.end(); ++it2)
         {
             print_config_item(*it2);
         }
-    }
+   // }
 }
 
 const vector<Server_Detail>&   Config::getServers() const

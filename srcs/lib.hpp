@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/20 12:53:24 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/22 19:44:19 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/24 12:49:36 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@
 #include <vector>
 #include <fstream>
 #include <utility>
+#include <netdb.h> // for addrinfo struct
 
 using namespace std;
 
