@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/24 17:11:48 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/24 20:00:31 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,42 +61,53 @@ void	alecprintf(vector<Server_Detail> *d_servers)
 		vector<Directive>::iterator bbte;
 
 		// vector<Directive> locations is start
+		string mainkey;
 		while (dit != dite)
 		{
 			cout << "directive: " << dit->directive << endl;
 			sit = dit->args.begin();
-			site = dit->args.end();
-			while (sit != site)
-				cout << "arg: " << *sit++ << endl;
+		//	site = dit->args.end();
+		//	while (sit != site)
+		//	{
+				cout << "LOCATION ARG PATH: " << *sit << endl;
+		//		it->mylocations[*sit] = multimap<string, string>();
+				it->mylocations.insert(make_pair(*sit, multimap<string, string>()));
+				mainkey = *sit;
+		//		sit++;
+		//	}
 			bt = dit->block.begin();
-			bte = dit->block.end(); // how u know internal is in block
-			// how to get "internal" from block?
-			// or maybe u forgot assign value to block during parsing?
-			// i just push everything to block
-			// here vector<Directive> block start
+			bte = dit->block.end();
+			multimap<string, string> tmp;
 			while ( (bt != bte))
  			{
 				// here keep looping;
-				cout << "bt->direcrive: " << bt->directive << endl;
+				cout << "bt->directive: " << bt->directive << endl;
 				sit = bt->args.begin();
-				site = bt->args.end();
-				while (sit != site)
-					cout << "bt->arg: " << *sit++ << endl;
+	//			site = bt->args.end();
+	//			while (sit != site)
+					cout << "bt->arg: " << *sit << endl;
+	//				cout << "bt->arg: " << *sit++ << endl;
+		//		tmp[bt->directive] = *sit;
+				tmp.insert(make_pair(bt->directive, *sit));
 				bbt = bt->block.begin();
 				bbte = bt->block.end();
 				while (bbt != bbte)
 				{
 					cout << "bt2->directive: " << bbt->directive << endl;
 					sit = bbt->args.begin();
-					site = bbt->args.end();
-					while (sit != site)
-						cout << "bt2->arg: " << *sit++ << endl;
+	//				site = bbt->args.end();
+	//				while (sit != site)
+						cout << "bt2->arg: " << *sit << endl;
+	//					cout << "bt2->arg: " << *sit++ << endl;
+		//			tmp[bbt->directive] = *sit;
+					tmp.insert(make_pair(bbt->directive, *sit));
 					bbt++;
 				}
+				//it->mylocations[mainkey] = tmp; 
+				it->mylocations.find(mainkey)->second = tmp;
 				bt++;
 			}
 			dit++;
-
 		}
 		it++;
 	}
@@ -182,6 +193,34 @@ int	get_ip2(void)
     return 0;
 }
 
+void	alecprintlocation(vector<Server_Detail> & d_servers)
+{
+	int i = 1;
+	vector<Server_Detail>::iterator s = d_servers.begin();
+	vector<Server_Detail>::iterator se = d_servers.end();
+	multimap<string, multimap<string, string> >::iterator it, ite;
+	multimap<string, string>::iterator tw, twe;
+	while (s != se)
+	{
+		cout << "====SERVER " << i++ << "====" << endl;
+		it = s->mylocations.begin();
+		ite = s->mylocations.end();
+		while (it != ite)
+		{
+			cout << "Location Path: " << it->first << endl;
+			tw = it->second.begin();
+			twe = it->second.end();
+			while (tw != twe)
+			{
+				cout << tw->first << ": " << tw->second << endl;
+				tw++;
+			}
+			it++;
+		}
+		s++;
+	}
+}
+
 void	test(char **argv)
 {
     string filename = argv[1];
@@ -195,6 +234,7 @@ void	test(char **argv)
 	d_servers = config.setServer(config); 
 	config.printServer(d_servers);
 	alecprintf(&d_servers);
+	alecprintlocation(d_servers);
 
 //	get_ip();
 //	get_ip2();

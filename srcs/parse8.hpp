@@ -25,6 +25,7 @@ struct Server_Detail
     string              autoIndex;
     string              redirection;
     vector<Directive>   locations; // lol this is using 6 loops
+	multimap<string, multimap<string, string> >	mylocations; // this is using 3 loops only
 };
 
 struct Config
