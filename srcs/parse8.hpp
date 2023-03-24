@@ -16,15 +16,15 @@ struct Directive;
 
 struct Server_Detail
 {
-    string              serverName;
+    string              serverName; // this is good, direct get without loop
     string              port;
     string              clientMaxBodySize;
-    vector<string>      errorPage;
+    vector<string>      errorPage; // this is ok, one time loop
     string              root;
     string              index;
     string              autoIndex;
     string              redirection;
-    vector<Directive>   locations;
+    vector<Directive>   locations; // lol this is using 6 loops
 };
 
 struct Config
@@ -55,9 +55,9 @@ struct configItem
 struct Directive
 {
     string              directive;
-    vector<string>      args;
+    vector<string>      args; // one loop
     int                 line;
-    vector<Directive>   block;
+    vector<Directive>   block; // 4 loops 
 };
 
 #endif

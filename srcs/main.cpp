@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/24 15:50:27 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/24 17:11:48 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,6 @@ void	alecprintf(vector<Server_Detail> *d_servers)
 		//cout << "errorPage: " << it->errorPage << endl;
 		sit = it->errorPage.begin();
 		site = it->errorPage.end();
-		cout << "errorPage: " << it->errorPage[0] << endl;
 		// errorPage vector got problem.
 		while (sit != site)
 		{
@@ -49,6 +48,8 @@ void	alecprintf(vector<Server_Detail> *d_servers)
 		}
 		cout << "root: " << it->root << endl;
 		cout << "index: " << it->index << endl;
+		cout << "autoIndex: " << it->autoIndex << endl;
+		cout << "redirection: " << it->redirection << endl;
 
 		vector<Directive>::iterator dit = it->locations.begin();
 		vector<Directive>::iterator dite = it->locations.end();
@@ -56,6 +57,10 @@ void	alecprintf(vector<Server_Detail> *d_servers)
 		vector<string>::iterator site;
 		vector<Directive>::iterator bt;
 		vector<Directive>::iterator bte;
+		vector<Directive>::iterator bbt;
+		vector<Directive>::iterator bbte;
+
+		// vector<Directive> locations is start
 		while (dit != dite)
 		{
 			cout << "directive: " << dit->directive << endl;
@@ -63,16 +68,35 @@ void	alecprintf(vector<Server_Detail> *d_servers)
 			site = dit->args.end();
 			while (sit != site)
 				cout << "arg: " << *sit++ << endl;
+			bt = dit->block.begin();
+			bte = dit->block.end(); // how u know internal is in block
+			// how to get "internal" from block?
+			// or maybe u forgot assign value to block during parsing?
+			// i just push everything to block
+			// here vector<Directive> block start
+			while ( (bt != bte))
+ 			{
+				// here keep looping;
+				cout << "bt->direcrive: " << bt->directive << endl;
+				sit = bt->args.begin();
+				site = bt->args.end();
+				while (sit != site)
+					cout << "bt->arg: " << *sit++ << endl;
+				bbt = bt->block.begin();
+				bbte = bt->block.end();
+				while (bbt != bbte)
+				{
+					cout << "bt2->directive: " << bbt->directive << endl;
+					sit = bbt->args.begin();
+					site = bbt->args.end();
+					while (sit != site)
+						cout << "bt2->arg: " << *sit++ << endl;
+					bbt++;
+				}
+				bt++;
+			}
 			dit++;
-			cout << "line: " << dit->line << endl;
-//			bt = dit->block.begin();
-//			bte = dit->block.end();
-//			while (bt != bte)
-//			{
-//				cout << "block directive: " << bt->directive << endl;
-//				cout << "block line: " << bt->line << endl;
-//				bt++;
-//			}
+
 		}
 		it++;
 	}
@@ -170,7 +194,7 @@ void	test(char **argv)
 	config.print(config);
 	d_servers = config.setServer(config); 
 	config.printServer(d_servers);
-//	alecprintf(&d_servers);
+	alecprintf(&d_servers);
 
 //	get_ip();
 //	get_ip2();
