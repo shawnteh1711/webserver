@@ -18,9 +18,11 @@ struct Server
     string              serverName;
     string              port;
     string              clientMaxBodySize;
-    string              errorPage;
+    vector<string>      errorPage;
     string              root;
     string              index;
+    string              autoIndex;
+    string              redirection;
     vector<Directive>   locations;
 };
 

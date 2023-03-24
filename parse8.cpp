@@ -31,6 +31,16 @@ vector<string> splitLine(string str, char delimiter)
     return (result);
 }
 
+string      removeComment(string line)
+{
+    line = trimLine(line);
+    size_t commentPos = line.find('#');
+    if (commentPos != string::npos)
+        line = line.substr(0, commentPos);
+    return (line);
+}
+
+
 Directive parseDirective(string& line, int lineNum)
 {
     Directive directive;
@@ -51,19 +61,19 @@ Directive parseDirective(string& line, int lineNum)
             if (line.back() == ';')
                 line = line.substr(0, line.size() - 1);
         }
-        directive.args.push_back(line);
     }
+    else
+    {
+        if (line.back() == ';')
+            line = line.substr(0, line.size() - 1);
+        if (line == "internal")
+            directive.directive = "internal";
+        line.clear();
+    }
+    directive.args.push_back(line);
     return (directive);
 }
 
-string      removeComment(string line)
-{
-    line = trimLine(line);
-    size_t commentPos = line.find('#');
-    if (commentPos != string::npos)
-        line = line.substr(0, commentPos);
-    return (line);
-}
 
 vector<Directive> parseBlock(ifstream& file, int& lineNum, Directive& parentDirective)
 {
@@ -115,6 +125,7 @@ vector<Directive> parseBlock(ifstream& file, int& lineNum, Directive& parentDire
         // handle location
         if (blockStart != string::npos)
         {
+
             directive = parseDirective(line, lineNum);
             directive.block = parseBlock(file, lineNum, directive);
         }
@@ -281,26 +292,32 @@ Server Config::createServer(const Directive& directive)
     Server new_server;
     vector<Directive>::const_iterator block_directive_it;
 
-    for (block_directive_it = directive.block.begin(); block_directive_it != directive.block.end(); ++block_directive_it) {
-        if (block_directive_it->directive == "listen") {
+    for (block_directive_it = directive.block.begin(); block_directive_it != directive.block.end(); ++block_directive_it)
+    {
+        if (block_directive_it->directive == "listen")
             new_server.port = block_directive_it->args[0];
-        } else if (block_directive_it->directive == "server_name") {
+        else if (block_directive_it->directive == "server_name")
             new_server.serverName = block_directive_it->args[0];
-        } else if (block_directive_it->directive == "client_max_body_size") {
+        else if (block_directive_it->directive == "client_max_body_size")
             new_server.clientMaxBodySize = block_directive_it->args[0];
-        } else if (block_directive_it->directive == "error_page") {
-            new_server.errorPage = block_directive_it->args[0];
-        } else if (block_directive_it->directive == "root") {
+        else if (block_directive_it->directive == "error_page")
+            new_server.errorPage.push_back(block_directive_it->args[0]);
+        else if (block_directive_it->directive == "root")
             new_server.root = block_directive_it->args[0];
-        } else if (block_directive_it->directive == "index") {
+        else if (block_directive_it->directive == "index")
             new_server.index = block_directive_it->args[0];
-        } else if (block_directive_it->directive == "location") {
+        else if (block_directive_it->directive == "return")
+            new_server.redirection = block_directive_it->args[0];
+        else if (block_directive_it->directive == "location") {
             Directive location_directive;
             location_directive.directive = block_directive_it->directive;
             location_directive.args.push_back(block_directive_it->args[0]);
             vector<Directive>::const_iterator nested_directive_it;
 
-            for (nested_directive_it = block_directive_it->block.begin(); nested_directive_it != block_directive_it->block.end(); ++nested_directive_it) {
+            for (nested_directive_it = block_directive_it->block.begin(); nested_directive_it != block_directive_it->block.end(); ++nested_directive_it)
+            {
+                if (nested_directive_it->directive == "autoindex")
+                    new_server.autoIndex = nested_directive_it->args[0];
                 location_directive.block.push_back(*nested_directive_it);
             }
             new_server.locations.push_back(location_directive);
@@ -313,7 +330,7 @@ void    Config::printServer(vector<Server>& servers)
 {
     vector<Server>::const_iterator server_it;
     vector<Directive>::const_iterator location_it, directive_it;
-    vector<string>::const_iterator arg_it;
+    vector<string>::const_iterator arg_it, error_it;
 
     for (server_it = servers.begin(); server_it != servers.end(); ++server_it)
     {
@@ -321,9 +338,14 @@ void    Config::printServer(vector<Server>& servers)
         cout << "\tlisten " << server_it->port << ";" << endl;
         cout << "\tserver_name " << server_it->serverName << ";" << endl;
         cout << "\tclient_max_body_size " << server_it->clientMaxBodySize << ";" << endl;
-        cout << "\terror_page " << server_it->errorPage << ";" << endl;
+        cout << "\terror_page: ";
+        for (error_it = server_it->errorPage.begin(); error_it != server_it->errorPage.end(); error_it++)
+            cout << *error_it << " ";
+        cout << endl;
         cout << "\troot " << server_it->root << ";" << endl;
         cout << "\tindex " << server_it->index << ";" << endl;
+        cout << "\tautoindex " << server_it->autoIndex << ";" << endl;
+        cout << "\treturn  " << server_it->redirection << ";" << endl;
 
         cout << RESET << BLUE;
         for (location_it = server_it->locations.begin(); location_it != server_it->locations.end(); ++location_it)
@@ -332,7 +354,6 @@ void    Config::printServer(vector<Server>& servers)
             {
                 std::cout << "\t" << location_it->directive << " " << *arg_it << " {" << std::endl;
             }
-
             for (directive_it = location_it->block.begin(); directive_it != location_it->block.end(); ++directive_it) 
             {
                 cout << "\t\t" << directive_it->directive << " " << directive_it->args[0] << ";" << endl;
@@ -358,9 +379,9 @@ int main(int argc, char* argv[])
     vector<Server>      servers;
 
     config = config.parseConfigFile(filename);
-    // config.print(config);
+    config.print(config);
     servers = config.setServer(config);
     config.printServer(servers);
-    cout << servers[0].port << endl;
+    // cout << servers[0].port << endl;
     return 0;
 }

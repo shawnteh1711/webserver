@@ -163,19 +163,31 @@ int create_server_socket()
     // struct sockaddr_in server_address;
     struct sockaddr_in server_address;
 
-    // create socket
-    server_socket = socket(AF_INET, SOCK_STREAM, 0);
-
     // configure server address
+    memset(&server_address, 0, sizeof(server_address));
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = INADDR_ANY;
     server_address.sin_port = htons(8080);
+
+    // create socket
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+
+    int optval = 1;
+    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1)
+    {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
 
     // bind socket to the specified address
     bind(server_socket, (struct sockaddr*)&server_address, sizeof(server_address));
 
     // listen for incoming connections
-    listen(server_socket, 5);
+    if (listen(server_socket, 5) < 0)
+    {
+        perror("In listen");
+        exit(EXIT_FAILURE);
+    }
 
     // accept a connection
 
@@ -245,7 +257,7 @@ int main()
 
             args[0] = const_cast<char*>(cgi_path.c_str());
             args[1] = NULL;
-            if (execv(args[0], args) == -1)
+            if (execve(args[0], args, NULL) == -1)
             {
                 cerr <<  "Error: " << strerror(errno) << endl;
                 exit(EXIT_FAILURE);
@@ -264,8 +276,8 @@ int main()
                 cout << "Child process exit status" << WIFEXITED(status) << endl;
                   // Get the output of the CGI script from the pipe
                 char buffer[4096];
-                // int num_read = read(out_pipe[0], buffer, sizeof(buffer));
-                int num_read = read(client_socket, buffer, sizeof(buffer));
+                int num_read = read(out_pipe[0], buffer, sizeof(buffer));
+                // int num_read = read(client_socket, buffer, sizeof(buffer));
                 // int num_read = recv(out_pipe[0], buffer, sizeof(buffer), 0);
                 if (num_read == -1)
                 {
