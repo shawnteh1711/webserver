@@ -16,6 +16,7 @@ struct Directive;
 
 struct Server_Detail
 {
+	int					id;
     string              serverName; // this is good, direct get without loop
     string              port;
     string              clientMaxBodySize;

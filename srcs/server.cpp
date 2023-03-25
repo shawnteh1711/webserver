@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/22 20:55:09 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/25 19:06:04 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,13 +21,19 @@ namespace N_MY
 
 	int	ErrorExit(const string &errorMessage)
 	{
+		cout << RED;
 		msg("ERROR: " + errorMessage);
+		cout << RESET;
 		exit(1);
 		return (1);
 	}
 }
 
 Server *Server::server_instance = NULL;
+
+Server::Server(void)
+	: _port(-1), _sockfd(-1), _clientfd(-1), _serverMsg(),
+	_ip(), _socketAddr(), _socketAddr_len(){}
 
 Server::Server(string ip_address, int port)
 	: _port(port), _sockfd(), _clientfd(),
@@ -36,12 +42,9 @@ Server::Server(string ip_address, int port)
 {
 	_socketAddr.sin_family = AF_INET;
 	_socketAddr.sin_port = htons(_port);
-	_socketAddr.sin_addr.s_addr = inet_addr(_ip.c_str()); // s_addr is string
+	_socketAddr.sin_addr.s_addr = inet_addr(_ip.c_str());
 	// ip is string, s_addr is unsigned int
 	// because of dot. so need inet_addr. 
-	cout << "!!!!!!!!!!!!!!!!!!!!!!!!!IPADDRESS: " << _ip << endl;
-	cout << "!!!!!!!!!!!!!!!!!!!!!!!!!S_ADDR: " << _socketAddr.sin_addr.s_addr << endl;
-	cout << "convert back to: " << inet_ntoa(_socketAddr.sin_addr) << endl;
 
 	if (startServer() != 0)
 	{
@@ -52,8 +55,15 @@ Server::Server(string ip_address, int port)
 	server_instance = this;
 }
 
+Server::Server(const Server & src)
+: _port(src._port), _sockfd(src._sockfd), _clientfd(src._clientfd),
+	_serverMsg(src._serverMsg), _ip(src._ip),
+	_socketAddr(src._socketAddr), _socketAddr_len(src._socketAddr_len)
+{}
+
 Server::~Server()
 {
+	cout << RED << "Server close" << RESET << endl;
 	closeServer();
 }
 
@@ -77,7 +87,7 @@ void	Server::closeServer()
 {
 	close(_sockfd);
 	close(_clientfd);
-	exit(0);
+//	exit(0);
 }
 
 void	Server::startListen()
@@ -123,32 +133,36 @@ void	Server::startListen()
 			{
 				bzero(buffer, BUF_SIZE);
 				bytes = recv(fds[i].fd, buffer, BUF_SIZE, 0);
-				if (bytes < 0)
-					N_MY::ErrorExit("Failed to read bytes from client socket connection");
-
-				// Check the limit of the client body size
-				string clientRequest(buffer, bytes);
-				cout << "clientRequest: " << clientRequest << endl;
-				size_t bodyPos = clientRequest.find("\r\n\r\n") + 4;
-				size_t bodySize = bytes - bodyPos;
-
-				if (bodySize <= LIMIT_SIZE)
-				{
-					size_t methodPos = clientRequest.find(" ");
-					cout << "methodPos: " << methodPos << endl;
-				//	if (methodPos == string::npos)
-				//		sendErrorResponse(fds[i].fd, 400); 
-					if (methodPos != 10)
-						sendErrorResponse(fds[i].fd, 400); 
-					else
-					{
-						N_MY::msg("--- Received Request from client ---");
-						sendResponse(fds[i].fd);
-						
-					}
-				}
+				if (bytes  == -1)
+					N_MY::msg(RED"Failed to read bytes from client socket connection"RESET);
+				if (bytes == 0)
+					N_MY::msg("The client has closed the connection");
 				else
-					N_MY::msg("Client body size exceeded the limit\n\n");
+				{
+
+					// Check the limit of the client body size
+					string clientRequest(buffer, bytes);
+					cout << "clientRequest: " << clientRequest << endl;
+					size_t bodyPos = clientRequest.find("\r\n\r\n") + 4;
+					size_t bodySize = bytes - bodyPos;
+	
+					if (bodySize <= LIMIT_SIZE)
+					{
+						size_t methodPos = clientRequest.find(" ");
+						cout << "methodPos: " << methodPos << endl;
+					//	if (methodPos == string::npos)
+					//		sendErrorResponse(fds[i].fd, 400); 
+						if (methodPos != 10)
+							sendErrorResponse(fds[i].fd, 400); 
+						else
+						{
+							N_MY::msg("--- Received Request from client ---");
+							sendResponse(fds[i].fd);			
+						}
+					}
+					else
+						N_MY::msg("Client body size exceeded the limit\n\n");
+				}
 
 				close(fds[i].fd);
 
@@ -189,10 +203,12 @@ void Server::sendResponse(int client_fd)
 	long	bytesSent;
 
 	bytesSent = send(client_fd, _serverMsg.c_str(), _serverMsg.size(), 0);
-	if (bytesSent == (long)_serverMsg.size())
-		N_MY::msg("------ Server Response sent to client -----\n\n");
-	else
+	if (bytesSent == -1)
 		N_MY::msg("Error sending response to client");
+	else if (bytesSent == 0)
+		N_MY::msg("Server closed the connection with the client");
+	else
+		N_MY::msg("Server sent a response to the client\n\n");
 }
 
 void Server::sendErrorResponse(int client_fd, int statuscode)
@@ -239,4 +255,5 @@ void	Server::sig_handler(int signo)
 {
 	cout << "Ah you click signal " << signo << endl;
 	server_instance->closeServer();
+	exit(0);
 }

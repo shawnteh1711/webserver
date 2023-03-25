@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/22 19:46:00 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/25 18:26:10 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,8 +39,10 @@ class	Server
 	static Server		*server_instance;
 	
 	public:
+		Server(void);
 		Server(std::string ip_address, int port);
 		~Server();
+		Server(const Server & src);
 
 		void	startListen();
 
