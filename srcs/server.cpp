@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/25 19:06:04 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/25 19:58:40 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,9 @@ Server::Server(string ip_address, int port)
 {
 	_socketAddr.sin_family = AF_INET;
 	_socketAddr.sin_port = htons(_port);
-	_socketAddr.sin_addr.s_addr = inet_addr(_ip.c_str());
+	//_socketAddr.sin_addr.s_addr = inet_addr(_ip.c_str());
+	//_socketAddr.sin_addr.s_addr = in6addr_any;
+	_socketAddr.sin_addr.s_addr = INADDR_ANY;
 	// ip is string, s_addr is unsigned int
 	// because of dot. so need inet_addr. 
 
@@ -99,7 +101,7 @@ void	Server::startListen()
 	if (listen(_sockfd, 20) < 0)
 		N_MY::ErrorExit("Socket listen failed");
 	ss << "\n*** Listening on ADDRESS: " 
-		<< inet_ntoa(_socketAddr.sin_addr);
+		<< inet_ntoa(_socketAddr.sin_addr) << " PORT: " << this->_port;
 	N_MY::msg(ss.str());
 
 	// Create an array of pollfd structs,

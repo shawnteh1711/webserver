@@ -6,12 +6,11 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/25 19:14:49 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/25 19:51:42 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "server.hpp"
-#include "parse8.hpp"
+#include "webserver.hpp"
 
 //int	main()
 //{
@@ -314,58 +313,35 @@ void	setup(vector<Server_Detail> & d_servers, char **argv)
 void	test(char **argv)
 {
 	vector<Server_Detail>	d_servers;
-	int						max_servers;
+	int						max_servers; // total server
+	vector<Server*>		servers;
+
 
 	setup(d_servers, argv);
 	max_servers = alecprintf(&d_servers);
-	cout << "max_servers: " << max_servers << endl;
-	vector<Server*>		servers;
-	vector<pthread_t>	threads(max_servers);
 	vector<Server_Detail>::iterator it, ite;
 	it = d_servers.begin();
 	ite = d_servers.end();
 	signal(SIGINT, Server::sig_handler);
 	signal(SIGTSTP, Server::sig_handler);
-	//servers.push_back(Server("127.0.0.1", 8080));
-	//servers[0].startListen();
-	//Server	server("127.0.0.1", stoi(it->port));
-	//server.startListen();
-//	servers[0].startListen();
-//	int i = 0;
-//	while (it != ite)
-//	{
-//		cout << "it->port: " << it->port << endl;
-//		servers.push_back(new Server("193.184.216.34", stoi(it->port)));
-//		pthread_create(&threads[i], NULL, startListen, servers[i]);
-//		i++;
-//		it++;
-//	}
-	cout << "end of loop" << endl;
-//	for (int s = 0; s < max_servers; s++)
-//		pthread_join(threads[s], NULL);
-//	pthread_create(&threads[0], NULL, startListen, &servers[0]);
-//	pthread_create(&threads[1], NULL, startListen, &servers[1]);
-//	pthread_join(threads[0], NULL);
-//	pthread_join(threads[1], NULL);
-//	servers[1]->startListen();
+	vector<pthread_t>	threads(max_servers);
+	
+	int i = 0;
+	while (it != ite)
+	{
+		cout << "it->port: " << it->port << endl;
+		servers.push_back(new Server("127.0.0.1", stoi(it->port)));
+		pthread_create(&threads[i], NULL, startListen, servers[i]);
+		i++;
+		it++;
+	}
+	for (int s = 0; s < max_servers; s++)
+		pthread_join(threads[s], NULL);
 
 //	get_ip();
 //	get_ip2();
 //	get_ip3();
 
-	// alec
-	Server	server = Server("164.2.2.1", 8080);
-//	Server	server2 = Server("127.0.0.1", 5000);
-//	signal(SIGINT, Server::sig_handler);
-//	signal(SIGTSTP, Server::sig_handler);
-
-//	server.startListen();
-//	pthread_t	thread1, thread2;
-//	pthread_create(&thread1, NULL, startListen, &server);
-//	pthread_create(&thread2, NULL, startListen, &server2);
-
-//	pthread_join(thread1, NULL);
-//	pthread_join(thread2, NULL);
 	(void)argv;
 }
 
