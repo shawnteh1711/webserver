@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/27 15:23:04 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/27 16:04:34 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,16 +20,18 @@
 
 class	Server
 {
-	vector<Server_Detail>	servers;
-//	int						_port;
-	int						_sockfd;
-	int						_clientfd;
-	string					_serverMsg;
+	vector<Server_Detail>		servers;
+//	int							_port;
+	vector<int>					_sockfds;
+//	int							_sockfd;
+	int							_clientfd;
+	string						_serverMsg;
 //	string					_ip;
-	struct sockaddr_in		_socketAddr;
-	unsigned int			_socketAddr_len;
+	vector<struct sockaddr_in>	_socketAddrs;
+//	struct sockaddr_in			_socketAddr;
+	unsigned int				_socketAddr_len;
 
-	int			startServer();
+	int				startServer(int index);
 	void			closeServer();
 	void			acceptConnection(int &new_socket);
 	string			buildResponse();

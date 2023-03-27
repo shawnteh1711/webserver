@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/27 15:22:56 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/27 16:12:15 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,25 +37,39 @@ Server *Server::server_instance = NULL;
 
 // d_servers's port is string type
 Server::Server(vector<Server_Detail> & d_servers)
-	: servers(d_servers), _sockfd(), _clientfd(),
-	_serverMsg(buildResponse()),
-	_socketAddr(), _socketAddr_len(sizeof(_socketAddr))
+	: servers(d_servers), _sockfds(d_servers.size()), _clientfd(),
+	_serverMsg(buildResponse()), _socketAddrs(d_servers.size()) , _socketAddr_len(sizeof(_socketAddrs[0]))
+//	_socketAddr(), _socketAddr_len(sizeof(_socketAddr))
 {
-	cout << "servers[0].port: " << servers[0].port << endl;
-	_socketAddr.sin_family = AF_INET;
-	_socketAddr.sin_port = htons(stoi(servers[0].port));
-	//_socketAddr.sin_addr.s_addr = inet_addr(_ip.c_str());
-	//_socketAddr.sin_addr.s_addr = in6addr_any;
-	_socketAddr.sin_addr.s_addr = INADDR_ANY;
-	// ip is string, s_addr is unsigned int
-	// because of dot. so need inet_addr. 
-
-	if (startServer() != 0)
+	cout << "seervers: " << d_servers.size() << endl;
+	vector<Server_Detail>::iterator it, ite;
+	it = d_servers.begin();
+	ite = d_servers.end();
+	int	i = 0;
+	while (it != ite)
 	{
-		ostringstream ss;
-		ss << "Failed to start server with PORT: " << ntohs(_socketAddr.sin_port);
-		N_MY::msg(ss.str());
+		_socketAddrs[i].sin_family = AF_INET;
+		_socketAddrs[i].sin_port = htons(stoi(servers[i].port));
+		_socketAddrs[i].sin_addr.s_addr = INADDR_ANY;
+		if (startServer(i) != 0)
+		{
+			ostringstream ss;
+			ss << "Failed to start server with PORT: " << ntohs(_socketAddrs[i].sin_port);
+			N_MY::msg(ss.str());
+		}
+		it++;
+		i++;
 	}
+//	_socketAddr.sin_family = AF_INET;
+//	_socketAddr.sin_port = htons(stoi(servers[0].port));
+//	_socketAddr.sin_addr.s_addr = INADDR_ANY;
+
+//	if (startServer() != 0)
+//	{
+//		ostringstream ss;
+//		ss << "Failed to start server with PORT: " << ntohs(_socketAddr.sin_port);
+//		N_MY::msg(ss.str());
+//	}
 	server_instance = this;
 }
 
@@ -71,15 +85,16 @@ Server::~Server()
 	closeServer();
 }
 
-int	Server::startServer()
+int	Server::startServer(int index)
 {
 	int	reuse = 1;
-	_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (_sockfd < 0)
+	cout << "index: " << index << endl;
+	_sockfds[index] = socket(AF_INET, SOCK_STREAM, 0); // create sockfd 
+	if (_sockfds[index] < 0)
 		return N_MY::ErrorExit("Cannot create socket");
-	if (setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
+	if (setsockopt(_sockfds[index], SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
 		return N_MY::ErrorExit("Cannot set socket option");
-	if (bind(_sockfd, (sockaddr*)&_socketAddr, _socketAddr_len) < 0)
+	if (bind(_sockfds[index], (sockaddr*)&_socketAddrs[index], _socketAddr_len) < 0)
 	{
 		std::perror(std::strerror(errno));
 		return N_MY::ErrorExit("Cannot connect socket to address");
@@ -89,7 +104,8 @@ int	Server::startServer()
 
 void	Server::closeServer()
 {
-	close(_sockfd);
+	for (size_t i = 0; i < _sockfds.size(); i++)
+		close(_sockfds[i]);
 	close(_clientfd);
 //	exit(0);
 }
@@ -100,10 +116,10 @@ void	Server::startListen()
 	int		bytes;
 	char		buffer[BUF_SIZE];
 	
-	if (listen(_sockfd, 20) < 0)
+	if (listen(_sockfds[0], 20) < 0)
 		N_MY::ErrorExit("Socket listen failed");
 	ss << "\n*** Listening on ADDRESS: " 
-		<< inet_ntoa(_socketAddr.sin_addr) << " PORT: " << servers[0].port;
+		<< inet_ntoa(_socketAddrs[0].sin_addr) << " PORT: " << servers[0].port;
 	N_MY::msg(ss.str());
 
 	// Create an array of pollfd structs,
@@ -111,7 +127,7 @@ void	Server::startListen()
 	const int	MAX_CLIENTS = 10;
 	struct pollfd	fds[MAX_CLIENTS + 1];
 	memset(fds, 0, sizeof(fds));
-	fds[0].fd = _sockfd;
+	fds[0].fd = _sockfds[0];
 	fds[0].events = POLLIN;
 
 	int nfds = 1; // Number of active socket fds.
@@ -134,9 +150,12 @@ void	Server::startListen()
 		for (int i = 1; i < nfds; i++)
 		{
 			if (fds[i].revents & POLLIN)
-			{
+			{ 
+				// sorry just now my explanation wrong.
+				//
 				bzero(buffer, BUF_SIZE);
-				bytes = recv(fds[i].fd, buffer, BUF_SIZE, 0);
+				bytes = recv(fds[i].fd, buffer, BUF_SIZE, 0); // recv 1 time per loop
+				// buffer is from client. 
 				if (bytes  == -1)
 					N_MY::msg(RED"Failed to read bytes from client socket connection"RESET);
 				if (bytes == 0)
@@ -181,11 +200,11 @@ void	Server::startListen()
 
 void	Server::acceptConnection(int &new_client)
 {
-	new_client = accept(_sockfd, (sockaddr*)&_socketAddr, &_socketAddr_len);
+	new_client = accept(_sockfds[0], (sockaddr*)&_socketAddrs[0], &_socketAddr_len);
 	if (new_client < 0)
 	{
 		ostringstream ss;
-		ss << "Server failed to accept incoming connection from ADDRESS: " << inet_ntoa(_socketAddr.sin_addr) << "; PORT: " << ntohs(_socketAddr.sin_port);
+		ss << "Server failed to accept incoming connection from ADDRESS: " << inet_ntoa(_socketAddrs[0].sin_addr) << "; PORT: " << ntohs(_socketAddrs[0].sin_port);
 		N_MY::ErrorExit(ss.str());
 	}
 }
