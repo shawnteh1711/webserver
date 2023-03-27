@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/27 12:37:00 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/27 14:31:35 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/27 17:45:04 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,7 +96,9 @@ int	main()
 		if (pollfds[0].revents & POLLIN)
 		{
 			cout << "enter server fd ONE" << endl;
+			cout << "OLD PORT?" << ntohs(addr1.sin_port) << endl;
 			int	new_socket = accept(server_fd1, (struct sockaddr*)&addr1, (socklen_t*)&addrlen); // new_socket is actually new_client_fd.
+			cout << "NEW PORT?" << ntohs(addr1.sin_port) << endl;
 			// here need to implement client fd's write, rev & need to add pollfd too.
 			if (new_socket < 0)
 			{

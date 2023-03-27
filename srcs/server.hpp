@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/27 16:04:34 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/27 17:20:59 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 class	Server
 {
 	vector<Server_Detail>		servers;
+	size_t						total;
 //	int							_port;
 	vector<int>					_sockfds;
 //	int							_sockfd;
@@ -33,7 +34,7 @@ class	Server
 
 	int				startServer(int index);
 	void			closeServer();
-	void			acceptConnection(int &new_socket);
+	void			acceptConnection(int &new_socket, int index);
 	string			buildResponse();
 	void			sendResponse(int client_fd);
 	void			sendErrorResponse(int client_fd, int statuscode);
