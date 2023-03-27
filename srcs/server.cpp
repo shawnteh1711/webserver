@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/25 19:58:40 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/27 15:22:56 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,17 +31,19 @@ namespace N_MY
 
 Server *Server::server_instance = NULL;
 
-Server::Server(void)
-	: _port(-1), _sockfd(-1), _clientfd(-1), _serverMsg(),
-	_ip(), _socketAddr(), _socketAddr_len(){}
+//Server::Server(void)
+//	: servers(), _port(-1), _sockfd(-1), _clientfd(-1), _serverMsg(),
+//	_ip(), _socketAddr(), _socketAddr_len(){}
 
-Server::Server(string ip_address, int port)
-	: _port(port), _sockfd(), _clientfd(),
-	_serverMsg(buildResponse()), _ip(ip_address),
+// d_servers's port is string type
+Server::Server(vector<Server_Detail> & d_servers)
+	: servers(d_servers), _sockfd(), _clientfd(),
+	_serverMsg(buildResponse()),
 	_socketAddr(), _socketAddr_len(sizeof(_socketAddr))
 {
+	cout << "servers[0].port: " << servers[0].port << endl;
 	_socketAddr.sin_family = AF_INET;
-	_socketAddr.sin_port = htons(_port);
+	_socketAddr.sin_port = htons(stoi(servers[0].port));
 	//_socketAddr.sin_addr.s_addr = inet_addr(_ip.c_str());
 	//_socketAddr.sin_addr.s_addr = in6addr_any;
 	_socketAddr.sin_addr.s_addr = INADDR_ANY;
@@ -57,11 +59,11 @@ Server::Server(string ip_address, int port)
 	server_instance = this;
 }
 
-Server::Server(const Server & src)
-: _port(src._port), _sockfd(src._sockfd), _clientfd(src._clientfd),
-	_serverMsg(src._serverMsg), _ip(src._ip),
-	_socketAddr(src._socketAddr), _socketAddr_len(src._socketAddr_len)
-{}
+//Server::Server(const Server & src)
+//: _port(src._port), _sockfd(src._sockfd), _clientfd(src._clientfd),
+//	_serverMsg(src._serverMsg), _ip(src._ip),
+//	_socketAddr(src._socketAddr), _socketAddr_len(src._socketAddr_len)
+//{}
 
 Server::~Server()
 {
@@ -101,7 +103,7 @@ void	Server::startListen()
 	if (listen(_sockfd, 20) < 0)
 		N_MY::ErrorExit("Socket listen failed");
 	ss << "\n*** Listening on ADDRESS: " 
-		<< inet_ntoa(_socketAddr.sin_addr) << " PORT: " << this->_port;
+		<< inet_ntoa(_socketAddr.sin_addr) << " PORT: " << servers[0].port;
 	N_MY::msg(ss.str());
 
 	// Create an array of pollfd structs,
@@ -154,7 +156,7 @@ void	Server::startListen()
 						cout << "methodPos: " << methodPos << endl;
 					//	if (methodPos == string::npos)
 					//		sendErrorResponse(fds[i].fd, 400); 
-						if (methodPos != 10)
+						if (methodPos == 10)
 							sendErrorResponse(fds[i].fd, 400); 
 						else
 						{
@@ -194,7 +196,7 @@ string Server::buildResponse()
 	ostringstream ss;
 	ss << "HTTP/1.1 200 OK\r\n"
 	   << "Content-Type: text/html\r\n"
-	   << "Content-Length: " << htmlFile.size()
+	   << "Content-Length: " << htmlFile.size() 
 	   << "\r\n\r\n"
 	   << htmlFile;
 	return ss.str();
@@ -204,6 +206,7 @@ void Server::sendResponse(int client_fd)
 {
 	long	bytesSent;
 
+	// send(client_fd, _serverMsg.c_str()n
 	bytesSent = send(client_fd, _serverMsg.c_str(), _serverMsg.size(), 0);
 	if (bytesSent == -1)
 		N_MY::msg("Error sending response to client");
@@ -246,11 +249,6 @@ void Server::sendErrorResponse(int client_fd, int statuscode)
 		N_MY::msg("---- Server Error Response sent to client ---- \n\n");
 	else
 		N_MY::msg("Error sending response to client");
-}
-
-int	Server::get_port(void) const
-{
-	return (this->_port);
 }
 
 void	Server::sig_handler(int signo)

@@ -6,11 +6,11 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/25 19:51:42 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/27 15:18:50 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "webserver.hpp"
+#include "server.hpp"
 
 //int	main()
 //{
@@ -314,7 +314,7 @@ void	test(char **argv)
 {
 	vector<Server_Detail>	d_servers;
 	int						max_servers; // total server
-	vector<Server*>		servers;
+//	vector<Server*>		servers;
 
 
 	setup(d_servers, argv);
@@ -324,19 +324,24 @@ void	test(char **argv)
 	ite = d_servers.end();
 	signal(SIGINT, Server::sig_handler);
 	signal(SIGTSTP, Server::sig_handler);
-	vector<pthread_t>	threads(max_servers);
-	
-	int i = 0;
-	while (it != ite)
-	{
-		cout << "it->port: " << it->port << endl;
-		servers.push_back(new Server("127.0.0.1", stoi(it->port)));
-		pthread_create(&threads[i], NULL, startListen, servers[i]);
-		i++;
-		it++;
-	}
-	for (int s = 0; s < max_servers; s++)
-		pthread_join(threads[s], NULL);
+	Server	s1(d_servers);
+
+	s1.startListen();
+
+
+//	vector<pthread_t>	threads(max_servers);
+//	
+//	int i = 0;
+//	while (it != ite)
+//	{
+//		cout << "it->port: " << it->port << endl;
+//		servers.push_back(new Server("127.0.0.1", stoi(it->port)));
+//		pthread_create(&threads[i], NULL, startListen, servers[i]);
+//		i++;
+//		it++;
+//	}
+//	for (int s = 0; s < max_servers; s++)
+//		pthread_join(threads[s], NULL);
 
 //	get_ip();
 //	get_ip2();

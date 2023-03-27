@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/25 19:40:59 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/25 19:41:20 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/27 15:19:30 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #ifndef TOKEN_HPP
 # define  TOKEN_HPP
 
-#include "server.hpp"
+#include "lib.hpp"
 
 struct configItem;
 struct Directive;
