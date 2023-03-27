@@ -22,16 +22,19 @@ class Request
         string _request;
         string _cgi_path;
     public:
+        Request();
         Request(const string& request);
         ~Request();
         bool isCgiRequest() const;
+        bool is_cgi_request();
         string  getMethod() const;
         string  getQueryString() const;
         string  getHeader(const string& header_name) const;
         string  getAddress() const;
         string  getCgiPath() const;
         void    setCgiPath(string path);
-        string  parseCgiPath(string request);
+        void    setRequest(string request);
+        string  parseCgiPath();
 };
 
 class Response
