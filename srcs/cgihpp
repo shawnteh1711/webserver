@@ -20,6 +20,7 @@ class Request
 {
     private:
         string _request;
+        string _cgi_path;
     public:
         Request(const string& request);
         ~Request();
@@ -28,6 +29,9 @@ class Request
         string  getQueryString() const;
         string  getHeader(const string& header_name) const;
         string  getAddress() const;
+        string  getCgiPath() const;
+        void    setCgiPath(string path);
+        string  parseCgiPath(string request);
 };
 
 class Response
@@ -36,7 +40,7 @@ class Response
         void    setStatusCode(int code);
         void    setContentType(const string& type);
         void    setContent(const char* content, int length);
-        string  toString() const;
+        string  restoString() const;
 
     private:
         int             _status_code;

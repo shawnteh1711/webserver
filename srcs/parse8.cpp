@@ -1,11 +1,5 @@
 #include "parse8.hpp"
 
-#define RESET   "\033[0m"
-#define RED     "\033[31m"
-#define GREEN   "\033[32m"
-#define YELLOW  "\033[33m"      
-#define BLUE    "\033[34m"
-
 string trimLine(const string &str)
 {
     size_t  start;
@@ -289,8 +283,11 @@ vector<Server_Detail> Config::setServer(Config& config)
 
 Server_Detail Config::createServer(const Directive& directive)
 {
+	static int i = 1;
     Server_Detail new_server;
     vector<Directive>::const_iterator block_directive_it;
+
+	new_server.id = i++;
 
     for (block_directive_it = directive.block.begin(); block_directive_it != directive.block.end(); ++block_directive_it)
     {

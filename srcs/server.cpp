@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/22 20:55:09 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/28 15:17:54 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,9 @@ namespace N_MY
 
 	int	ErrorExit(const string &errorMessage)
 	{
+		cout << RED;
 		msg("ERROR: " + errorMessage);
+		cout << RESET;
 		exit(1);
 		return (1);
 	}
@@ -29,43 +31,70 @@ namespace N_MY
 
 Server *Server::server_instance = NULL;
 
-Server::Server(string ip_address, int port)
-	: _port(port), _sockfd(), _clientfd(),
-	_serverMsg(buildResponse()), _ip(ip_address),
-	_socketAddr(), _socketAddr_len(sizeof(_socketAddr))
-{
-	_socketAddr.sin_family = AF_INET;
-	_socketAddr.sin_port = htons(_port);
-	_socketAddr.sin_addr.s_addr = inet_addr(_ip.c_str()); // s_addr is string
-	// ip is string, s_addr is unsigned int
-	// because of dot. so need inet_addr. 
-	cout << "!!!!!!!!!!!!!!!!!!!!!!!!!IPADDRESS: " << _ip << endl;
-	cout << "!!!!!!!!!!!!!!!!!!!!!!!!!S_ADDR: " << _socketAddr.sin_addr.s_addr << endl;
-	cout << "convert back to: " << inet_ntoa(_socketAddr.sin_addr) << endl;
+//Server::Server(void)
+//	: servers(), _port(-1), _sockfd(-1), _clientfd(-1), _serverMsg(),
+//	_ip(), _socketAddr(), _socketAddr_len(){}
 
-	if (startServer() != 0)
+// d_servers's port is string type
+Server::Server(vector<Server_Detail> & d_servers)
+	: servers(d_servers), total(d_servers.size()), 
+	_sockfds(total), _clientfd(),
+	_serverMsg(buildResponse()), _socketAddrs(total) , _socketAddr_len(sizeof(_socketAddrs[0]))
+//	_socketAddr(), _socketAddr_len(sizeof(_socketAddr))
+{
+	cout << "seervers: " << total << endl;
+	vector<Server_Detail>::iterator it, ite;
+	it = d_servers.begin();
+	ite = d_servers.end();
+	int	i = 0;
+	while (it != ite)
 	{
-		ostringstream ss;
-		ss << "Failed to start server with PORT: " << ntohs(_socketAddr.sin_port);
-		N_MY::msg(ss.str());
+		_socketAddrs[i].sin_family = AF_INET;
+		_socketAddrs[i].sin_port = htons(stoi(servers[i].port));
+		_socketAddrs[i].sin_addr.s_addr = INADDR_ANY;
+		if (startServer(i) != 0)
+		{
+			ostringstream ss;
+			ss << "Failed to start server with PORT: " << ntohs(_socketAddrs[i].sin_port);
+			N_MY::msg(ss.str());
+		}
+		it++;
+		i++;
 	}
+//	_socketAddr.sin_family = AF_INET;
+//	_socketAddr.sin_port = htons(stoi(servers[0].port));
+//	_socketAddr.sin_addr.s_addr = INADDR_ANY;
+
+//	if (startServer() != 0)
+//	{
+//		ostringstream ss;
+//		ss << "Failed to start server with PORT: " << ntohs(_socketAddr.sin_port);
+//		N_MY::msg(ss.str());
+//	}
 	server_instance = this;
 }
 
+//Server::Server(const Server & src)
+//: _port(src._port), _sockfd(src._sockfd), _clientfd(src._clientfd),
+//	_serverMsg(src._serverMsg), _ip(src._ip),
+//	_socketAddr(src._socketAddr), _socketAddr_len(src._socketAddr_len)
+//{}
+
 Server::~Server()
 {
+	cout << RED << "Server close" << RESET << endl;
 	closeServer();
 }
 
-int	Server::startServer()
+int	Server::startServer(int index)
 {
 	int	reuse = 1;
-	_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (_sockfd < 0)
+	_sockfds[index] = socket(AF_INET, SOCK_STREAM, 0); // create sockfd 
+	if (_sockfds[index] < 0)
 		return N_MY::ErrorExit("Cannot create socket");
-	if (setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
+	if (setsockopt(_sockfds[index], SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
 		return N_MY::ErrorExit("Cannot set socket option");
-	if (bind(_sockfd, (sockaddr*)&_socketAddr, _socketAddr_len) < 0)
+	if (bind(_sockfds[index], (sockaddr*)&_socketAddrs[index], _socketAddr_len) < 0)
 	{
 		std::perror(std::strerror(errno));
 		return N_MY::ErrorExit("Cannot connect socket to address");
@@ -75,32 +104,33 @@ int	Server::startServer()
 
 void	Server::closeServer()
 {
-	close(_sockfd);
+	for (size_t i = 0; i < _sockfds.size(); i++)
+		close(_sockfds[i]);
 	close(_clientfd);
-	exit(0);
+//	exit(0);
 }
 
 void	Server::startListen()
 {
 	ostringstream	ss;
-	int		bytes;
-	char		buffer[BUF_SIZE];
-	
-	if (listen(_sockfd, 20) < 0)
-		N_MY::ErrorExit("Socket listen failed");
-	ss << "\n*** Listening on ADDRESS: " 
-		<< inet_ntoa(_socketAddr.sin_addr);
-	N_MY::msg(ss.str());
+	int				bytes;
+	char			buffer[BUF_SIZE];
+	const int		MAX_CLIENTS = 10;
+	struct pollfd	*fds = new struct pollfd[MAX_CLIENTS + total];
+	int				nfds = total; // total of socket descriptors
 
-	// Create an array of pollfd structs,
-	// one for the listening socket
-	const int	MAX_CLIENTS = 10;
-	struct pollfd	fds[MAX_CLIENTS + 1];
-	memset(fds, 0, sizeof(fds));
-	fds[0].fd = _sockfd;
-	fds[0].events = POLLIN;
+	memset(fds, 0, sizeof(*fds) * (MAX_CLIENTS + total));
+	for (size_t i = 0; i < total; i++)
+	{
+		if (listen(_sockfds[i], 20) < 0)
+			N_MY::ErrorExit("Socket listen failed");
+		ss << "\n*** Listening on ADDRESS: "
+			<< inet_ntoa(_socketAddrs[i].sin_addr) << " PORT: " << servers[i].port;
+		N_MY::msg(ss.str());
+		fds[i].fd = _sockfds[i];
+		fds[i].events = POLLIN;
+	}
 
-	int nfds = 1; // Number of active socket fds.
 	while (1)
 	{
 		int rv = poll(fds, nfds, -1);
@@ -108,50 +138,60 @@ void	Server::startListen()
 			N_MY::ErrorExit("poll() failed");
 
 		// Check if there is a new connection waiting on ther listening
-		if (fds[0].revents & POLLIN)
-		{
-			acceptConnection(_clientfd);
-			fds[nfds].fd = _clientfd;
-			fds[nfds].events = POLLIN;
-			nfds++;
-			N_MY::msg("--- New client connected ---");
-		}
-
-		for (int i = 1; i < nfds; i++)
+		// check server fd's side
+		for (size_t i = 0; i < total; i++)
 		{
 			if (fds[i].revents & POLLIN)
 			{
+				acceptConnection(_clientfd, i);
+				fds[nfds].fd = _clientfd;
+				fds[nfds].events = POLLIN;
+				nfds++;
+				N_MY::msg("--- New client connected ---");
+			}
+		}
+		
+		// Check client fd's side
+		// recv from client & also send to client fd too
+		for (int i = total; i < nfds; i++)
+		{
+			if (fds[i].revents & POLLIN)
+			{ 
 				bzero(buffer, BUF_SIZE);
-				bytes = recv(fds[i].fd, buffer, BUF_SIZE, 0);
-				if (bytes < 0)
-					N_MY::ErrorExit("Failed to read bytes from client socket connection");
-
-				// Check the limit of the client body size
-				string clientRequest(buffer, bytes);
-				cout << "clientRequest: " << clientRequest << endl;
-				size_t bodyPos = clientRequest.find("\r\n\r\n") + 4;
-				size_t bodySize = bytes - bodyPos;
-
-				if (bodySize <= LIMIT_SIZE)
-				{
-					size_t methodPos = clientRequest.find(" ");
-					cout << "methodPos: " << methodPos << endl;
-				//	if (methodPos == string::npos)
-				//		sendErrorResponse(fds[i].fd, 400); 
-					if (methodPos != 10)
-						sendErrorResponse(fds[i].fd, 400); 
-					else
-					{
-						N_MY::msg("--- Received Request from client ---");
-						sendResponse(fds[i].fd);
-						
-					}
-				}
+				bytes = recv(fds[i].fd, buffer, BUF_SIZE, 0); // recv 1 time per loop
+				// buffer is from client. 
+				if (bytes  == -1)
+					N_MY::msg(RED"Failed to read bytes from client socket connection"RESET);
+				if (bytes == 0)
+					N_MY::msg("The client has closed the connection");
 				else
-					N_MY::msg("Client body size exceeded the limit\n\n");
+				{
+					// Check the limit of the client body size
+					string clientRequest(buffer, bytes);
+					cout << "clientRequest: " << clientRequest << endl;
+					size_t bodyPos = clientRequest.find("\r\n\r\n") + 4;
+					size_t bodySize = bytes - bodyPos;
 
+					cout << "bodySize: " << bodySize << endl;
+					cout << "LIMIT_SIZE: " << LIMIT_SIZE << endl;
+					if (bodySize <= LIMIT_SIZE)
+					{
+						size_t methodPos = clientRequest.find(" ");
+						cout << "methodPos: " << methodPos << endl;
+					//	if (methodPos == string::npos)
+					//		sendErrorResponse(fds[i].fd, 400); 
+						if (methodPos == 10)
+							sendErrorResponse(fds[i].fd, 400); 
+						else
+						{
+							N_MY::msg("--- Received Request from client ---");
+							sendResponse(fds[i].fd);			
+						}
+					}
+					else
+						N_MY::msg("Client body size exceeded the limit\n\n");
+				}
 				close(fds[i].fd);
-
 				// Remove the client socket from the array
 				nfds--;
 				fds[i] = fds[nfds];
@@ -159,15 +199,16 @@ void	Server::startListen()
 			}
 		}
 	}
+	delete [] fds;
 }
 
-void	Server::acceptConnection(int &new_client)
+void	Server::acceptConnection(int &new_client, int index)
 {
-	new_client = accept(_sockfd, (sockaddr*)&_socketAddr, &_socketAddr_len);
+	new_client = accept(_sockfds[index], (sockaddr*)&_socketAddrs[index], &_socketAddr_len);
 	if (new_client < 0)
 	{
 		ostringstream ss;
-		ss << "Server failed to accept incoming connection from ADDRESS: " << inet_ntoa(_socketAddr.sin_addr) << "; PORT: " << ntohs(_socketAddr.sin_port);
+		ss << "Server failed to accept incoming connection from ADDRESS: " << inet_ntoa(_socketAddrs[index].sin_addr) << "; PORT: " << ntohs(_socketAddrs[index].sin_port);
 		N_MY::ErrorExit(ss.str());
 	}
 }
@@ -178,7 +219,7 @@ string Server::buildResponse()
 	ostringstream ss;
 	ss << "HTTP/1.1 200 OK\r\n"
 	   << "Content-Type: text/html\r\n"
-	   << "Content-Length: " << htmlFile.size()
+	   << "Content-Length: " << htmlFile.size() 
 	   << "\r\n\r\n"
 	   << htmlFile;
 	return ss.str();
@@ -188,11 +229,14 @@ void Server::sendResponse(int client_fd)
 {
 	long	bytesSent;
 
+	// send(client_fd, _serverMsg.c_str()n
 	bytesSent = send(client_fd, _serverMsg.c_str(), _serverMsg.size(), 0);
-	if (bytesSent == (long)_serverMsg.size())
-		N_MY::msg("------ Server Response sent to client -----\n\n");
-	else
+	if (bytesSent == -1)
 		N_MY::msg("Error sending response to client");
+	else if (bytesSent == 0)
+		N_MY::msg("Server closed the connection with the client");
+	else
+		N_MY::msg("Server sent a response to the client\n\n");
 }
 
 void Server::sendErrorResponse(int client_fd, int statuscode)
@@ -230,13 +274,9 @@ void Server::sendErrorResponse(int client_fd, int statuscode)
 		N_MY::msg("Error sending response to client");
 }
 
-int	Server::get_port(void) const
-{
-	return (this->_port);
-}
-
 void	Server::sig_handler(int signo)
 {
 	cout << "Ah you click signal " << signo << endl;
 	server_instance->closeServer();
+	exit(0);
 }

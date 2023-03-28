@@ -1,30 +1,37 @@
-# include <string>
-# include <vector>
-# include <iostream>
-# include <sstream>
-# include <fstream>
-# include <map>
-# include <utility>
-#include "lib.hpp"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parse8.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/03/25 19:40:59 by leng-chu          #+#    #+#             */
+/*   Updated: 2023/03/27 15:19:30 by leng-chu         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 
 #ifndef TOKEN_HPP
 # define  TOKEN_HPP
-using namespace std;
+
+#include "lib.hpp"
 
 struct configItem;
 struct Directive;
 
 struct Server_Detail
 {
-    string              serverName;
+	int					id;
+    string              serverName; // this is good, direct get without loop
     string              port;
     string              clientMaxBodySize;
-    vector<string>      errorPage;
+    vector<string>      errorPage; // this is ok, one time loop
     string              root;
     string              index;
     string              autoIndex;
     string              redirection;
-    vector<Directive>   locations;
+    vector<Directive>   locations; // lol this is using 6 loops
+	multimap<string, multimap<string, string> >	mylocations; // this is using 3 loops only
 };
 
 struct Config
@@ -55,9 +62,9 @@ struct configItem
 struct Directive
 {
     string              directive;
-    vector<string>      args;
+    vector<string>      args; // one loop
     int                 line;
-    vector<Directive>   block;
+    vector<Directive>   block; // 4 loops 
 };
 
 #endif
