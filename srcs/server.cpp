@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/28 14:28:26 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/28 15:17:54 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,6 +152,7 @@ void	Server::startListen()
 		}
 		
 		// Check client fd's side
+		// recv from client & also send to client fd too
 		for (int i = total; i < nfds; i++)
 		{
 			if (fds[i].revents & POLLIN)
@@ -170,7 +171,9 @@ void	Server::startListen()
 					cout << "clientRequest: " << clientRequest << endl;
 					size_t bodyPos = clientRequest.find("\r\n\r\n") + 4;
 					size_t bodySize = bytes - bodyPos;
-	
+
+					cout << "bodySize: " << bodySize << endl;
+					cout << "LIMIT_SIZE: " << LIMIT_SIZE << endl;
 					if (bodySize <= LIMIT_SIZE)
 					{
 						size_t methodPos = clientRequest.find(" ");

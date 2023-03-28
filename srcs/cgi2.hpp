@@ -20,14 +20,21 @@ class Request
 {
     private:
         string _request;
+        string _cgi_path;
     public:
+        Request();
         Request(const string& request);
         ~Request();
         bool isCgiRequest() const;
+        bool is_cgi_request();
         string  getMethod() const;
         string  getQueryString() const;
         string  getHeader(const string& header_name) const;
         string  getAddress() const;
+        string  getCgiPath() const;
+        void    setCgiPath(string path);
+        void    setRequest(string request);
+        string  parseCgiPath();
 };
 
 class Response
@@ -36,7 +43,7 @@ class Response
         void    setStatusCode(int code);
         void    setContentType(const string& type);
         void    setContent(const char* content, int length);
-        string  toString() const;
+        string  restoString() const;
 
     private:
         int             _status_code;
