@@ -429,6 +429,7 @@ int handle_cgi(int client_socket, Request& req)
 
         const char* cgi_bin_path = "../cgi-bin/";
         string cgi_path = cgi_bin_path + req.parseCgiPath();
+        cout << cgi_path <<  endl;
         args[0] = const_cast<char*>(cgi_path.c_str());
         args[1] = NULL;
         if (execve(args[0], args, envp) == -1)
