@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/27 18:30:24 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/28 14:28:26 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,11 @@ void	Server::startListen()
 	ostringstream	ss;
 	int				bytes;
 	char			buffer[BUF_SIZE];
+	const int		MAX_CLIENTS = 10;
+	struct pollfd	*fds = new struct pollfd[MAX_CLIENTS + total];
+	int				nfds = total; // total of socket descriptors
 
+	memset(fds, 0, sizeof(*fds) * (MAX_CLIENTS + total));
 	for (size_t i = 0; i < total; i++)
 	{
 		if (listen(_sockfds[i], 20) < 0)
@@ -123,17 +127,10 @@ void	Server::startListen()
 		ss << "\n*** Listening on ADDRESS: "
 			<< inet_ntoa(_socketAddrs[i].sin_addr) << " PORT: " << servers[i].port;
 		N_MY::msg(ss.str());
+		fds[i].fd = _sockfds[i];
+		fds[i].events = POLLIN;
 	}
 
-	// Create an array of pollfd structs,
-	// one for the listening socket
-	const int	MAX_CLIENTS = 10;
-	struct pollfd	fds[MAX_CLIENTS + 1];
-	memset(fds, 0, sizeof(fds));
-	fds[0].fd = _sockfds[0];
-	fds[0].events = POLLIN;
-
-	int nfds = 1; // Number of active socket fds.
 	while (1)
 	{
 		int rv = poll(fds, nfds, -1);
@@ -141,21 +138,24 @@ void	Server::startListen()
 			N_MY::ErrorExit("poll() failed");
 
 		// Check if there is a new connection waiting on ther listening
-		if (fds[0].revents & POLLIN)
+		// check server fd's side
+		for (size_t i = 0; i < total; i++)
 		{
-			acceptConnection(_clientfd, 0);
-			fds[nfds].fd = _clientfd;
-			fds[nfds].events = POLLIN;
-			nfds++;
-			N_MY::msg("--- New client connected ---");
+			if (fds[i].revents & POLLIN)
+			{
+				acceptConnection(_clientfd, i);
+				fds[nfds].fd = _clientfd;
+				fds[nfds].events = POLLIN;
+				nfds++;
+				N_MY::msg("--- New client connected ---");
+			}
 		}
-
-		for (int i = 1; i < nfds; i++)
+		
+		// Check client fd's side
+		for (int i = total; i < nfds; i++)
 		{
 			if (fds[i].revents & POLLIN)
 			{ 
-				// sorry just now my explanation wrong.
-				//
 				bzero(buffer, BUF_SIZE);
 				bytes = recv(fds[i].fd, buffer, BUF_SIZE, 0); // recv 1 time per loop
 				// buffer is from client. 
@@ -165,7 +165,6 @@ void	Server::startListen()
 					N_MY::msg("The client has closed the connection");
 				else
 				{
-
 					// Check the limit of the client body size
 					string clientRequest(buffer, bytes);
 					cout << "clientRequest: " << clientRequest << endl;
@@ -189,9 +188,7 @@ void	Server::startListen()
 					else
 						N_MY::msg("Client body size exceeded the limit\n\n");
 				}
-
 				close(fds[i].fd);
-
 				// Remove the client socket from the array
 				nfds--;
 				fds[i] = fds[nfds];
@@ -199,6 +196,7 @@ void	Server::startListen()
 			}
 		}
 	}
+	delete [] fds;
 }
 
 void	Server::acceptConnection(int &new_client, int index)
