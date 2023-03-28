@@ -94,25 +94,39 @@ bool Request::is_cgi_request()
                 break;
             }
         }
-     
     }
     return (val);
 }
 
 string  Request::getRequestUrl() const
 {
+    size_t  url_pos;
     size_t  space_pos;
     size_t  query_pos;
+    size_t  http_pos;
     string  url;
 
     space_pos = _request.find(' ');
     if (space_pos != string::npos)
     {
-        query_pos = _request.find('?');
-        if (query_pos != string::npos)
-            url = _request.substr(space_pos + 1, query_pos - space_pos - 1);
-        else
-            url = _request.substr(space_pos + 1);
+        url_pos = _request.find('/', space_pos + 1);
+        if (url_pos != string::npos)
+        {
+            query_pos = _request.find('?');
+            if (query_pos != string::npos)
+            {
+                url = _request.substr(url_pos, query_pos - url_pos);
+                cout << "url: " << url << endl;
+            }
+            else
+            {
+                http_pos = _request.find("HTTP/", url_pos);
+                if (http_pos != string::npos)
+                    url = _request.substr(url_pos, http_pos - url_pos - 1);
+                else
+                    url = _request.substr(url_pos);
+            }
+        }
     }
     return (url);
 }
