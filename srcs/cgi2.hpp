@@ -16,6 +16,8 @@
 #include <map>
 
 #define BUFF_SIZE 4096
+#define ENV_SIZE 7
+
 using namespace std;
 
 enum cgi_extension
@@ -31,8 +33,10 @@ class Request
     private:
         string              _request;
         string              _cgi_path;
+        string              _extension;
         int                 _read_size;
         int                 _total_read_size;
+        char*               _envp[ENV_SIZE];
 
     public:
         Request();
@@ -46,6 +50,7 @@ class Request
         string  getQueryString() const;
         string  getHeader(const string& header_name) const;
         string  getAddress() const;
+        string  getExtension() const;
         string  getCgiPath() const;
         int     getTotalReadSize() const;
         int     getReadSize() const;
@@ -54,6 +59,11 @@ class Request
         void    setRequest(string request);
         string  parseCgiPath();
         void    setBuffer(string& buffer, int num_read);
+        void    generateEnvp();
+        int     read_request(int client_socket);
+        char**  getEnvp();
+        void    printEnvp() const;
+        int     handle_cgi(int client_socket);
 };
 
 class Response

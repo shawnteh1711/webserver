@@ -3,17 +3,23 @@
 
 Request::Request() : _request()
 {
+    for (int i = 0; i < ENV_SIZE; i++)
+        _envp[i] = NULL;
     return ;
 }
 
 Request::Request(const string& request) : _request(request)
 {
+    for (int i = 0; i < ENV_SIZE; i++)
+        _envp[i] = NULL;
     return ;
 }
 
 
 Request::Request(string& request, int num_read)
 {
+    for (int i = 0; i < ENV_SIZE; i++)
+        _envp[i] = NULL;
     setBuffer(request, num_read);
     return ;
 }
@@ -77,17 +83,16 @@ bool Request::is_cgi_request()
     bool            val;
     string          uri;
     size_t          dot_pos;
-    string          extension;
 
     val = false;
     uri = getRequestUrl();
     dot_pos = uri.rfind('.');
     if (dot_pos != string::npos)
     {
-        extension = uri.substr(dot_pos);
+        _extension = uri.substr(dot_pos);
         for (int i = 0; i < Unknown; ++i)
         {
-            if (getEntensionType(extension) == static_cast<cgi_extension>(i))
+            if (getEntensionType(_extension) == static_cast<cgi_extension>(i))
             {
                 if (uri.find("/cgi-bin/") != std::string::npos) 
                     val = true;
@@ -106,6 +111,7 @@ string  Request::getRequestUrl() const
     size_t  http_pos;
     string  url;
 
+    cout << "Request" << _request << endl;
     space_pos = _request.find(' ');
     if (space_pos != string::npos)
     {
@@ -116,7 +122,6 @@ string  Request::getRequestUrl() const
             if (query_pos != string::npos)
             {
                 url = _request.substr(url_pos, query_pos - url_pos);
-                cout << "url: " << url << endl;
             }
             else
             {
@@ -190,6 +195,10 @@ string Request::getAddress() const
     return host;
 }
 
+string  Request::getExtension() const
+{
+    return (_extension);
+}
 
 string Request::getCgiPath() const
 {
@@ -380,7 +389,7 @@ int accept_connection(int server_socket)
     return (client_socket);
 }
 
-int read_request(int client_socket, Request& req)
+int Request::read_request(int client_socket)
 {
     string buffer;
 
@@ -405,18 +414,62 @@ int read_request(int client_socket, Request& req)
             }
         }
     }
-    req.setBuffer(buffer, num_read);
+    this->setBuffer(buffer, num_read);
     return (0);
 }
 
-int handle_cgi(int client_socket, Request& req)
+void    Request::generateEnvp()
+{
+    string request_method = "REQUEST_METHOD=" + this->getMethod();
+    string query_string = "QUERY_STRING=" + this->getQueryString();
+    string content_type = "CONTENT_TYPE=" + this->getHeader("Content-Type");
+    string content_length = "CONTENT_LENGTH=" + this->getHeader("Content-Length");
+    string remote_addr = "REMOTE_ADDR=" + this->getAddress();
+    string script_name = "SCRIPT_NAME=" + this->parseCgiPath();
+
+    _envp[0] = const_cast<char*>(request_method.c_str());
+    _envp[1] = const_cast<char*>(query_string.c_str());
+    _envp[2] = const_cast<char*>(content_type.c_str());
+    _envp[3] = const_cast<char*>(content_length.c_str());
+    _envp[4] = const_cast<char*>(remote_addr.c_str());
+    _envp[5] = const_cast<char*>(script_name.c_str());
+    _envp[6] = NULL;
+
+    // for (int i = 0; i < ENV_SIZE; i++) {
+    //     _envp[i] = envp[i];
+    // }
+    this->printEnvp();
+}
+
+char**  Request::getEnvp()
+{
+    return (_envp);
+}
+
+void    Request::printEnvp() const
+{
+    for (int i = 0; i < ENV_SIZE; i++) 
+    {
+        cout << _envp[i] << endl;
+    }
+}
+
+// void    Request::generateArgs()
+// {
+//     string cgi_path = this->parseCgiPath();
+//     _args[0] = const_cast<char*>(cgi_path.c_str());
+//     _args[1] = NULL;
+// }
+
+int Request::handle_cgi(int client_socket)
 {
     pid_t   pid;
-    char*   args[2];
+    char* args[3];
     int     status;
     string  cgi_path;
 
     pid = fork();
+
     if (pid == -1)
     {
         perror("fork");
@@ -424,12 +477,12 @@ int handle_cgi(int client_socket, Request& req)
     }
     else if (pid == 0)
     {
-        string request_method = "REQUEST_METHOD=" + req.getMethod();
-        string query_string = "QUERY_STRING=" + req.getQueryString();
-        string content_type = "CONTENT_TYPE=" + req.getHeader("Content-Type");
-        string content_length = "CONTENT_LENGTH=" + req.getHeader("Content-Length");
-        string remote_addr = "REMOTE_ADDR=" + req.getAddress();
-        string script_name = "SCRIPT_NAME=" + req.parseCgiPath();
+        string request_method = "REQUEST_METHOD=" + this->getMethod();
+        string query_string = "QUERY_STRING=" + this->getQueryString();
+        string content_type = "CONTENT_TYPE=" + this->getHeader("Content-Type");
+        string content_length = "CONTENT_LENGTH=" + this->getHeader("Content-Length");
+        string remote_addr = "REMOTE_ADDR=" + this->getAddress();
+        string script_name = "SCRIPT_NAME=" + this->parseCgiPath();
 
         char *envp[] = {
             const_cast<char*>(request_method.c_str()),
@@ -440,13 +493,24 @@ int handle_cgi(int client_socket, Request& req)
             const_cast<char*>(script_name.c_str()),
             NULL
         };
-
+        // this->generateEnvp();
         const char* cgi_bin_path = "../cgi-bin/";
-        string cgi_path = cgi_bin_path + req.parseCgiPath();
-        cout << cgi_path <<  endl;
-        args[0] = const_cast<char*>(cgi_path.c_str());
-        args[1] = NULL;
+        string cgi_path = cgi_bin_path + this->parseCgiPath();
+        if (this->getExtension() == ".cgi")
+        {
+            args[0] = const_cast<char*>(cgi_path.c_str());
+            args[1] = NULL;
+        }
+        else if (this->getExtension() == ".php")
+        {
+            args[0] = const_cast<char*>("/usr/bin/php");
+            args[1] = const_cast<char*>(cgi_path.c_str());
+            args[2] = NULL;
+        }
+
+        // this->printEnvp();
         if (execve(args[0], args, envp) == -1)
+        // if (execve(args[0], args, this->getEnvp()) == -1)
         {
             cerr <<  "Error: " << strerror(errno) << endl;
             exit(EXIT_FAILURE);
@@ -458,27 +522,17 @@ int handle_cgi(int client_socket, Request& req)
     {
         if (WIFEXITED(status))
         {
-            cout << "Child process exit status" << WIFEXITED(status) << endl;
-            cgi_path = req.parseCgiPath();
-
-            req.setCgiPath(cgi_path);
-            cout << "Method: " << req.getMethod() << endl;
-            cout << "Query: " << req.getQueryString() << endl;
-            cout << "Address: " << req.getAddress() << endl;
-            cout << "Type: " << req.getHeader("Content-Type")<< endl;
-            cout << "Length: " << req.getHeader("Content-Length") << endl;
-            cout << "Path: " << req.parseCgiPath() << endl;
-            // cout << "Cookies: " << req.getCookies() << endl;\
+            cout << "Child process exit status " << WIFEXITED(status) << endl;
             
             // Send the HTTP response back to the client
-            Response res;
-            res.setStatusCode(200);
-            res.setContentType("text/plain");
-            res.setHeader("Set-Cookie", "mycookie=12345; Max-Age=3600; Path=/");
-            res.setContent(req.getRequest().c_str(), req.getReadSize());
-            res.printCookies();
-            string response_str = res.restoString();
-            send(client_socket, response_str.c_str(), response_str.size(), 0);
+            // Response res;
+            // res.setStatusCode(200);
+            // res.setContentType("text/plain");
+            // res.setHeader("Set-Cookie", "mycookie=12345; Max-Age=3600; Path=/");
+            // res.setContent(this->getRequest().c_str(), this->getReadSize());
+            // res.printCookies();
+            // string response_str = res.restoString();
+            // send(client_socket, response_str.c_str(), response_str.size(), 0);
         }
         if (waitpid(pid, &status, 0) == -1)
         {
@@ -512,9 +566,9 @@ int main()
     {
         cout << "+++++++Waiting for new connection+++++++" << endl;
         client_socket = accept_connection(server_socket);
-        read_request(client_socket, req);
+        req.read_request(client_socket);
         if (req.is_cgi_request())
-            client_socket = handle_cgi(client_socket, req);
+            client_socket = req.handle_cgi(client_socket);
         else
         {
             handle_non_cgi(client_socket, req);
