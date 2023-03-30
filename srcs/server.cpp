@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/30 17:27:55 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/30 21:00:57 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,15 +178,19 @@ void	Server::startListen()
 					cout << "LIMIT_SIZE: " << LIMIT_SIZE << endl;
 					if (bodySize <= LIMIT_SIZE)
 					{
+						Request req(clientRequest);
 						size_t methodPos = clientRequest.find(" ");
-						cout << "methodPos: " << methodPos << endl;
+						cout << YELLOW << "methodPos: " << methodPos << RESET << endl;
+						if (req.is_cgi_request())
+							cout << "it is cgi request??" << endl;
 					//	if (methodPos == string::npos)
 					//		sendErrorResponse(fds[i].fd, 400); 
-						if (methodPos == 10)
-							sendErrorResponse(fds[i].fd, 400); 
+				//		if (methodPos == 10)
+				//			sendErrorResponse(fds[i].fd, 400); 
 						else
 						{
 							N_MY::msg("--- Received Request from client ---");
+			//				handle_non_cgi(fds[i].fd, req);
 							sendResponse(fds[i].fd);			
 						}
 					}

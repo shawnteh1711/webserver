@@ -85,6 +85,7 @@ bool Request::is_cgi_request()
     size_t          dot_pos;
 
     val = false;
+	cout << CYAN << "Enter is cgi-r" << endl;
     uri = getRequestUrl();
     dot_pos = uri.rfind('.');
     if (dot_pos != string::npos)
@@ -100,6 +101,7 @@ bool Request::is_cgi_request()
             }
         }
     }
+	cout << RESET << endl;
     return (val);
 }
 
@@ -111,7 +113,7 @@ string  Request::getRequestUrl() const
     size_t  http_pos;
     string  url;
 
-    cout << "Request" << _request << endl;
+    cout << "Request:" << _request << endl;
     space_pos = _request.find(' ');
     if (space_pos != string::npos)
     {
