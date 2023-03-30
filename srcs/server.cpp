@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/28 15:17:54 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/30 17:27:55 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,6 +94,8 @@ int	Server::startServer(int index)
 		return N_MY::ErrorExit("Cannot create socket");
 	if (setsockopt(_sockfds[index], SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
 		return N_MY::ErrorExit("Cannot set socket option");
+//	int flags = fcntl(_sockfds[index], F_GETFL, 0);
+//	fcntl(_sockfds[index], F_SETFL, flags | O_NONBLOCK);
 	if (bind(_sockfds[index], (sockaddr*)&_socketAddrs[index], _socketAddr_len) < 0)
 	{
 		std::perror(std::strerror(errno));
@@ -115,7 +117,7 @@ void	Server::startListen()
 	ostringstream	ss;
 	int				bytes;
 	char			buffer[BUF_SIZE];
-	const int		MAX_CLIENTS = 10;
+	const int		MAX_CLIENTS = 1000;
 	struct pollfd	*fds = new struct pollfd[MAX_CLIENTS + total];
 	int				nfds = total; // total of socket descriptors
 
@@ -145,7 +147,7 @@ void	Server::startListen()
 			{
 				acceptConnection(_clientfd, i);
 				fds[nfds].fd = _clientfd;
-				fds[nfds].events = POLLIN;
+				fds[nfds].events = POLLIN | POLLERR | POLLHUP;
 				nfds++;
 				N_MY::msg("--- New client connected ---");
 			}
@@ -162,7 +164,7 @@ void	Server::startListen()
 				// buffer is from client. 
 				if (bytes  == -1)
 					N_MY::msg(RED"Failed to read bytes from client socket connection"RESET);
-				if (bytes == 0)
+				else if (bytes == 0)
 					N_MY::msg("The client has closed the connection");
 				else
 				{
@@ -193,6 +195,15 @@ void	Server::startListen()
 				}
 				close(fds[i].fd);
 				// Remove the client socket from the array
+				nfds--;
+				fds[i] = fds[nfds];
+				i--;
+			}
+			else if (fds[i].revents & (POLLERR | POLLHUP))
+			{
+				cout << "Enter POLLER || POLLHUP!!" << endl;
+				close(fds[i].fd);
+				close(fds[i].fd);
 				nfds--;
 				fds[i] = fds[nfds];
 				i--;
