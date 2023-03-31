@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/31 17:21:47 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/31 18:00:42 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,6 +122,33 @@ void	Server::startListen()
 	int				nfds = total; // total of socket descriptors
 	size_t			one_mb = 1024 * 1024;
 	size_t			limit_size = 1 * one_mb;
+
+	// this block for checking the cgi request
+	string			cgi_path = "";
+	int				found_cgi = 0;
+	multimap<string, multimap<string, string> >::iterator it, ite;
+	multimap<string, string>::iterator f, fe;
+
+	// implementation to check if server has cgi request or not
+	it = servers[0].mylocations.begin(), ite = servers[0].mylocations.end();
+	while (it != ite)
+	{
+		cout << "===NEW ITERATOR===" << endl;
+		cout << CYAN << "KEY: ";
+		cout << YELLOW << it->first << endl;
+		f = it->second.begin(); fe = it->second.end();
+		f = it->second.find("fastcgi_pass");
+		if (f != fe)
+		{
+			cout << GREEN << "FIND: " << f->first << " in " << it->first << RESET << endl;
+			found_cgi = 1;
+		}
+		if (found_cgi)
+			cgi_path = it->first;
+		it++;
+	}
+	found_cgi = 0;
+	cout << RESET << endl;
 
 	memset(fds, 0, sizeof(*fds) * (MAX_CLIENTS + total));
 	for (size_t i = 0; i < total; i++)
