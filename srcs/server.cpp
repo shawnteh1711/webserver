@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/30 21:00:57 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/31 17:21:47 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,6 +120,8 @@ void	Server::startListen()
 	const int		MAX_CLIENTS = 1000;
 	struct pollfd	*fds = new struct pollfd[MAX_CLIENTS + total];
 	int				nfds = total; // total of socket descriptors
+	size_t			one_mb = 1024 * 1024;
+	size_t			limit_size = 1 * one_mb;
 
 	memset(fds, 0, sizeof(*fds) * (MAX_CLIENTS + total));
 	for (size_t i = 0; i < total; i++)
@@ -150,6 +152,11 @@ void	Server::startListen()
 				fds[nfds].events = POLLIN | POLLERR | POLLHUP;
 				nfds++;
 				N_MY::msg("--- New client connected ---");
+				cout << "clientMaxBodySize: " << servers[i].clientMaxBodySize << endl;
+				if (servers[i].clientMaxBodySize != "")
+					limit_size = stoi(servers[i].clientMaxBodySize) * one_mb;
+				else 
+					limit_size = one_mb;
 			}
 		}
 		
@@ -175,8 +182,8 @@ void	Server::startListen()
 					size_t bodySize = bytes - bodyPos;
 
 					cout << "bodySize: " << bodySize << endl;
-					cout << "LIMIT_SIZE: " << LIMIT_SIZE << endl;
-					if (bodySize <= LIMIT_SIZE)
+					cout << "limit_size: " << limit_size << " bytes" << endl;
+					if (bodySize <= limit_size)
 					{
 						Request req(clientRequest);
 						size_t methodPos = clientRequest.find(" ");
