@@ -87,6 +87,7 @@ bool Request::is_cgi_request()
     size_t          dot_pos;
 
     val = false;
+	cout << CYAN << "Enter is cgi-r" << endl;
     uri = getRequestUrl();
     dot_pos = uri.rfind('.');
     if (dot_pos != string::npos)
@@ -102,6 +103,7 @@ bool Request::is_cgi_request()
             }
         }
     }
+	cout << RESET << endl;
     return (val);
 }
 
@@ -113,7 +115,7 @@ string  Request::getRequestUrl() const
     size_t  http_pos;
     string  url;
 
-    cout << "Request" << _request << endl;
+    cout << "Request:" << _request << endl;
     space_pos = _request.find(' ');
     if (space_pos != string::npos)
     {
@@ -555,27 +557,27 @@ void handle_non_cgi(int client_socket, Request& req)
 }
 
 //  curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "name=shawn&age=30" http://localhost:8080/cgi-bin/hello.cgi
-int main()
-{
-    int     client_socket;
-    int     server_socket;
-    Request req;
-
-    server_socket = create_server_socket();
-    while (true)
-    {
-        cout << "+++++++Waiting for new connection+++++++" << endl;
-        client_socket = accept_connection(server_socket);
-        req.read_request(client_socket);
-        if (req.is_cgi_request())
-            client_socket = req.handle_cgi(client_socket);
-        else
-        {
-            handle_non_cgi(client_socket, req);
-        }
-        // system("leaks a.out");
-        close(client_socket);
-        cout << "++++++++Done+++++++" << endl;
-    }
-    close(server_socket);
-}
+//int main()
+//{
+//    int     client_socket;
+//    int     server_socket;
+//    Request req;
+//
+//    server_socket = create_server_socket();
+//    while (true)
+//    {
+//        cout << "+++++++Waiting for new connection+++++++" << endl;
+//        client_socket = accept_connection(server_socket);
+//        req.read_request(client_socket);
+//        if (req.is_cgi_request())
+//            client_socket = req.handle_cgi(client_socket);
+//        else
+//        {
+//            handle_non_cgi(client_socket, req);
+//        }
+//        close(client_socket);
+//        cout << "++++++++Done+++++++" << endl;
+//        // system("leaks a.out");
+//    }
+//    close(server_socket);
+//}

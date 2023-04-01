@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/28 15:17:54 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/03/31 18:00:42 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,6 +94,8 @@ int	Server::startServer(int index)
 		return N_MY::ErrorExit("Cannot create socket");
 	if (setsockopt(_sockfds[index], SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
 		return N_MY::ErrorExit("Cannot set socket option");
+//	int flags = fcntl(_sockfds[index], F_GETFL, 0);
+//	fcntl(_sockfds[index], F_SETFL, flags | O_NONBLOCK);
 	if (bind(_sockfds[index], (sockaddr*)&_socketAddrs[index], _socketAddr_len) < 0)
 	{
 		std::perror(std::strerror(errno));
@@ -115,9 +117,38 @@ void	Server::startListen()
 	ostringstream	ss;
 	int				bytes;
 	char			buffer[BUF_SIZE];
-	const int		MAX_CLIENTS = 10;
+	const int		MAX_CLIENTS = 1000;
 	struct pollfd	*fds = new struct pollfd[MAX_CLIENTS + total];
 	int				nfds = total; // total of socket descriptors
+	size_t			one_mb = 1024 * 1024;
+	size_t			limit_size = 1 * one_mb;
+
+	// this block for checking the cgi request
+	string			cgi_path = "";
+	int				found_cgi = 0;
+	multimap<string, multimap<string, string> >::iterator it, ite;
+	multimap<string, string>::iterator f, fe;
+
+	// implementation to check if server has cgi request or not
+	it = servers[0].mylocations.begin(), ite = servers[0].mylocations.end();
+	while (it != ite)
+	{
+		cout << "===NEW ITERATOR===" << endl;
+		cout << CYAN << "KEY: ";
+		cout << YELLOW << it->first << endl;
+		f = it->second.begin(); fe = it->second.end();
+		f = it->second.find("fastcgi_pass");
+		if (f != fe)
+		{
+			cout << GREEN << "FIND: " << f->first << " in " << it->first << RESET << endl;
+			found_cgi = 1;
+		}
+		if (found_cgi)
+			cgi_path = it->first;
+		it++;
+	}
+	found_cgi = 0;
+	cout << RESET << endl;
 
 	memset(fds, 0, sizeof(*fds) * (MAX_CLIENTS + total));
 	for (size_t i = 0; i < total; i++)
@@ -145,9 +176,14 @@ void	Server::startListen()
 			{
 				acceptConnection(_clientfd, i);
 				fds[nfds].fd = _clientfd;
-				fds[nfds].events = POLLIN;
+				fds[nfds].events = POLLIN | POLLERR | POLLHUP;
 				nfds++;
 				N_MY::msg("--- New client connected ---");
+				cout << "clientMaxBodySize: " << servers[i].clientMaxBodySize << endl;
+				if (servers[i].clientMaxBodySize != "")
+					limit_size = stoi(servers[i].clientMaxBodySize) * one_mb;
+				else 
+					limit_size = one_mb;
 			}
 		}
 		
@@ -162,7 +198,7 @@ void	Server::startListen()
 				// buffer is from client. 
 				if (bytes  == -1)
 					N_MY::msg(RED"Failed to read bytes from client socket connection"RESET);
-				if (bytes == 0)
+				else if (bytes == 0)
 					N_MY::msg("The client has closed the connection");
 				else
 				{
@@ -173,18 +209,22 @@ void	Server::startListen()
 					size_t bodySize = bytes - bodyPos;
 
 					cout << "bodySize: " << bodySize << endl;
-					cout << "LIMIT_SIZE: " << LIMIT_SIZE << endl;
-					if (bodySize <= LIMIT_SIZE)
+					cout << "limit_size: " << limit_size << " bytes" << endl;
+					if (bodySize <= limit_size)
 					{
+						Request req(clientRequest);
 						size_t methodPos = clientRequest.find(" ");
-						cout << "methodPos: " << methodPos << endl;
+						cout << YELLOW << "methodPos: " << methodPos << RESET << endl;
+						if (req.is_cgi_request())
+							cout << "it is cgi request??" << endl;
 					//	if (methodPos == string::npos)
 					//		sendErrorResponse(fds[i].fd, 400); 
-						if (methodPos == 10)
-							sendErrorResponse(fds[i].fd, 400); 
+				//		if (methodPos == 10)
+				//			sendErrorResponse(fds[i].fd, 400); 
 						else
 						{
 							N_MY::msg("--- Received Request from client ---");
+			//				handle_non_cgi(fds[i].fd, req);
 							sendResponse(fds[i].fd);			
 						}
 					}
@@ -193,6 +233,15 @@ void	Server::startListen()
 				}
 				close(fds[i].fd);
 				// Remove the client socket from the array
+				nfds--;
+				fds[i] = fds[nfds];
+				i--;
+			}
+			else if (fds[i].revents & (POLLERR | POLLHUP))
+			{
+				cout << "Enter POLLER || POLLHUP!!" << endl;
+				close(fds[i].fd);
+				close(fds[i].fd);
 				nfds--;
 				fds[i] = fds[nfds];
 				i--;

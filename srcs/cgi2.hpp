@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   cgi2.hpp                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
+/*   Updated: 2023/03/30 20:15:10 by leng-chu         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 // Parse the incoming HTTP request and identify if it's a CGI request
 // Create a child process to handle the CGI request
 // Set environment variables for the child process, such as the request method, URL, headers, etc.
@@ -5,20 +17,13 @@
 // Execute the CGI script in the child process and pass the necessary data
 // Capture the output of the CGI script and send it back to the client as an HTTP response
 
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <map>
+#ifndef CGI_HPP
+#define CGI_HPP
 
 #define BUFF_SIZE 4096
 #define ENV_SIZE 7
 
-using namespace std;
+#include "lib.hpp"
 
 enum cgi_extension
 {
@@ -87,3 +92,7 @@ class Response
         static string           getReasonPhrase(int code);
 
 };
+
+void	handle_non_cgi(int client_socket, Request & req);
+
+#endif
