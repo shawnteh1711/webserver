@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi2.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
+/*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/30 20:15:10 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/01 20:34:10 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,12 +36,13 @@ class Request
 {
 
     private:
-        string              _request;
-        string              _cgi_path;
-        string              _extension;
-        int                 _read_size;
-        int                 _total_read_size;
-        char*               _envp[ENV_SIZE];
+        string                          _request;
+        string                          _cgi_path;
+        string                          _extension;
+        int                             _read_size;
+        int                             _total_read_size;
+        char*                           _envp[ENV_SIZE];
+        map<string, vector<string> >    _extension_map;
 
     public:
         Request();
@@ -69,8 +70,9 @@ class Request
         char**  getEnvp();
         void    printEnvp() const;
         void    freeEnvp(char **envp);
-
         int     handle_cgi(int client_socket);
+        char**  handleArgs(const string& extension, const string& cgi_path);
+
 };
 
 class Response

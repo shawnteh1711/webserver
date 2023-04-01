@@ -87,7 +87,7 @@ bool Request::is_cgi_request()
     size_t          dot_pos;
 
     val = false;
-	cout << CYAN << "Enter is cgi-r" << endl;
+	cout << CYAN << "Enter is cgi-request" << endl;
     uri = getRequestUrl();
     dot_pos = uri.rfind('.');
     if (dot_pos != string::npos)
@@ -481,16 +481,51 @@ void    Request::printEnvp() const
     }
 }
 
+char** Request::handleArgs(const string& extension, const string& cgi_path)
+{
+    vector<string>              commandArgs;
+    char**                      args;
+    int                         i;
+    vector<string>::iterator    it;
+
+    _extension_map[".cgi"].push_back(cgi_path);
+    _extension_map[".php"].push_back("/usr/bin/php");
+    if (_extension_map.find(extension) == _extension_map.end())
+    {
+        cerr << "Error: No CGI program found for extension " << extension << endl;
+        exit(EXIT_FAILURE);
+    }
+    commandArgs = _extension_map[extension];
+    args = new char*[commandArgs.size() + 2];
+    i = 0;
+    for (it = commandArgs.begin(); it != commandArgs.end(); it++)
+    {
+        args[i] = const_cast<char*>(it->c_str());;
+        i++;
+    }
+    args[i++] = const_cast<char*>(cgi_path.c_str());
+    args[i] = NULL;
+
+    char** args_copy = new char*[i + 1];
+    for (int j = 0; j < i; j++)
+    {
+        args_copy[j] = new char[strlen(args[j]) + 1];
+        strcpy(args_copy[j], args[j]);
+    }
+    args_copy[i] = NULL;
+    delete[] args;
+    return (args_copy);
+}
+
 int Request::handle_cgi(int client_socket)
 {
-    pid_t   pid;
-    char* args[3];
-    int     status;
-    string  cgi_path;
-  
+    pid_t                       pid;
+    int                         status;
+    string                      cgi_path;
+    string                      extension;
+    char**                      args;
 
     pid = fork();
-
     if (pid == -1)
     {
         perror("fork");
@@ -501,17 +536,8 @@ int Request::handle_cgi(int client_socket)
         this->setEnvp();
         const char* cgi_bin_path = "../cgi-bin/";
         string cgi_path = cgi_bin_path + this->parseCgiPath();
-        if (this->getExtension() == ".cgi")
-        {
-            args[0] = const_cast<char*>(cgi_path.c_str());
-            args[1] = NULL;
-        }
-        else if (this->getExtension() == ".php")
-        {
-            args[0] = const_cast<char*>("/usr/bin/php");
-            args[1] = const_cast<char*>(cgi_path.c_str());
-            args[2] = NULL;
-        }
+        extension = this->getExtension();
+        args = handleArgs(extension, cgi_path);
         if (execve(args[0], args, this->getEnvp()) == -1)
         {
             cerr <<  "Error: " << strerror(errno) << endl;
@@ -557,27 +583,27 @@ void handle_non_cgi(int client_socket, Request& req)
 }
 
 //  curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "name=shawn&age=30" http://localhost:8080/cgi-bin/hello.cgi
-//int main()
-//{
-//    int     client_socket;
-//    int     server_socket;
-//    Request req;
-//
-//    server_socket = create_server_socket();
-//    while (true)
-//    {
-//        cout << "+++++++Waiting for new connection+++++++" << endl;
-//        client_socket = accept_connection(server_socket);
-//        req.read_request(client_socket);
-//        if (req.is_cgi_request())
-//            client_socket = req.handle_cgi(client_socket);
-//        else
-//        {
-//            handle_non_cgi(client_socket, req);
-//        }
-//        close(client_socket);
-//        cout << "++++++++Done+++++++" << endl;
-//        // system("leaks a.out");
-//    }
-//    close(server_socket);
-//}
+int main()
+{
+   int     client_socket;
+   int     server_socket;
+   Request req;
+
+   server_socket = create_server_socket();
+   while (true)
+   {
+       cout << "+++++++Waiting for new connection+++++++" << endl;
+       client_socket = accept_connection(server_socket);
+       req.read_request(client_socket);
+       if (req.is_cgi_request())
+           client_socket = req.handle_cgi(client_socket);
+       else
+       {
+           handle_non_cgi(client_socket, req);
+       }
+       close(client_socket);
+    //    system("leaks a.out");
+       cout << "++++++++Done+++++++" << endl;
+   }
+   close(server_socket);
+}
