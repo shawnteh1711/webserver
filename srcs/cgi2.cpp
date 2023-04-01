@@ -26,6 +26,8 @@ Request::Request(string& request, int num_read)
 
 void    Request::setBuffer(string& request, int num_read)
 {
+     for (int i = 0; i < ENV_SIZE; i++)
+        _envp[i] = NULL;
     _request = request.substr(0, num_read);
     _read_size = num_read;
     _total_read_size += num_read;
@@ -418,7 +420,7 @@ int Request::read_request(int client_socket)
     return (0);
 }
 
-void    Request::generateEnvp()
+void Request::setEnvp()
 {
     string request_method = "REQUEST_METHOD=" + this->getMethod();
     string query_string = "QUERY_STRING=" + this->getQueryString();
@@ -427,18 +429,38 @@ void    Request::generateEnvp()
     string remote_addr = "REMOTE_ADDR=" + this->getAddress();
     string script_name = "SCRIPT_NAME=" + this->parseCgiPath();
 
-    _envp[0] = const_cast<char*>(request_method.c_str());
-    _envp[1] = const_cast<char*>(query_string.c_str());
-    _envp[2] = const_cast<char*>(content_type.c_str());
-    _envp[3] = const_cast<char*>(content_length.c_str());
-    _envp[4] = const_cast<char*>(remote_addr.c_str());
-    _envp[5] = const_cast<char*>(script_name.c_str());
-    _envp[6] = NULL;
+    char** envp = (char**) malloc((ENV_SIZE + 1) * sizeof(char*));
+    if (envp == NULL)
+    {
+        cerr << "Error: Failed to allocate memory to _envp." << endl;
+        exit(EXIT_FAILURE);
+    }
+    envp[0] = strdup(request_method.c_str());
+    envp[1] = strdup(query_string.c_str());
+    envp[2] = strdup(content_type.c_str());
+    envp[3] = strdup(content_length.c_str());
+    envp[4] = strdup(remote_addr.c_str());
+    envp[5] = strdup(script_name.c_str());
+    envp[6] = NULL;
 
-    // for (int i = 0; i < ENV_SIZE; i++) {
-    //     _envp[i] = envp[i];
-    // }
-    this->printEnvp();
+    for (int i = 0; i < ENV_SIZE; i++)
+    {
+        _envp[i] = envp[i];
+    }
+    _envp[ENV_SIZE - 1] = NULL;
+    // this->freeEnvp(envp);
+}
+
+void Request::freeEnvp(char **envp)
+{
+    for (int i = 0; i < ENV_SIZE; i++)
+    {
+        if (envp[i] != NULL)
+        {
+            free(envp[i]);
+        }
+    }
+    free(envp);
 }
 
 char**  Request::getEnvp()
@@ -450,16 +472,12 @@ void    Request::printEnvp() const
 {
     for (int i = 0; i < ENV_SIZE; i++) 
     {
-        cout << _envp[i] << endl;
+        if (_envp[i] != NULL) 
+        {
+            cout << _envp[i] << endl;
+        }
     }
 }
-
-// void    Request::generateArgs()
-// {
-//     string cgi_path = this->parseCgiPath();
-//     _args[0] = const_cast<char*>(cgi_path.c_str());
-//     _args[1] = NULL;
-// }
 
 int Request::handle_cgi(int client_socket)
 {
@@ -467,6 +485,7 @@ int Request::handle_cgi(int client_socket)
     char* args[3];
     int     status;
     string  cgi_path;
+  
 
     pid = fork();
 
@@ -477,23 +496,7 @@ int Request::handle_cgi(int client_socket)
     }
     else if (pid == 0)
     {
-        string request_method = "REQUEST_METHOD=" + this->getMethod();
-        string query_string = "QUERY_STRING=" + this->getQueryString();
-        string content_type = "CONTENT_TYPE=" + this->getHeader("Content-Type");
-        string content_length = "CONTENT_LENGTH=" + this->getHeader("Content-Length");
-        string remote_addr = "REMOTE_ADDR=" + this->getAddress();
-        string script_name = "SCRIPT_NAME=" + this->parseCgiPath();
-
-        char *envp[] = {
-            const_cast<char*>(request_method.c_str()),
-            const_cast<char*>(query_string.c_str()),
-            const_cast<char*>(content_type.c_str()),
-            const_cast<char*>(content_length.c_str()),
-            const_cast<char*>(remote_addr.c_str()),
-            const_cast<char*>(script_name.c_str()),
-            NULL
-        };
-        // this->generateEnvp();
+        this->setEnvp();
         const char* cgi_bin_path = "../cgi-bin/";
         string cgi_path = cgi_bin_path + this->parseCgiPath();
         if (this->getExtension() == ".cgi")
@@ -507,10 +510,7 @@ int Request::handle_cgi(int client_socket)
             args[1] = const_cast<char*>(cgi_path.c_str());
             args[2] = NULL;
         }
-
-        // this->printEnvp();
-        if (execve(args[0], args, envp) == -1)
-        // if (execve(args[0], args, this->getEnvp()) == -1)
+        if (execve(args[0], args, this->getEnvp()) == -1)
         {
             cerr <<  "Error: " << strerror(errno) << endl;
             exit(EXIT_FAILURE);
@@ -519,20 +519,20 @@ int Request::handle_cgi(int client_socket)
             cout << "running execve" << endl;
     }
     else
-    {
+    {   
         if (WIFEXITED(status))
         {
             cout << "Child process exit status " << WIFEXITED(status) << endl;
             
             // Send the HTTP response back to the client
-            // Response res;
-            // res.setStatusCode(200);
-            // res.setContentType("text/plain");
-            // res.setHeader("Set-Cookie", "mycookie=12345; Max-Age=3600; Path=/");
-            // res.setContent(this->getRequest().c_str(), this->getReadSize());
-            // res.printCookies();
-            // string response_str = res.restoString();
-            // send(client_socket, response_str.c_str(), response_str.size(), 0);
+            Response res;
+            res.setStatusCode(200);
+            res.setContentType("text/plain");
+            res.setHeader("Set-Cookie", "mycookie=12345; Max-Age=3600; Path=/");
+            res.setContent(this->getRequest().c_str(), this->getReadSize());
+            res.printCookies();
+            string response_str = res.restoString();
+            send(client_socket, response_str.c_str(), response_str.size(), 0);
         }
         if (waitpid(pid, &status, 0) == -1)
         {
@@ -573,9 +573,9 @@ int main()
         {
             handle_non_cgi(client_socket, req);
         }
+        // system("leaks a.out");
         close(client_socket);
         cout << "++++++++Done+++++++" << endl;
-        // system("leaks a.out");
     }
     close(server_socket);
 }

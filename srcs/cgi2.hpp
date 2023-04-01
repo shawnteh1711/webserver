@@ -59,10 +59,12 @@ class Request
         void    setRequest(string request);
         string  parseCgiPath();
         void    setBuffer(string& buffer, int num_read);
-        void    generateEnvp();
+        void    setEnvp();
         int     read_request(int client_socket);
         char**  getEnvp();
         void    printEnvp() const;
+        void    freeEnvp(char **envp);
+
         int     handle_cgi(int client_socket);
 };
 
