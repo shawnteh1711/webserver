@@ -148,8 +148,27 @@ string  Request::getMethod() const
     return (_request.substr(0, method_pos));
 }
 
+// string  Request::getQueryString() const
+// {
+//     size_t query_pos = _request.find("?");
+//     if (query_pos == string::npos)
+//         return "";
+
+//     size_t end_query_pos = _request.find(" ", query_pos + 1);
+//     if (end_query_pos == string::npos)
+//         return "";
+
+//     return _request.substr(query_pos + 1, end_query_pos - query_pos - 1);
+// }
+
+void    Request::setQuery(string& query)
+{
+    _query = query;
+}
+
 string  Request::getQueryString() const
 {
+    string  query;
     size_t query_pos = _request.find("?");
     if (query_pos == string::npos)
         return "";
@@ -158,7 +177,8 @@ string  Request::getQueryString() const
     if (end_query_pos == string::npos)
         return "";
 
-    return _request.substr(query_pos + 1, end_query_pos - query_pos - 1);
+    query = _request.substr(query_pos + 1, end_query_pos - query_pos - 1);
+    return (query);
 }
 
 string Request::getHeader(const string& header_name) const
@@ -661,6 +681,7 @@ string  Request::getCookies() const
 
 //  curl --cookie "name=shawn; name2=alec" http://localhost:80
 //  curl -b "name=shawn; name2=alec" http://localhost:80
+// curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "name=shawn&age=30" "127.0.0.1/cgi-bin/hello.cgi?name=shawn&age=23&hobby=sport"
 int main()
 {
    int     client_socket;

@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/02 20:31:24 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/02 23:01:34 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,6 @@ enum cgi_extension
 
 class Request
 {
-
     private:
         string                          _request;
         string                          _cgi_path;
@@ -45,6 +44,7 @@ class Request
         char*                           _envp[ENV_SIZE];
         map<string, vector<string> >    _extension_map;
         string                          _cookies;
+        string                          _query;
 
     public:
         Request();
@@ -64,6 +64,7 @@ class Request
         int     getReadSize() const;
         string  getRequest() const;
         void    setCgiPath(string path);
+        void    setQuery(string& query);
         void    setRequest(string request);
         string  parseCgiPath();
         void    setBuffer(string& buffer, int num_read);
