@@ -1,26 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   cgi2.hpp                                           :+:      :+:    :+:   */
+/*   cookies.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/02 19:04:46 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/02 20:31:24 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// Parse the incoming HTTP request and identify if it's a CGI request
-// Create a child process to handle the CGI request
-// Set environment variables for the child process, such as the request method, URL, headers, etc.
-// Set up input and output streams for the child process to read and write data
-// Execute the CGI script in the child process and pass the necessary data
-// Capture the output of the CGI script and send it back to the client as an HTTP response
+// Cookies
+// If (http request use the cookie header)
+// {    use the cookie header to extract the cookie data }
+// else if (no cookie header)
+// {    create a new cookie header set its value and send response}
+// else if (cookies present in request)
+// {    read the cookie data and use it to customize response }
 
-
-
-#ifndef CGI_HPP
-#define CGI_HPP
+#ifndef COOKIES_HPP
+#define COOKIES_HPP
 
 #define BUFF_SIZE 4096
 #define ENV_SIZE 7
@@ -45,6 +44,7 @@ class Request
         int                             _total_read_size;
         char*                           _envp[ENV_SIZE];
         map<string, vector<string> >    _extension_map;
+        string                          _cookies;
 
     public:
         Request();
@@ -68,12 +68,14 @@ class Request
         string  parseCgiPath();
         void    setBuffer(string& buffer, int num_read);
         void    setEnvp();
-        int     read_request(int client_socket);
+        int     readRequest(int client_socket);
         char**  getEnvp();
         void    printEnvp() const;
         void    freeEnvp(char **envp);
         int     handle_cgi(int client_socket);
         char**  handleArgs(const string& extension, const string& cgi_path);
+        bool    hasCookies();
+        string  getCookies() const;
 
 };
 

@@ -1,4 +1,4 @@
-#include "cgi2.hpp"
+#include "cookies.hpp"
 
 
 Request::Request() : _request()
@@ -235,6 +235,12 @@ void    Request::setRequest(string request)
 void    Response::setHeader(const string& name, const string& value)
 {
     _headers[name] = value;
+    map<string, string>::const_iterator it;
+
+    for (it = _headers.begin(); it != _headers.end(); ++it)
+    {
+        cout << it->first << ": " << it->second << "\r\n";
+    }
 }
 
 void    Response::printCookies() const
@@ -287,10 +293,16 @@ void    Response::setContent(const char* content, int length)
 
 string  Response::restoString() const
 {
+    map<string, string>::const_iterator it;
+
     ostringstream   oss;
     oss << "HTTP/1.1 " << _status_code << " " << getReasonPhrase(_status_code) << "\r\n";
     oss << "Content-Type: " << _content_type << "\r\n";
     oss << "Content-Length: " << _content.length() << "\r\n";
+    for (it = _headers.begin(); it != _headers.end(); ++it)
+    {
+        oss << it->first << ": " << it->second << "\r\n";
+    }
     oss << "\r\n";
     oss << _content;
     return (oss.str());
@@ -393,7 +405,7 @@ int accept_connection(int server_socket)
     return (client_socket);
 }
 
-int Request::read_request(int client_socket)
+int Request::readRequest(int client_socket)
 {
     string buffer;
 
@@ -404,7 +416,8 @@ int Request::read_request(int client_socket)
         exit(EXIT_FAILURE);
     } else if (num_read == BUFF_SIZE)
     {
-        while (true) {
+        while (true) 
+        {
             char temp_buffer[BUFF_SIZE];
             int temp_read = recv(client_socket, temp_buffer, BUFF_SIZE, 0);
             if (temp_read == -1) {
@@ -524,7 +537,13 @@ int Request::handle_cgi(int client_socket)
     string                      cgi_path;
     string                      extension;
     char**                      args;
+    // int                         pipes[2];
 
+    // if (pipe(pipes) == -1)
+    // {
+    //     perror("pipe");
+    //     exit(EXIT_FAILURE);
+    // }
     pid = fork();
     if (pid == -1)
     {
@@ -533,6 +552,9 @@ int Request::handle_cgi(int client_socket)
     }
     else if (pid == 0)
     {
+        // close(pipes[0]);
+        // dup2(pipes[1], STDOUT_FILENO);
+        // close(pipes[1]);
         this->setEnvp();
         const char* cgi_bin_path = "../cgi-bin/";
         string cgi_path = cgi_bin_path + this->parseCgiPath();
@@ -548,6 +570,23 @@ int Request::handle_cgi(int client_socket)
     }
     else
     {   
+        // close(pipes[1]);
+        // char buffer[BUFSIZ];
+        // ssize_t count = read(pipes[0], buffer, BUFSIZ);
+        // if (count == -1)
+        // {
+        //     perror("read");
+        //     exit(EXIT_FAILURE);
+        // }
+        // else if (count == 0)
+        // {
+        //     cout << "No data read" << endl;
+        // }
+        // else
+        // {
+        //     cout << "Read " << count << " bytes" << endl;
+        //     cout << "Data read: " << buffer << endl;
+        // }
         if (WIFEXITED(status))
         {
             cout << "Child process exit status " << WIFEXITED(status) << endl;
@@ -555,12 +594,25 @@ int Request::handle_cgi(int client_socket)
             // Send the HTTP response back to the client
             Response res;
             res.setStatusCode(200);
-            res.setContentType("text/html");
-            res.setHeader("Set-Cookie", "mycookie=12345; Max-Age=3600; Path=/");
+            res.setContentType("text/plain");
+            if (this->hasCookies())
+                res.setHeader("Set-Cookie", this->getCookies());
             res.setContent(this->getRequest().c_str(), this->getReadSize());
+            // res.setContent(buffer, count);
             res.printCookies();
             string response_str = res.restoString();
-            send(client_socket, response_str.c_str(), response_str.size(), 0);
+            int bytes_sent;
+            bytes_sent = send(client_socket, response_str.c_str(), response_str.size(), 0);
+            if (bytes_sent == -1)
+            {
+                perror("send");
+                exit(EXIT_FAILURE);
+            }
+            else if (bytes_sent != (int)response_str.size())
+            {
+                cerr << "Error: sent " << bytes_sent << " out of " << response_str.size() << " bytes" << endl;
+                exit(EXIT_FAILURE);
+            }
         }
         if (waitpid(pid, &status, 0) == -1)
         {
@@ -573,16 +625,42 @@ int Request::handle_cgi(int client_socket)
 
 void handle_non_cgi(int client_socket, Request& req)
 {
-    (void)req;
+    cout << "Handling non CGI request" << endl;
     Response res;
     res.setStatusCode(200);
-    res.setContentType("text/html");
+    res.setContentType("text/plain");
+    if (req.hasCookies())
+        res.setHeader("Set-Cookie", req.getCookies());
     res.setContent(req.getRequest().c_str(), req.getReadSize());
     string response_str = res.restoString();
     send(client_socket, response_str.c_str(), response_str.size(), 0);
 }
 
 //  curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "name=shawn&age=30" http://localhost:8080/cgi-bin/hello.cgi
+
+bool Request::hasCookies()
+{
+    _cookies = this->getHeader("Cookie");
+    if (_cookies.empty())
+    {
+        cout << "No cookies found" << endl;
+        return (false);
+    }
+    else
+    {
+        cout << "Cookies found: " << _cookies << endl;
+        return (true);
+    }
+}
+
+string  Request::getCookies() const
+{
+    return (_cookies);
+}   
+
+
+//  curl --cookie "name=shawn; name2=alec" http://localhost:80
+//  curl -b "name=shawn; name2=alec" http://localhost:80
 int main()
 {
    int     client_socket;
@@ -594,7 +672,8 @@ int main()
    {
        cout << "+++++++Waiting for new connection+++++++" << endl;
        client_socket = accept_connection(server_socket);
-       req.read_request(client_socket);
+       req.readRequest(client_socket);
+       req.hasCookies();
        if (req.is_cgi_request())
            client_socket = req.handle_cgi(client_socket);
        else
