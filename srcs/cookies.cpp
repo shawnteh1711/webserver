@@ -183,11 +183,15 @@ string  Request::getQueryString() const
     if (query_pos == string::npos)
         return "";
 
-    size_t end_query_pos = _request.find(" ", query_pos + 1);
+    size_t end_query_pos = _request.find("\r\n", query_pos + 1);
     if (end_query_pos == string::npos)
         return "";
 
     query = _request.substr(query_pos + 1, end_query_pos - query_pos - 1);
+
+    size_t http_pos = query.find(" HTTP/1.1");
+    if (http_pos != string::npos)
+        query.erase(http_pos);
     return (query);
 }
 
@@ -479,9 +483,12 @@ void Request::setEnvp()
     string content_length = "CONTENT_LENGTH=" + this->getHeader("Content-Length");
     string remote_addr = "REMOTE_ADDR=" + this->getAddress();
     string script_name = "SCRIPT_NAME=" + this->parseCgiPath();
+    string script_path = "SCRIPT_PATH=" + _cgi_path;
+
+    // cout << "script_path: " << script_path << endl;
 
   //  char** envp = (char**) malloc((ENV_SIZE + 1) * sizeof(char*));
-	vector<char *> envp(100);
+	vector<char *> envp(8);
 	// using vector for this easier, we are using cpp.
     if (envp.size() == 0)
     {
@@ -494,13 +501,14 @@ void Request::setEnvp()
     envp[3] = strdup(content_length.c_str());
     envp[4] = strdup(remote_addr.c_str());
     envp[5] = strdup(script_name.c_str());
-    envp[6] = NULL;
+    envp[6] = strdup(script_path.c_str());
+    envp[7] = NULL;
 
-    for (int i = 0; i < ENV_SIZE; i++)
+    for (int i = 0; i < (int)envp.size(); i++)
     {
         _envp[i] = envp[i];
     }
-    _envp[ENV_SIZE - 1] = NULL;
+    _envp[envp.size() - 1] = NULL;
     // this->freeEnvp(envp);
 }
 
@@ -554,7 +562,8 @@ char** Request::handleArgs(const string& cgi_path)
         args[i] = const_cast<char*>(it->c_str());;
         i++;
     }
-    args[i++] = const_cast<char*>(cgi_path.c_str());
+    // args[i++] = const_cast<char*>(cgi_path.c_str());
+    args[i++] = const_cast<char*>(_cgi_path.c_str());
     args[i] = NULL;
 
     char** args_copy = new char*[i + 1];
@@ -604,11 +613,17 @@ int Request::handle_cgi(int client_socket)
             exit(EXIT_FAILURE);
         }
         close(pipes[1]);
-        this->setEnvp(); //this create enviroment variables?
-        //const char* cgi_bin_path = "~/Desktop/LEARN/WEBSERV/SHAWN/cgi-bin/";
-        const char* cgi_bin_path = "/Users/leng-chu/Desktop/LEARN/WEBSERV/SHAWN/cgi-bin/";
-        string cgi_path = cgi_bin_path + this->parseCgiPath();
-		//cout << "cgi:path" << cgi_path << endl;
+        char cwd[1024];
+        if (getcwd(cwd, sizeof(cwd)) == NULL) 
+        {
+            perror("getcwd() error");
+            exit(EXIT_FAILURE);
+        }
+        const char* cgi_bin_path = "/cgi-bin/";
+        string cgi_path = string(cwd) + cgi_bin_path + this->parseCgiPath();
+        // setenv("CGI_PATH", cgi_path.c_str(), 1);
+        _cgi_path = cgi_path;
+        this->setEnvp();
         args = handleArgs(cgi_path);
         if (execve(args[0], args, this->getEnvp()) == -1)
         {
