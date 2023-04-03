@@ -629,7 +629,9 @@ int Request::handle_cgi(int client_socket)
         string cgi_path = pwd + cgi_bin_path + this->parseCgiPath();
         _cgi_path = cgi_path;
         this->setEnvp();
+		cout << GREEN << "FFF" << endl;
         args = handleArgs(cgi_path);
+		cout << GREEN << "GGG" << endl;
         if (execve(args[0], args, this->getEnvp()) == -1)
         {
             cerr <<  "Error: " << strerror(errno) << endl;
@@ -644,6 +646,7 @@ int Request::handle_cgi(int client_socket)
         close(pipes[1]);
         char buffer[BUFF_SIZE];
         ssize_t count = read(pipes[0], buffer, BUFF_SIZE);
+		cout << GREEN << "HHH" << endl;
         if (count == -1)
         {
             perror("read");
@@ -693,6 +696,7 @@ int Request::handle_cgi(int client_socket)
         }
         // system("leaks webserv");
     }
+	cout << RESET << endl;
     return (client_socket);
 }
 

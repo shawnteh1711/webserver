@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/03 19:49:22 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/03 20:03:56 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -202,6 +202,8 @@ void	Server::startListen()
 			{ 
 				finalbuffer.clear();
 				bzero(buffer, BUF_SIZE);
+				// it reads till EOF of client
+				// chunk by chunk (BUF_SIZE is chunk size)
 				while ((bytes = recv(fds[i].fd, buffer, BUF_SIZE, 0)) > 0)
 				{
 					finalbuffer += string(buffer, BUF_SIZE);

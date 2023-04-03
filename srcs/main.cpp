@@ -6,7 +6,11 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2023/04/03 21:02:52 by steh             ###   ########.fr       */
+=======
+/*   Updated: 2023/04/03 20:17:54 by leng-chu         ###   ########.fr       */
+>>>>>>> aaba4ac29579d152f21dd2c8071ff4ab5ffd8d0b
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,88 +110,88 @@ int	alecprintf(vector<Server_Detail> *d_servers)
 	}
 	return (max_server);
 }
-
-void	get_ip(void)
-{
-	const char* server_name = "example.com";
-    struct addrinfo hints, *res;
-
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-
-	memset(&hints, 0, sizeof hints);
-
-    if (getaddrinfo(server_name, NULL, &hints, &res) != 0)
-    {
-        std::cerr << "Failed to get address info for " << server_name << std::endl;
-      //  return 1;
-    }
-
-    const sockaddr_in* addr = reinterpret_cast<const sockaddr_in*>(res->ai_addr);
-    char ip_str[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &addr->sin_addr, ip_str, INET_ADDRSTRLEN);
-    std::cout << "The IP address of " << server_name << " is " << ip_str << std::endl;
-
-    freeaddrinfo(res);
-
- //   return 0;
-}
-
-int	get_ip2(void)
-{
-	const char* hostname = "127.0.0.1";
-    const char* port = "8080";
-
-    struct addrinfo hints, *res, *p;
-	memset(&hints, 0, sizeof hints);
-
-    // Set up hints for getaddrinfo()
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-
-    // Call getaddrinfo() to get a list of address structures
-    int status = getaddrinfo(hostname, port, &hints, &res);
-    if (status != 0) {
-        std::cerr << "getaddrinfo error: " << gai_strerror(status) << '\n';
-        return 1;
-    }
-
-	cout << "loop start" << endl;
-    // Loop through the list of address structures and try to connect
-    int sockfd = -1;
-    for (p = res; p != NULL; p = p->ai_next) {
-        sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if (sockfd == -1) {
-            continue;
-        }
-
-        status = connect(sockfd, p->ai_addr, p->ai_addrlen);
-        if (status == -1) {
-            close(sockfd);
-            sockfd = -1;
-            continue;
-        }
-		cout << "connection successful" << endl;
-
-        break;  // connection successful
-    }
-
-    // Clean up the address structures
-    freeaddrinfo(res);
-
-    // Check if we were able to connect
-    if (sockfd == -1) {
-        std::cerr << "Unable to connect to " << hostname << ":" << port << '\n';
-        return 1;
-    }
-
-    std::cout << "Connected to " << hostname << ":" << port << '\n';
-
-    // Do something with the socket...
-
-    close(sockfd);
-    return 0;
-}
+//
+//void	get_ip(void)
+//{
+//	const char* server_name = "example.com";
+//    struct addrinfo hints, *res;
+//
+//    hints.ai_family = AF_INET;
+//    hints.ai_socktype = SOCK_STREAM;
+//
+//	memset(&hints, 0, sizeof hints);
+//
+//    if (getaddrinfo(server_name, NULL, &hints, &res) != 0)
+//    {
+//        std::cerr << "Failed to get address info for " << server_name << std::endl;
+//      //  return 1;
+//    }
+//
+//    const sockaddr_in* addr = reinterpret_cast<const sockaddr_in*>(res->ai_addr);
+//    char ip_str[INET_ADDRSTRLEN];
+//    inet_ntop(AF_INET, &addr->sin_addr, ip_str, INET_ADDRSTRLEN);
+//    std::cout << "The IP address of " << server_name << " is " << ip_str << std::endl;
+//
+//    freeaddrinfo(res);
+//
+// //   return 0;
+//}
+//
+//int	get_ip2(void)
+//{
+//	const char* hostname = "127.0.0.1";
+//    const char* port = "8080";
+//
+//    struct addrinfo hints, *res, *p;
+//	memset(&hints, 0, sizeof hints);
+//
+//    // Set up hints for getaddrinfo()
+//    hints.ai_family = AF_UNSPEC;
+//    hints.ai_socktype = SOCK_STREAM;
+//
+//    // Call getaddrinfo() to get a list of address structures
+//    int status = getaddrinfo(hostname, port, &hints, &res);
+//    if (status != 0) {
+//        std::cerr << "getaddrinfo error: " << gai_strerror(status) << '\n';
+//        return 1;
+//    }
+//
+//	cout << "loop start" << endl;
+//    // Loop through the list of address structures and try to connect
+//    int sockfd = -1;
+//    for (p = res; p != NULL; p = p->ai_next) {
+//        sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+//        if (sockfd == -1) {
+//            continue;
+//        }
+//
+//        status = connect(sockfd, p->ai_addr, p->ai_addrlen);
+//        if (status == -1) {
+//            close(sockfd);
+//            sockfd = -1;
+//            continue;
+//        }
+//		cout << "connection successful" << endl;
+//
+//        break;  // connection successful
+//    }
+//
+//    // Clean up the address structures
+//    freeaddrinfo(res);
+//
+//    // Check if we were able to connect
+//    if (sockfd == -1) {
+//        std::cerr << "Unable to connect to " << hostname << ":" << port << '\n';
+//        return 1;
+//    }
+//
+//    std::cout << "Connected to " << hostname << ":" << port << '\n';
+//
+//    // Do something with the socket...
+//
+//    close(sockfd);
+//    return 0;
+//}
 
 void	alecprintlocation(vector<Server_Detail> & d_servers)
 {

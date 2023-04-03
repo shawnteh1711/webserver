@@ -6,7 +6,7 @@
 #    By: steh <steh@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/03/10 21:12:27 by steh              #+#    #+#              #
-#    Updated: 2023/04/03 21:01:41 by steh             ###   ########.fr        #
+#    Updated: 2023/04/03 21:06:10 by steh             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,8 +18,8 @@ OBJS_DIR			=	objs
 OBJS				=	$(patsubst $(SRCS_DIR)/%.cpp, $(OBJS_DIR)/%.o, $(SRCS))
 DEPENDS_DIR			=	dependencies
 DEPENDS				=	$(patsubst $(SRCS_DIR)/%.cpp, $(OBJS_DIR)/%.d, $(SRCS))
-# CXXFLAGS			+=	-Wall -Wextra -Werror -std=c++98 -pedantic -fsanitize=address
-CXXFLAGS			+=	-Wall -Wextra -Werror -std=c++98 -pedantic
+CXXFLAGS			+=	-Wall -Wextra -Werror -std=c++98 -pedantic -fsanitize=address
+#CXXFLAGS			+=	-Wall -Wextra -Werror -std=c++98 -pedantic
 INCLUDES			=	-I$(SRCS_DIR) $(patsubst %, -I%, $(wildcard $(SRCS_DIR)/*/))
 
 all					:	$(NAME)
