@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/03 13:52:21 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/03 20:50:35 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 #define COOKIES_HPP
 
 #define BUFF_SIZE 4096
-#define ENV_SIZE 7
+#define ENV_SIZE 8
 
 #include "lib.hpp"
 

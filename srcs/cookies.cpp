@@ -456,7 +456,7 @@ int Request::readRequest(int client_socket)
         exit(EXIT_FAILURE);
     } else if (num_read == BUFF_SIZE)
     {
-        while (true) 
+        while (true)
         {
             char temp_buffer[BUFF_SIZE];
             int temp_read = recv(client_socket, temp_buffer, BUFF_SIZE, 0);
@@ -485,30 +485,42 @@ void Request::setEnvp()
     string script_name = "SCRIPT_NAME=" + this->parseCgiPath();
     string script_path = "SCRIPT_PATH=" + _cgi_path;
 
-    // cout << "script_path: " << script_path << endl;
+    // char** envp = (char**) malloc((ENV_SIZE + 1) * sizeof(char*));
+    vector<char *> envp2(8);
 
-  //  char** envp = (char**) malloc((ENV_SIZE + 1) * sizeof(char*));
-	vector<char *> envp(8);
-	// using vector for this easier, we are using cpp.
-    if (envp.size() == 0)
+    if (envp2.size() == 0)
     {
-        cerr << "Error: Failed to allocate memory to _envp." << endl;
+        cerr << "Error: Failed to allocate memory to envp." << endl;
         exit(EXIT_FAILURE);
     }
-    envp[0] = strdup(request_method.c_str());
-    envp[1] = strdup(query_string.c_str());
-    envp[2] = strdup(content_type.c_str());
-    envp[3] = strdup(content_length.c_str());
-    envp[4] = strdup(remote_addr.c_str());
-    envp[5] = strdup(script_name.c_str());
-    envp[6] = strdup(script_path.c_str());
-    envp[7] = NULL;
+    // envp[0] = strdup(request_method.c_str());
+    // envp[1] = strdup(query_string.c_str());
+    // envp[2] = strdup(content_type.c_str());
+    // envp[3] = strdup(content_length.c_str());
+    // envp[4] = strdup(remote_addr.c_str());
+    // envp[5] = strdup(script_name.c_str());
+    // envp[6] = strdup(script_path.c_str());
+    // envp[7] = NULL;
 
-    for (int i = 0; i < (int)envp.size(); i++)
+    envp2[0] = strdup(request_method.c_str());
+    envp2[1] = strdup(query_string.c_str());
+    envp2[2] = strdup(content_type.c_str());
+    envp2[3] = strdup(content_length.c_str());
+    envp2[4] = strdup(remote_addr.c_str());
+    envp2[5] = strdup(script_name.c_str());
+    envp2[6] = strdup(script_path.c_str());
+    envp2[7] = NULL;
+
+    // for (int i = 0; i < ENV_SIZE; i++)
+    // {
+    //     _envp[i] = envp[i];
+    // }
+    // _envp[ENV_SIZE - 1] = NULL;
+    for (int i = 0; i < (int)envp2.size(); i++)
     {
-        _envp[i] = envp[i];
+        _envp[i] = envp2[i];
     }
-    _envp[envp.size() - 1] = NULL;
+    _envp[envp2.size() - 1] = NULL;
     // this->freeEnvp(envp);
 }
 
@@ -562,7 +574,6 @@ char** Request::handleArgs(const string& cgi_path)
         args[i] = const_cast<char*>(it->c_str());;
         i++;
     }
-    // args[i++] = const_cast<char*>(cgi_path.c_str());
     args[i++] = const_cast<char*>(_cgi_path.c_str());
     args[i] = NULL;
 
@@ -613,15 +624,9 @@ int Request::handle_cgi(int client_socket)
             exit(EXIT_FAILURE);
         }
         close(pipes[1]);
-        char cwd[1024];
-        if (getcwd(cwd, sizeof(cwd)) == NULL) 
-        {
-            perror("getcwd() error");
-            exit(EXIT_FAILURE);
-        }
+        string pwd = getenv("PWD");
         const char* cgi_bin_path = "/cgi-bin/";
-        string cgi_path = string(cwd) + cgi_bin_path + this->parseCgiPath();
-        // setenv("CGI_PATH", cgi_path.c_str(), 1);
+        string cgi_path = pwd + cgi_bin_path + this->parseCgiPath();
         _cgi_path = cgi_path;
         this->setEnvp();
         args = handleArgs(cgi_path);
@@ -686,6 +691,7 @@ int Request::handle_cgi(int client_socket)
             perror("waitpid failed");
             exit(EXIT_FAILURE);
         }
+        // system("leaks webserv");
     }
     return (client_socket);
 }

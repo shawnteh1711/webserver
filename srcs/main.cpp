@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
+/*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/28 14:00:00 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/03 21:02:52 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -360,6 +360,6 @@ int main(int argc, char* argv[])
         return (1);
     }
 	test(argv);
-//	system("leaks webserv");
+	// system("leaks webserv");
     return 0;
 }
