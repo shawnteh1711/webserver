@@ -8,7 +8,8 @@ Request::Request() : _request()
     return ;
 }
 
-Request::Request(const string& request) : _request(request)
+Request::Request(const string& request, const string & cgi_path)
+	: _request(request), _cgi_path(cgi_path)
 {
     for (int i = 0; i < ENV_SIZE; i++)
         _envp[i] = NULL;
@@ -479,8 +480,10 @@ void Request::setEnvp()
     string remote_addr = "REMOTE_ADDR=" + this->getAddress();
     string script_name = "SCRIPT_NAME=" + this->parseCgiPath();
 
-    char** envp = (char**) malloc((ENV_SIZE + 1) * sizeof(char*));
-    if (envp == NULL)
+  //  char** envp = (char**) malloc((ENV_SIZE + 1) * sizeof(char*));
+	vector<char *> envp(100);
+	// using vector for this easier, we are using cpp.
+    if (envp.size() == 0)
     {
         cerr << "Error: Failed to allocate memory to _envp." << endl;
         exit(EXIT_FAILURE);
@@ -583,25 +586,29 @@ int Request::handle_cgi(int client_socket)
         perror("pipe");
         exit(EXIT_FAILURE);
     }
-    pid = fork();
+    pid = fork(); // this create a clone of main program process
     if (pid == -1)
     {
         perror("fork");
         exit(EXIT_FAILURE);
     }
-    else if (pid == 0)
+    else if (pid == 0) // 0 is child
     {
+		// pipe 0 = input
+		// pipe 1 = write(output)
+		cout << GREEN << "ENTER CHILD PROCESS" << RESET << endl;
         close(pipes[0]);
-        if (dup2(pipes[1], STDOUT_FILENO) == -1)
+        if (dup2(pipes[1], STDOUT_FILENO) == -1) // what is STDOUT_FILENO? terminal output save to pipes[1]. terminal output become child output? or child output become terminal output
         {
             perror("dup2");
             exit(EXIT_FAILURE);
         }
         close(pipes[1]);
-        this->setEnvp();
-        const char* cgi_bin_path = "../cgi-bin/";
+        this->setEnvp(); //this create enviroment variables?
+        //const char* cgi_bin_path = "~/Desktop/LEARN/WEBSERV/SHAWN/cgi-bin/";
+        const char* cgi_bin_path = "/Users/leng-chu/Desktop/LEARN/WEBSERV/SHAWN/cgi-bin/";
         string cgi_path = cgi_bin_path + this->parseCgiPath();
-		cout << "cgi:path" << cgi_path << endl;
+		//cout << "cgi:path" << cgi_path << endl;
         args = handleArgs(cgi_path);
         if (execve(args[0], args, this->getEnvp()) == -1)
         {
@@ -613,6 +620,7 @@ int Request::handle_cgi(int client_socket)
     }
     else
     {   
+		cout << GREEN << "ENTER PARENT PROCESS" << RESET << endl;
         close(pipes[1]);
         char buffer[BUFF_SIZE];
         ssize_t count = read(pipes[0], buffer, BUFF_SIZE);
@@ -637,7 +645,7 @@ int Request::handle_cgi(int client_socket)
             // Send the HTTP response back to the client
             Response res;
             res.setStatusCode(200);
-            res.setContentType("text/plain");
+            res.setContentType("text/html");
             if (this->hasCookies())
                 res.setHeader("Set-Cookie", this->getCookies());
             // res.setContent(this->getRequest().c_str(), this->getReadSize());

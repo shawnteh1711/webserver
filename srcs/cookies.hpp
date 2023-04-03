@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/03 12:28:30 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/03 13:52:21 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ class Request
 
     public:
         Request();
-        Request(const string& request);
+        Request(const string& request, const string & cgi_path);
         Request(string& request, int num_read);
         ~Request();
         bool isCgiRequest() const;

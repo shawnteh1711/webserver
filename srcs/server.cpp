@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/03 13:06:05 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/03 13:51:47 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,11 +140,14 @@ void	Server::startListen()
 		f = it->second.find("fastcgi_pass");
 		if (f != fe)
 		{
-			cout << GREEN << "FIND: " << f->first << " in " << it->first << RESET << endl;
+			cout << GREEN << "FIND: " << f->first << " ==> " << f->second << RESET << endl;
 			found_cgi = 1;
 		}
 		if (found_cgi)
+		{
 			cgi_path = it->first;
+			cout << GREEN << cgi_path << RESET << endl;
+		}
 		it++;
 	}
 	found_cgi = 0;
@@ -212,10 +215,11 @@ void	Server::startListen()
 					cout << "limit_size: " << limit_size << " bytes" << endl;
 					if (bodySize <= limit_size)
 					{
-						Request req(clientRequest);
+						Request req(clientRequest, cgi_path);
 						size_t methodPos = clientRequest.find(" ");
 						cout << YELLOW << "methodPos: " << methodPos << RESET << endl;
 						// how to check if this is cgi request or not?
+						req.hasCookies();
 						if (req.is_cgi_request())
 						{
 							cout << "it is cgi request??" << endl;
