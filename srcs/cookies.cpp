@@ -89,10 +89,12 @@ bool Request::is_cgi_request()
     val = false;
 	cout << CYAN << "Enter is cgi-request" << endl;
     uri = getRequestUrl();
+    cout << "uri: " << uri << endl;
     dot_pos = uri.rfind('.');
     if (dot_pos != string::npos)
     {
         _extension = uri.substr(dot_pos);
+        cout << "extension: " << _extension << endl;
         for (int i = 0; i < Unknown; ++i)
         {
             if (getEntensionType(_extension) == static_cast<cgi_extension>(i))
@@ -104,6 +106,7 @@ bool Request::is_cgi_request()
         }
     }
 	cout << RESET << endl;
+    cout << "val: " << val << endl;
     return (val);
 }
 
@@ -114,26 +117,32 @@ string  Request::getRequestUrl() const
     size_t  query_pos;
     size_t  http_pos;
     string  url;
+    size_t  header_end_pos;
 
-    cout << "Request:" << _request << endl;
+    // cout << "Request:" << _request << endl;
     space_pos = _request.find(' ');
     if (space_pos != string::npos)
     {
         url_pos = _request.find('/', space_pos + 1);
         if (url_pos != string::npos)
         {
-            query_pos = _request.find('?');
-            if (query_pos != string::npos)
+            header_end_pos = _request.find("\r\n");
+            if (header_end_pos != string::npos)
             {
-                url = _request.substr(url_pos, query_pos - url_pos);
-            }
-            else
-            {
-                http_pos = _request.find("HTTP/", url_pos);
-                if (http_pos != string::npos)
-                    url = _request.substr(url_pos, http_pos - url_pos - 1);
+                // query_pos = _request.find('?');
+                query_pos = _request.substr(0, header_end_pos).find('?');
+                if (query_pos != string::npos)
+                {
+                    url = _request.substr(url_pos, query_pos - url_pos);
+                }
                 else
-                    url = _request.substr(url_pos);
+                {
+                    http_pos = _request.find("HTTP/", url_pos);
+                    if (http_pos != string::npos)
+                        url = _request.substr(url_pos, http_pos - url_pos - 1);
+                    else
+                        url = _request.substr(url_pos);
+                }
             }
         }
     }
@@ -276,10 +285,15 @@ void    Response::printCookies() const
 
 string Request::parseCgiPath()
 {
-    string cgi_path;
+    string  cgi_path;
+    size_t  header_end;
+    size_t  path_start;
+    size_t  path_end;
 
-    size_t path_start = _request.find(" ");
-    size_t path_end = _request.find("?", path_start + 1);
+    path_start = _request.find(" ");
+    header_end = _request.find("\r\n");
+    path_end = _request.substr(0, header_end).find('?');
+    // path_end = _request.find("?", path_start + 1);
     if (path_end == string::npos)
         path_end = _request.find(" ", path_start + 1);
     if (path_end == string::npos)
@@ -295,6 +309,7 @@ string Request::parseCgiPath()
     {
         cout << "Request is not a CGI request" << endl;
     }
+    // cout << "cgi_path: " << cgi_path << endl;
     return (cgi_path);
 }
 
@@ -514,7 +529,7 @@ void    Request::printEnvp() const
     }
 }
 
-char** Request::handleArgs(const string& extension, const string& cgi_path)
+char** Request::handleArgs(const string& cgi_path)
 {
     vector<string>              commandArgs;
     char**                      args;
@@ -523,12 +538,12 @@ char** Request::handleArgs(const string& extension, const string& cgi_path)
 
     _extension_map[".cgi"].push_back(cgi_path);
     _extension_map[".php"].push_back("/usr/bin/php");
-    if (_extension_map.find(extension) == _extension_map.end())
+    if (_extension_map.find(this->getExtension()) == _extension_map.end())
     {
-        cerr << "Error: No CGI program found for extension " << extension << endl;
+        cerr << "Error: No CGI program found for extension " << this->getExtension() << endl;
         exit(EXIT_FAILURE);
     }
-    commandArgs = _extension_map[extension];
+    commandArgs = _extension_map[this->getExtension()];
     args = new char*[commandArgs.size() + 2];
     i = 0;
     for (it = commandArgs.begin(); it != commandArgs.end(); it++)
@@ -550,20 +565,24 @@ char** Request::handleArgs(const string& extension, const string& cgi_path)
     return (args_copy);
 }
 
+string    Response::getContent() const
+{
+    return (_content);
+}
+
 int Request::handle_cgi(int client_socket)
 {
     pid_t                       pid;
     int                         status;
     string                      cgi_path;
-    string                      extension;
     char**                      args;
-    // int                         pipes[2];
+    int                         pipes[2];
 
-    // if (pipe(pipes) == -1)
-    // {
-    //     perror("pipe");
-    //     exit(EXIT_FAILURE);
-    // }
+    if (pipe(pipes) == -1)
+    {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
     pid = fork();
     if (pid == -1)
     {
@@ -572,14 +591,17 @@ int Request::handle_cgi(int client_socket)
     }
     else if (pid == 0)
     {
-        // close(pipes[0]);
-        // dup2(pipes[1], STDOUT_FILENO);
-        // close(pipes[1]);
+        close(pipes[0]);
+        if (dup2(pipes[1], STDOUT_FILENO) == -1)
+        {
+            perror("dup2");
+            exit(EXIT_FAILURE);
+        }
+        close(pipes[1]);
         this->setEnvp();
         const char* cgi_bin_path = "../cgi-bin/";
         string cgi_path = cgi_bin_path + this->parseCgiPath();
-        extension = this->getExtension();
-        args = handleArgs(extension, cgi_path);
+        args = handleArgs(cgi_path);
         if (execve(args[0], args, this->getEnvp()) == -1)
         {
             cerr <<  "Error: " << strerror(errno) << endl;
@@ -590,23 +612,23 @@ int Request::handle_cgi(int client_socket)
     }
     else
     {   
-        // close(pipes[1]);
-        // char buffer[BUFSIZ];
-        // ssize_t count = read(pipes[0], buffer, BUFSIZ);
-        // if (count == -1)
-        // {
-        //     perror("read");
-        //     exit(EXIT_FAILURE);
-        // }
-        // else if (count == 0)
-        // {
-        //     cout << "No data read" << endl;
-        // }
-        // else
-        // {
-        //     cout << "Read " << count << " bytes" << endl;
-        //     cout << "Data read: " << buffer << endl;
-        // }
+        close(pipes[1]);
+        char buffer[BUFF_SIZE];
+        ssize_t count = read(pipes[0], buffer, BUFF_SIZE);
+        if (count == -1)
+        {
+            perror("read");
+            exit(EXIT_FAILURE);
+        }
+        else if (count == 0)
+        {
+            cout << "No data read" << endl;
+        }
+        else
+        {
+            cout << "Read " << count << " bytes" << endl;
+            cout << "Data read: " << buffer << endl;
+        }
         if (WIFEXITED(status))
         {
             cout << "Child process exit status " << WIFEXITED(status) << endl;
@@ -617,11 +639,12 @@ int Request::handle_cgi(int client_socket)
             res.setContentType("text/plain");
             if (this->hasCookies())
                 res.setHeader("Set-Cookie", this->getCookies());
-            res.setContent(this->getRequest().c_str(), this->getReadSize());
-            // res.setContent(buffer, count);
-            res.printCookies();
+            // res.setContent(this->getRequest().c_str(), this->getReadSize());
+            res.setContent(buffer, count);
+            // res.printCookies();
             string response_str = res.restoString();
             int bytes_sent;
+            // bytes_sent = write(client_socket, response_str.c_str(), response_str.size());
             bytes_sent = send(client_socket, response_str.c_str(), response_str.size(), 0);
             if (bytes_sent == -1)
             {

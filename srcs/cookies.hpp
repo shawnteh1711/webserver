@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/02 23:01:34 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/03 12:28:30 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ class Request
         void    printEnvp() const;
         void    freeEnvp(char **envp);
         int     handle_cgi(int client_socket);
-        char**  handleArgs(const string& extension, const string& cgi_path);
+        char**  handleArgs(const string& cgi_path);
         bool    hasCookies();
         string  getCookies() const;
 
@@ -86,6 +86,7 @@ class Response
         void    setStatusCode(int code);
         void    setContentType(const string& type);
         void    setContent(const char* content, int length);
+        string  getContent() const;
         string  restoString() const;
         void    setHeader(const string& name, const string& value);
         void    printCookies() const;
