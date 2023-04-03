@@ -613,18 +613,26 @@ int Request::handle_cgi(int client_socket)
             exit(EXIT_FAILURE);
         }
         close(pipes[1]);
-        char cwd[1024];
-        if (getcwd(cwd, sizeof(cwd)) == NULL) 
+		cout << GREEN << " CHILD AAA" << endl;
+        char *cwd = NULL;
+        if (getcwd(cwd, 1024) == NULL)  // this got problem
         {
+		cout << GREEN << "BBB" << endl;
+
             perror("getcwd() error");
             exit(EXIT_FAILURE);
         }
+		cout << GREEN << "CCC" << endl;
         const char* cgi_bin_path = "/cgi-bin/";
+		cout << GREEN << "DDD" << endl;
         string cgi_path = string(cwd) + cgi_bin_path + this->parseCgiPath();
         // setenv("CGI_PATH", cgi_path.c_str(), 1);
+		cout << GREEN << "EEE" << endl;
         _cgi_path = cgi_path;
         this->setEnvp();
+		cout << GREEN << "FFF" << endl;
         args = handleArgs(cgi_path);
+		cout << GREEN << "GGG" << endl;
         if (execve(args[0], args, this->getEnvp()) == -1)
         {
             cerr <<  "Error: " << strerror(errno) << endl;
@@ -639,6 +647,7 @@ int Request::handle_cgi(int client_socket)
         close(pipes[1]);
         char buffer[BUFF_SIZE];
         ssize_t count = read(pipes[0], buffer, BUFF_SIZE);
+		cout << GREEN << "HHH" << endl;
         if (count == -1)
         {
             perror("read");
@@ -687,6 +696,7 @@ int Request::handle_cgi(int client_socket)
             exit(EXIT_FAILURE);
         }
     }
+	cout << RESET << endl;
     return (client_socket);
 }
 
