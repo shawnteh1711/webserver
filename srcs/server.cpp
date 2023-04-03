@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/03 13:51:47 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/03 19:49:22 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,8 @@ Server::Server(vector<Server_Detail> & d_servers)
 	while (it != ite)
 	{
 		_socketAddrs[i].sin_family = AF_INET;
+		if (servers[i].port == "")
+			servers[i].port = "80";
 		_socketAddrs[i].sin_port = htons(stoi(servers[i].port));
 		_socketAddrs[i].sin_addr.s_addr = INADDR_ANY;
 		if (startServer(i) != 0)
@@ -116,12 +118,14 @@ void	Server::startListen()
 {
 	ostringstream	ss;
 	int				bytes;
+	int				total_bytes = 0;
 	char			buffer[BUF_SIZE];
 	const int		MAX_CLIENTS = 1000;
 	struct pollfd	*fds = new struct pollfd[MAX_CLIENTS + total];
 	int				nfds = total; // total of socket descriptors
 	size_t			one_mb = 1024 * 1024;
 	size_t			limit_size = 1 * one_mb;
+	string			finalbuffer;
 
 	// this block for checking the cgi request
 	string			cgi_path = "";
@@ -196,24 +200,36 @@ void	Server::startListen()
 		{
 			if (fds[i].revents & POLLIN)
 			{ 
+				finalbuffer.clear();
 				bzero(buffer, BUF_SIZE);
-				bytes = recv(fds[i].fd, buffer, BUF_SIZE, 0); // recv 1 time per loop
-				// buffer is from client. 
+				while ((bytes = recv(fds[i].fd, buffer, BUF_SIZE, 0)) > 0)
+				{
+					finalbuffer += string(buffer, BUF_SIZE);
+					total_bytes += bytes;
+					if (buffer[BUF_SIZE - 1] == '\0')
+						break ;
+					bzero(buffer, BUF_SIZE);
+				}
 				if (bytes  == -1)
 					N_MY::msg(RED"Failed to read bytes from client socket connection"RESET);
 				else if (bytes == 0)
-					N_MY::msg("The client has closed the connection");
+					N_MY::msg("The client has closed the connection"); // it triggered
 				else
 				{
 					// Check the limit of the client body size
-					string clientRequest(buffer, bytes);
+					//string clientRequest(buffer, bytes);
+					
+					string clientRequest = finalbuffer;
+					cout << "BYTES from client: " << total_bytes << endl;
 					cout << "clientRequest: " << clientRequest << endl;
+					cout << "clientRequest.find(\"\\r\\n\\r\\\"):" << clientRequest.find("\r\n\r\n") << endl;
 					size_t bodyPos = clientRequest.find("\r\n\r\n") + 4;
-					size_t bodySize = bytes - bodyPos;
+					cout << "bodyPos: " << bodyPos << endl;
+					size_t bodySize = total_bytes;
 
 					cout << "bodySize: " << bodySize << endl;
 					cout << "limit_size: " << limit_size << " bytes" << endl;
-					if (bodySize <= limit_size)
+					if (bodySize <= limit_size) // bodysize from client, limit_size from conf
 					{
 						Request req(clientRequest, cgi_path);
 						size_t methodPos = clientRequest.find(" ");
@@ -237,7 +253,7 @@ void	Server::startListen()
 						}
 					}
 					else
-						N_MY::msg("Client body size exceeded the limit\n\n");
+						N_MY::msg("Client body size exceeded the limit\n\n"); // should this return or not?
 				}
 				close(fds[i].fd);
 				// Remove the client socket from the array
