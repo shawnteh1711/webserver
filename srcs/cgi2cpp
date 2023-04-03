@@ -583,27 +583,27 @@ void handle_non_cgi(int client_socket, Request& req)
 }
 
 //  curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "name=shawn&age=30" http://localhost:8080/cgi-bin/hello.cgi
-int main()
-{
-   int     client_socket;
-   int     server_socket;
-   Request req;
-
-   server_socket = create_server_socket();
-   while (true)
-   {
-       cout << "+++++++Waiting for new connection+++++++" << endl;
-       client_socket = accept_connection(server_socket);
-       req.read_request(client_socket);
-       if (req.is_cgi_request())
-           client_socket = req.handle_cgi(client_socket);
-       else
-       {
-           handle_non_cgi(client_socket, req);
-       }
-       close(client_socket);
-    //    system("leaks a.out");
-       cout << "++++++++Done+++++++" << endl;
-   }
-   close(server_socket);
-}
+//int main()
+//{
+//   int     client_socket;
+//   int     server_socket;
+//   Request req;
+//
+//   server_socket = create_server_socket();
+//   while (true)
+//   {
+//       cout << "+++++++Waiting for new connection+++++++" << endl;
+//       client_socket = accept_connection(server_socket);
+//       req.read_request(client_socket);
+//       if (req.is_cgi_request())
+//           client_socket = req.handle_cgi(client_socket);
+//       else
+//       {
+//           handle_non_cgi(client_socket, req);
+//       }
+//       close(client_socket);
+//    //    system("leaks a.out");
+//       cout << "++++++++Done+++++++" << endl;
+//   }
+//   close(server_socket);
+//}

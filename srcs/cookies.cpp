@@ -601,6 +601,7 @@ int Request::handle_cgi(int client_socket)
         this->setEnvp();
         const char* cgi_bin_path = "../cgi-bin/";
         string cgi_path = cgi_bin_path + this->parseCgiPath();
+		cout << "cgi:path" << cgi_path << endl;
         args = handleArgs(cgi_path);
         if (execve(args[0], args, this->getEnvp()) == -1)
         {
@@ -671,12 +672,14 @@ void handle_non_cgi(int client_socket, Request& req)
     cout << "Handling non CGI request" << endl;
     Response res;
     res.setStatusCode(200);
-    res.setContentType("text/plain");
+    res.setContentType("text/html");
     if (req.hasCookies())
         res.setHeader("Set-Cookie", req.getCookies());
     res.setContent(req.getRequest().c_str(), req.getReadSize());
     string response_str = res.restoString();
+	cout << "response_str : " << response_str << endl;
     send(client_socket, response_str.c_str(), response_str.size(), 0);
+	// non-cgi dont need pipe, mine works. 
 }
 
 //  curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "name=shawn&age=30" http://localhost:8080/cgi-bin/hello.cgi
@@ -705,28 +708,28 @@ string  Request::getCookies() const
 //  curl --cookie "name=shawn; name2=alec" http://localhost:80
 //  curl -b "name=shawn; name2=alec" http://localhost:80
 // curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "name=shawn&age=30" "127.0.0.1/cgi-bin/hello.cgi?name=shawn&age=23&hobby=sport"
-int main()
-{
-   int     client_socket;
-   int     server_socket;
-   Request req;
-
-   server_socket = create_server_socket();
-   while (true)
-   {
-       cout << "+++++++Waiting for new connection+++++++" << endl;
-       client_socket = accept_connection(server_socket);
-       req.readRequest(client_socket);
-       req.hasCookies();
-       if (req.is_cgi_request())
-           client_socket = req.handle_cgi(client_socket);
-       else
-       {
-           handle_non_cgi(client_socket, req);
-       }
-       close(client_socket);
-    //    system("leaks a.out");
-       cout << "++++++++Done+++++++" << endl;
-   }
-   close(server_socket);
-}
+//int main()
+//{
+//   int     client_socket;
+//   int     server_socket;
+//   Request req;
+//
+//   server_socket = create_server_socket();
+//   while (true)
+//   {
+//       cout << "+++++++Waiting for new connection+++++++" << endl;
+//       client_socket = accept_connection(server_socket);
+//       req.readRequest(client_socket);
+//       req.hasCookies();
+//       if (req.is_cgi_request())
+//           client_socket = req.handle_cgi(client_socket);
+//       else
+//       {
+//           handle_non_cgi(client_socket, req);
+//       }
+//       close(client_socket);
+//    //    system("leaks a.out");
+//       cout << "++++++++Done+++++++" << endl;
+//   }
+//   close(server_socket);
+//}

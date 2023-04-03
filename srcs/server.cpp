@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/03/31 18:00:42 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/03 13:06:05 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -215,8 +215,12 @@ void	Server::startListen()
 						Request req(clientRequest);
 						size_t methodPos = clientRequest.find(" ");
 						cout << YELLOW << "methodPos: " << methodPos << RESET << endl;
+						// how to check if this is cgi request or not?
 						if (req.is_cgi_request())
+						{
 							cout << "it is cgi request??" << endl;
+							req.handle_cgi(fds[i].fd);
+						}
 					//	if (methodPos == string::npos)
 					//		sendErrorResponse(fds[i].fd, 400); 
 				//		if (methodPos == 10)
@@ -224,7 +228,7 @@ void	Server::startListen()
 						else
 						{
 							N_MY::msg("--- Received Request from client ---");
-			//				handle_non_cgi(fds[i].fd, req);
+					//		handle_non_cgi(fds[i].fd, req); // it is your request class
 							sendResponse(fds[i].fd);			
 						}
 					}
