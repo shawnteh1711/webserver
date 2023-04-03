@@ -629,9 +629,7 @@ int Request::handle_cgi(int client_socket)
         string cgi_path = pwd + cgi_bin_path + this->parseCgiPath();
         _cgi_path = cgi_path;
         this->setEnvp();
-		cout << GREEN << "FFF" << endl;
         args = handleArgs(cgi_path);
-		cout << GREEN << "GGG" << endl;
         if (execve(args[0], args, this->getEnvp()) == -1)
         {
             cerr <<  "Error: " << strerror(errno) << endl;
