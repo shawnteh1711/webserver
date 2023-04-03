@@ -35,36 +35,55 @@ string      removeComment(string line)
 }
 
 
-Directive parseDirective(string& line, int lineNum)
+Directive parseDirective(string& line, int lineNum) // i think here got issue
 {
     Directive directive;
     directive.line = lineNum;
     size_t argStart = line.find(' ');
+	cout << CYAN << "ENTER AAA" << endl;
     if (argStart != string::npos)
     {
+		cout << "BBBB" << endl;
         directive.directive = line.substr(0, argStart);
         if (directive.directive == "location" || directive.directive == "limit_except" || directive.directive == "upstream")
         {
+			cout << CYAN << "DDDD" << endl;
             size_t  argEnd = line.find_last_not_of(' ', line.size() - 2);
             line = line.substr(argStart + 1, argEnd - argStart);
         }
         else
         {
+			cout << CYAN << "EEEE" << endl;
             line = line.substr(argStart + 1);
             line = trimLine(line);
+			cout << CYAN << "FFFF" << endl;
             if (line.back() == ';')
                 line = line.substr(0, line.size() - 1);
         }
     }
     else
     {
-        if (line.back() == ';')
+		cout << CYAN << "GGGG" << endl;
+		cout << "line: " << line << endl;
+		cout << "line size: " << line.size() << endl;
+		cout << "line num: " << lineNum << endl;
+        //if ((line.size() > 0) && line.back() == ';') // <---- got issue
+        if (line.back() == ';') // <---- got issue
+		{
+			cout << CYAN << "GGGG2" << endl;
             line = line.substr(0, line.size() - 1);
+		}
         if (line == "internal")
+		{
+			cout << CYAN << "GGGG3" << endl;
             directive.directive = "internal";
+		}
         line.clear();
+		cout << CYAN << "GGGG4" << endl;
     }
     directive.args.push_back(line);
+	cout << "END BBB" << endl;
+	cout << RESET << endl;
     return (directive);
 }
 
@@ -82,10 +101,13 @@ vector<Directive> parseBlock(ifstream& file, int& lineNum, Directive& parentDire
     currentBlock = &block;
     isServerBlock = false;
     blockStack.push(&block);
+
     while (getline(file, line))
     {
         lineNum++;
-        if (line.empty() || line[0] == '#')
+		line = trimLine(line);
+        if (line.empty() || line[0] == '#' || line == "\t"
+				|| line == "\r" || line == " ")
             continue;
         line = removeComment(line);
         Directive directive;
