@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/03 20:03:56 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/04 16:18:57 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,8 +96,6 @@ int	Server::startServer(int index)
 		return N_MY::ErrorExit("Cannot create socket");
 	if (setsockopt(_sockfds[index], SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
 		return N_MY::ErrorExit("Cannot set socket option");
-//	int flags = fcntl(_sockfds[index], F_GETFL, 0);
-//	fcntl(_sockfds[index], F_SETFL, flags | O_NONBLOCK);
 	if (bind(_sockfds[index], (sockaddr*)&_socketAddrs[index], _socketAddr_len) < 0)
 	{
 		std::perror(std::strerror(errno));
@@ -119,7 +117,7 @@ void	Server::startListen()
 	ostringstream	ss;
 	int				bytes;
 	int				total_bytes = 0;
-	char			buffer[BUF_SIZE];
+	char			buffer[BUF_SIZE + 1];
 	const int		MAX_CLIENTS = 1000;
 	struct pollfd	*fds = new struct pollfd[MAX_CLIENTS + total];
 	int				nfds = total; // total of socket descriptors
@@ -204,14 +202,24 @@ void	Server::startListen()
 				bzero(buffer, BUF_SIZE);
 				// it reads till EOF of client
 				// chunk by chunk (BUF_SIZE is chunk size)
+				total_bytes = 0;
+				// BUF_SIZE is 10. any total bytes % 10 != 0 is fine.
+				// if total bytes % 10 == 0 got issue
 				while ((bytes = recv(fds[i].fd, buffer, BUF_SIZE, 0)) > 0)
 				{
+					cout << "buffer: " << buffer << endl;
+					cout << YELLOW << "new loop" << RESET << endl;
+					cout << GREEN << "total bytes: " << total_bytes << endl;
+					cout << "new bytes: " << bytes << endl;
 					finalbuffer += string(buffer, BUF_SIZE);
 					total_bytes += bytes;
-					if (buffer[BUF_SIZE - 1] == '\0')
+					if (buffer[BUF_SIZE - 1] == '\0' || buffer[BUF_SIZE] == '\0')
 						break ;
+					cout << CYAN << "finalbuffer: " << finalbuffer << RESET << endl;
 					bzero(buffer, BUF_SIZE);
+					cout << "bzero done" << endl;
 				}
+				cout << YELLOW << "" << RESET << endl;
 				if (bytes  == -1)
 					N_MY::msg(RED"Failed to read bytes from client socket connection"RESET);
 				else if (bytes == 0)
@@ -240,7 +248,7 @@ void	Server::startListen()
 						req.hasCookies();
 						if (req.is_cgi_request())
 						{
-							cout << "it is cgi request??" << endl;
+							cout << "it has cgi request" << endl;
 							req.handle_cgi(fds[i].fd);
 						}
 					//	if (methodPos == string::npos)
