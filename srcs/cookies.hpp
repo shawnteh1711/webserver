@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/03 20:50:35 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/04 15:56:58 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ class Request
         map<string, vector<string> >    _extension_map;
         string                          _cookies;
         string                          _query;
+        string                          _pwd;
 
     public:
         Request();
@@ -63,7 +64,7 @@ class Request
         int     getTotalReadSize() const;
         int     getReadSize() const;
         string  getRequest() const;
-        void    setCgiPath(string path);
+        string  setCgiPath(string path);
         void    setQuery(string& query);
         void    setRequest(string request);
         string  parseCgiPath();
@@ -76,6 +77,7 @@ class Request
         int     handle_cgi(int client_socket);
         char**  handleArgs(const string& cgi_path);
         bool    hasCookies();
+        void    readPipe(int count, char* buffer);
         string  getCookies() const;
 
 };
@@ -90,11 +92,16 @@ class Response
         string  restoString() const;
         void    setHeader(const string& name, const string& value);
         void    printCookies() const;
+        void    sendCgiResponse(Request& request, int client_socket, char *buffer, int num_read);
+        void    sendErrorResponse(int client_socket,  int status_code, string path);
+        bool    checkRequestCookies(Request& request);
+        string  getRequestCookies(Request& request);
 
     private:
         int                     _status_code;
         string                  _content_type;
         string                  _content;
+        string                  _cookies;
         map<string, string>     _headers;
 
         static string           getReasonPhrase(int code);

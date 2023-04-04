@@ -3,32 +3,24 @@
 
 Request::Request() : _request()
 {
-    for (int i = 0; i < ENV_SIZE; i++)
-        _envp[i] = NULL;
     return ;
 }
 
 Request::Request(const string& request, const string & cgi_path)
 	: _request(request), _cgi_path(cgi_path)
 {
-    for (int i = 0; i < ENV_SIZE; i++)
-        _envp[i] = NULL;
     return ;
 }
 
 
 Request::Request(string& request, int num_read)
 {
-    for (int i = 0; i < ENV_SIZE; i++)
-        _envp[i] = NULL;
     setBuffer(request, num_read);
     return ;
 }
 
 void    Request::setBuffer(string& request, int num_read)
 {
-     for (int i = 0; i < ENV_SIZE; i++)
-        _envp[i] = NULL;
     _request = request.substr(0, num_read);
     _read_size = num_read;
     _total_read_size += num_read;
@@ -256,9 +248,16 @@ string  Request::getRequest() const
     return (_request);
 }
 
-void    Request::setCgiPath(string path)
+string    Request::setCgiPath(string cgi_path)
 {
-    _cgi_path = path;
+    _pwd = getenv("PWD");
+    const char* cgi_bin_path = "/cgi-bin/";
+    cgi_path = _pwd + cgi_bin_path + this->parseCgiPath();
+    // cout << GREEN << "cgi_path: " << cgi_path << endl;
+    // cout << "_cgi_path: " << _cgi_path << endl;
+    // cout << RESET << endl;
+    _cgi_path = cgi_path;
+    return (_cgi_path);
 }
 
 void    Request::setRequest(string request)
@@ -593,41 +592,133 @@ string    Response::getContent() const
     return (_content);
 }
 
+bool       Response::checkRequestCookies(Request& request)
+{
+    _cookies = request.getHeader("Cookie");
+    if (_cookies.empty())
+    {
+        cout << "No cookies found" << endl;
+        return (false);
+    }
+    else
+    {
+        cout << "Cookies found: " << _cookies << endl;
+        return (true);
+    }
+
+}
+
+string  Response::getRequestCookies(Request& request)
+{
+    return (request.getCookies());
+}
+
+
+void    Response::sendCgiResponse(Request& request, int client_socket, char *buffer, int count)
+{
+    Response    res;
+    string      response_str;
+    int         bytes_sent;
+
+    res.setStatusCode(200);
+    res.setContentType("text/html");
+    if (this->checkRequestCookies(request))
+        res.setHeader("Set-Cookie", this->getRequestCookies(request));
+    // res.setContent(this->getRequest().c_str(), this->getReadSize());
+    res.setContent(buffer, count);
+    // res.printCookies();
+    response_str = res.restoString();
+    bytes_sent = send(client_socket, response_str.c_str(), response_str.size(), 0);
+    if (bytes_sent == -1)
+    {
+        perror("send");
+        exit(EXIT_FAILURE);
+    }
+    else if (bytes_sent != (int)response_str.size())
+    {
+        cerr << "Error: sent " << bytes_sent << " out of " << response_str.size() << " bytes" << endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+void    Response::sendErrorResponse(int client_socket, int status_code, string path)
+{
+    Response        res;
+    stringstream    ss;
+    string          html_content;
+    string          response_str;
+    int             bytes_sent;
+    string          pwd;
+
+    ifstream file(path);
+    ss << file.rdbuf();
+    html_content = ss.str();
+    res.setStatusCode(status_code);
+    res.setContentType("text/html");
+    res.setContent(html_content.c_str(), html_content.size());
+    response_str = res.restoString();
+    bytes_sent = send(client_socket, response_str.c_str(), response_str.size(), 0);
+    if (bytes_sent == -1)
+    {
+        perror("send");
+        exit(EXIT_FAILURE);
+    }
+    else if (bytes_sent != (int)response_str.size())
+    {
+        cerr << "Error: sent " << bytes_sent << " out of " << response_str.size() << " bytes" << endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+void Request::readPipe(int count, char* buffer)
+{
+    if (count == -1)
+    {
+        perror("read");
+        exit(EXIT_FAILURE);
+    }
+    else if (count == 0)
+        cout << "No data read" << endl;
+    else
+    {
+        cout << "Read " << count << " bytes" << endl;
+        cout << "Data read: " << buffer << endl;
+    }
+}
+
+
 int Request::handle_cgi(int client_socket)
 {
-    pid_t                       pid;
-    int                         status;
-    string                      cgi_path;
-    char**                      args;
-    int                         pipes[2];
+    pid_t       pid;
+    int         status;
+    string      cgi_path;
+    char**      args;
+    int         pipes[2];
+    Response    res;
+    ssize_t     count;
 
+    cgi_path = this->setCgiPath(cgi_path);
     if (pipe(pipes) == -1)
     {
         perror("pipe");
         exit(EXIT_FAILURE);
     }
-    pid = fork(); // this create a clone of main program process
+    pid = fork();
     if (pid == -1)
     {
         perror("fork");
         exit(EXIT_FAILURE);
     }
-    else if (pid == 0) // 0 is child
+    else if (pid == 0)
     {
-		// pipe 0 = input
-		// pipe 1 = write(output)
 		cout << GREEN << "ENTER CHILD PROCESS" << RESET << endl;
         close(pipes[0]);
-        if (dup2(pipes[1], STDOUT_FILENO) == -1) // what is STDOUT_FILENO? terminal output save to pipes[1]. terminal output become child output? or child output become terminal output
+        if (dup2(pipes[1], STDOUT_FILENO) == -1)
         {
             perror("dup2");
             exit(EXIT_FAILURE);
         }
         close(pipes[1]);
-        string pwd = getenv("PWD");
-        const char* cgi_bin_path = "/cgi-bin/";
-        string cgi_path = pwd + cgi_bin_path + this->parseCgiPath();
-        _cgi_path = cgi_path;
         this->setEnvp();
         args = handleArgs(cgi_path);
         if (execve(args[0], args, this->getEnvp()) == -1)
@@ -635,66 +726,48 @@ int Request::handle_cgi(int client_socket)
             cerr <<  "Error: " << strerror(errno) << endl;
             exit(EXIT_FAILURE);
         }
-        else
-            cout << "running execve" << endl;
     }
     else
-    {   
-		cout << GREEN << "ENTER PARENT PROCESS" << RESET << endl;
-        close(pipes[1]);
-        char buffer[BUFF_SIZE];
-        ssize_t count = read(pipes[0], buffer, BUFF_SIZE);
-		cout << GREEN << "HHH" << endl;
-        if (count == -1)
-        {
-            perror("read");
-            exit(EXIT_FAILURE);
-        }
-        else if (count == 0)
-        {
-            cout << "No data read" << endl;
-        }
-        else
-        {
-            cout << "Read " << count << " bytes" << endl;
-            cout << "Data read: " << buffer << endl;
-        }
-        if (WIFEXITED(status))
-        {
-            cout << "Child process exit status " << WIFEXITED(status) << endl;
-            
-            // Send the HTTP response back to the client
-            Response res;
-            res.setStatusCode(200);
-            res.setContentType("text/html");
-            if (this->hasCookies())
-                res.setHeader("Set-Cookie", this->getCookies());
-            // res.setContent(this->getRequest().c_str(), this->getReadSize());
-            res.setContent(buffer, count);
-            // res.printCookies();
-            string response_str = res.restoString();
-            int bytes_sent;
-            // bytes_sent = write(client_socket, response_str.c_str(), response_str.size());
-            bytes_sent = send(client_socket, response_str.c_str(), response_str.size(), 0);
-            if (bytes_sent == -1)
-            {
-                perror("send");
-                exit(EXIT_FAILURE);
-            }
-            else if (bytes_sent != (int)response_str.size())
-            {
-                cerr << "Error: sent " << bytes_sent << " out of " << response_str.size() << " bytes" << endl;
-                exit(EXIT_FAILURE);
-            }
-        }
+    {
+        cout << GREEN << "ENTER PARENT PROCESS" << RESET << endl;
         if (waitpid(pid, &status, 0) == -1)
         {
             perror("waitpid failed");
             exit(EXIT_FAILURE);
         }
+        if (WIFEXITED(status))
+        {
+            int         exit_status;
+            struct stat file_stat;
+            int         result;
+            char        buffer[BUFF_SIZE];
+
+            cout << "Child process exit status " << WIFEXITED(status) << endl;
+            exit_status = WEXITSTATUS(status);
+            close(pipes[1]);
+            count = read(pipes[0], buffer, BUFF_SIZE);
+            this->readPipe(count, buffer);
+            result = stat(_cgi_path.c_str(), &file_stat);
+            if (exit_status != 0)
+            {
+                if (result == -1)
+                {
+                    string root = "/root/404.html";
+                    string path = _pwd + root;
+                    res.sendErrorResponse(client_socket, 404, path);
+                }
+                else
+                {
+                    string root = "/root/500.html";
+                    string path = _pwd + root;
+                    res.sendErrorResponse(client_socket, 500, path);
+                }
+            }
+            else
+                res.sendCgiResponse(*this, client_socket, buffer, count);
+        }
         // system("leaks webserv");
     }
-	cout << RESET << endl;
     return (client_socket);
 }
 

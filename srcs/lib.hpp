@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   lib.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
+/*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/20 12:53:24 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/03 20:20:08 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/04 10:27:09 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@
 #include <vector>
 #include <fstream>
 #include <utility>
+#include <sys/stat.h>
 //#include <netdb.h> // for addrinfo struct
 #include <map>
 
