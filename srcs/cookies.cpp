@@ -80,7 +80,9 @@ bool Request::is_cgi_request()
     size_t          dot_pos;
 
     val = false;
+    // it keep running?
 	cout << CYAN << "Enter is cgi-request" << endl;
+    uri = getRequestUrl();
     cout << "uri: " << uri << endl;
     dot_pos = uri.rfind('.');
     if (dot_pos != string::npos)
