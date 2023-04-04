@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/20 12:53:24 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/04 19:39:24 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/04 19:40:36 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@
 #include <sys/stat.h>
 //#include <netdb.h> // for addrinfo struct
 #include <map>
-#include <fctnl.h>
+#include <fcntl.h>
 
 #define RESET   "\033[0m"
 #define RED		"\033[31m"

@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/04 19:39:11 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/04 22:00:55 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,7 +119,8 @@ void	Server::startListen()
 	int				total_bytes = 0;
 	char			buffer[BUF_SIZE + 1];
 	const int		MAX_CLIENTS = 1000;
-	struct pollfd	*fds = new struct pollfd[MAX_CLIENTS + total];
+	vector<struct pollfd>	fds(MAX_CLIENTS + total);
+	//struct pollfd	*fds = new struct pollfd[MAX_CLIENTS + total];
 	int				nfds = total; // total of socket descriptors
 	size_t			one_mb = 1024 * 1024;
 	size_t			limit_size = 1 * one_mb;
@@ -155,11 +156,11 @@ void	Server::startListen()
 	found_cgi = 0;
 	cout << RESET << endl;
 
-	memset(fds, 0, sizeof(*fds) * (MAX_CLIENTS + total));
+//	memset(fds, 0, sizeof(*fds) * (MAX_CLIENTS + total));
 	for (size_t i = 0; i < total; i++)
 	{
-	//	int flags = fcntl(_sockfd[i], F_GETFL, 0);
-	//	fcntl(_sockfd[i], F_SETFL, flags | O_NONBLOCK);
+		int flags = fcntl(_sockfds[i], F_GETFL, 0);
+		fcntl(_sockfds[i], F_SETFL, flags |= O_NONBLOCK);
 		if (listen(_sockfds[i], 20) < 0)
 			N_MY::ErrorExit("Socket listen failed");
 		ss << "\n*** Listening on ADDRESS: "
@@ -171,7 +172,8 @@ void	Server::startListen()
 
 	while (1)
 	{
-		int rv = poll(fds, nfds, -1);
+		int rv = poll(&fds[0], nfds, -1);
+		//cout << "POLLLLLLLLL" << endl;
 		if (rv == -1)
 			N_MY::ErrorExit("poll() failed");
 
@@ -181,9 +183,14 @@ void	Server::startListen()
 		{
 			if (fds[i].revents & POLLIN)
 			{
+				cout << YELLOW << "NEW CLIENT FD" << RESET << endl;
 				acceptConnection(_clientfd, i);
+		//		int flags = fcntl(_clientfd, F_GETFL, 0);
+		//		fcntl(_clientfd, F_SETFL, flags |= O_NONBLOCK);
 				fds[nfds].fd = _clientfd;
-				fds[nfds].events = POLLIN | POLLERR | POLLHUP;
+				fds[nfds].events = POLLIN | POLLERR | POLLHUP | POLLOUT;
+			//	fds[nfds].revents = 0;
+			//	cout << "fds[" << nfds << "] events: " << fds[nfds].events << " revents: " << fds[nfds].revents << endl; 
 				nfds++;
 				N_MY::msg("--- New client connected ---");
 				cout << "clientMaxBodySize: " << servers[i].clientMaxBodySize << endl;
@@ -194,35 +201,44 @@ void	Server::startListen()
 			}
 		}
 		
+				//cout << "fds[" << nfds - 1<< "] events: " << fds[nfds -1].events << " revents: " << fds[i].revents << endl; 
+		
 		// Check client fd's side
 		// recv from client & also send to client fd too
 		for (int i = total; i < nfds; i++)
 		{
-			if (fds[i].revents & POLLIN)
+			if (fds[i].revents & (POLLERR | POLLHUP))
+			{
+				cout << "Enter POLLER || POLLHUP!!" << endl;
+				close(fds[i].fd);
+				nfds--;
+				fds.erase(fds.begin() + i);
+				//fds[i] = fds[nfds]; // what is this line for ?
+				i--;
+			}
+			else if (fds[i].revents & POLLIN)
 			{ 
+				std::cout << "client in POLLIN" << std::endl;
 				finalbuffer.clear();
 				bzero(buffer, BUF_SIZE);
-				// it reads till EOF of client
-				// chunk by chunk (BUF_SIZE is chunk size)
 				total_bytes = 0;
-				// BUF_SIZE is 10. any total bytes % 10 != 0 is fine.
-				// if total bytes % 10 == 0 got issue
 				while ((bytes = recv(fds[i].fd, buffer, BUF_SIZE, 0)) > 0)
 				{
-					cout << "buffer: " << buffer << endl;
-					cout << YELLOW << "new loop" << RESET << endl;
-					cout << GREEN << "total bytes: " << total_bytes << endl;
-					cout << "new bytes: " << bytes << endl;
+					buffer[bytes] = '\0';
+//					cout << "buffer: " << buffer << endl;
+//					cout << YELLOW << "new loop" << RESET << endl;
+//					cout << GREEN << "total bytes: " << total_bytes << endl;
+//					cout << "new bytes: " << bytes << endl;
 					finalbuffer += string(buffer, BUF_SIZE);
 					total_bytes += bytes;
 					if (buffer[BUF_SIZE - 1] == '\0')
 						break ;
-					cout << CYAN << "finalbuffer: " << finalbuffer << RESET << endl;
+//					cout << CYAN << "finalbuffer: " << finalbuffer << RESET << endl;
 					bzero(buffer, BUF_SIZE);
-					cout << "bzero done" << endl;
+//					cout << "bzero done" << endl;
 				}
 				cout << YELLOW << "" << RESET << endl;
-				if (bytes  == -1)
+				if (bytes  == -1 && finalbuffer.size() == 0)
 					N_MY::msg(RED"Failed to read bytes from client socket connection"RESET);
 				else if (bytes == 0)
 					N_MY::msg("The client has closed the connection"); // it triggered
@@ -260,7 +276,10 @@ void	Server::startListen()
 						else
 						{
 							N_MY::msg("--- Received Request from client ---");
+							cout << "after close fds[" << i << "] events: " << fds[i].events << " revents: " << fds[i].revents << endl; 
 					//		handle_non_cgi(fds[i].fd, req); // it is your request class
+					//		if (fds[i].revents & (POLLOUT))
+					//			cout << "POLLOUUUT!!" << endl;
 							sendResponse(fds[i].fd);			
 						}
 					}
@@ -273,18 +292,18 @@ void	Server::startListen()
 				fds[i] = fds[nfds];
 				i--;
 			}
-			else if (fds[i].revents & (POLLERR | POLLHUP))
-			{
-				cout << "Enter POLLER || POLLHUP!!" << endl;
-				close(fds[i].fd);
-				close(fds[i].fd);
-				nfds--;
-				fds[i] = fds[nfds];
-				i--;
-			}
+		//	else if (fds[i].revents & (POLLERR | POLLHUP))
+		//	{
+		//		cout << "Enter POLLER || POLLHUP!!" << endl;
+		//		close(fds[i].fd);
+		//		close(fds[i].fd);
+		//		nfds--;
+		//		fds[i] = fds[nfds];
+		//		i--;
+		//	}
 		}
 	}
-	delete [] fds;
+	//delete [] fds;
 }
 
 void	Server::acceptConnection(int &new_client, int index)

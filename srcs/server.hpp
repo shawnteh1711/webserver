@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/03 18:17:33 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/04 19:41:29 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,8 @@
 #include "parse8.hpp"
 
 //#define BUF_SIZE	1048576
-#define BUF_SIZE	10
+//#define BUF_SIZE	10
+#define BUF_SIZE	1024
 #define LIMIT_SIZE	1000 // for limit client body size
 
 class	Server
