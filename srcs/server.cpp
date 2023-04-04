@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
+/*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/03 20:03:56 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/04 18:10:05 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -233,6 +233,8 @@ void	Server::startListen()
 					cout << "limit_size: " << limit_size << " bytes" << endl;
 					if (bodySize <= limit_size) // bodysize from client, limit_size from conf
 					{
+						// can you print this?
+						cout << RED << "clientRequest"<< clientRequest  << RESET  << endl;
 						Request req(clientRequest, cgi_path);
 						size_t methodPos = clientRequest.find(" ");
 						cout << YELLOW << "methodPos: " << methodPos << RESET << endl;

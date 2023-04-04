@@ -81,7 +81,6 @@ bool Request::is_cgi_request()
 
     val = false;
 	cout << CYAN << "Enter is cgi-request" << endl;
-    uri = getRequestUrl();
     cout << "uri: " << uri << endl;
     dot_pos = uri.rfind('.');
     if (dot_pos != string::npos)
@@ -728,6 +727,13 @@ int Request::handle_cgi(int client_socket)
     }
     else
     {
+        int         exit_status;
+        struct stat file_stat;
+        int         result;
+        char        buffer[BUFF_SIZE];
+        string      root;
+        string      path;
+
         cout << GREEN << "ENTER PARENT PROCESS" << RESET << endl;
         if (waitpid(pid, &status, 0) == -1)
         {
@@ -736,11 +742,6 @@ int Request::handle_cgi(int client_socket)
         }
         if (WIFEXITED(status))
         {
-            int         exit_status;
-            struct stat file_stat;
-            int         result;
-            char        buffer[BUFF_SIZE];
-
             cout << "Child process exit status " << WIFEXITED(status) << endl;
             exit_status = WEXITSTATUS(status);
             close(pipes[1]);
@@ -751,14 +752,14 @@ int Request::handle_cgi(int client_socket)
             {
                 if (result == -1)
                 {
-                    string root = "/root/404.html";
-                    string path = _pwd + root;
+                    root = "/root/404.html";
+                    path = _pwd + root;
                     res.sendErrorResponse(client_socket, 404, path);
                 }
                 else
                 {
-                    string root = "/root/500.html";
-                    string path = _pwd + root;
+                    root = "/root/500.html";
+                    path = _pwd + root;
                     res.sendErrorResponse(client_socket, 500, path);
                 }
             }
