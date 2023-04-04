@@ -6,7 +6,7 @@
 /*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/04 16:18:57 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/04 19:39:11 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,6 +158,8 @@ void	Server::startListen()
 	memset(fds, 0, sizeof(*fds) * (MAX_CLIENTS + total));
 	for (size_t i = 0; i < total; i++)
 	{
+	//	int flags = fcntl(_sockfd[i], F_GETFL, 0);
+	//	fcntl(_sockfd[i], F_SETFL, flags | O_NONBLOCK);
 		if (listen(_sockfds[i], 20) < 0)
 			N_MY::ErrorExit("Socket listen failed");
 		ss << "\n*** Listening on ADDRESS: "
@@ -213,7 +215,7 @@ void	Server::startListen()
 					cout << "new bytes: " << bytes << endl;
 					finalbuffer += string(buffer, BUF_SIZE);
 					total_bytes += bytes;
-					if (buffer[BUF_SIZE - 1] == '\0' || buffer[BUF_SIZE] == '\0')
+					if (buffer[BUF_SIZE - 1] == '\0')
 						break ;
 					cout << CYAN << "finalbuffer: " << finalbuffer << RESET << endl;
 					bzero(buffer, BUF_SIZE);
