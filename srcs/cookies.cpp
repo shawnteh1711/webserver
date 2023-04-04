@@ -252,7 +252,7 @@ string    Request::setCgiPath(string cgi_path)
 {
     _pwd = getenv("PWD");
     const char* cgi_bin_path = "/cgi-bin/";
-    cgi_path = _pwd + cgi_bin_path + this->parseCgiPath();
+    cgi_path = _pwd + cgi_bin_path + this->parseRequestedFile();
     // cout << GREEN << "cgi_path: " << cgi_path << endl;
     // cout << "_cgi_path: " << _cgi_path << endl;
     // cout << RESET << endl;
@@ -287,9 +287,9 @@ void    Response::printCookies() const
     
 }
 
-string Request::parseCgiPath()
+string Request::parseRequestedFile()
 {
-    string  cgi_path;
+    string  cgi_file;
     size_t  header_end;
     size_t  path_start;
     size_t  path_end;
@@ -305,16 +305,15 @@ string Request::parseCgiPath()
     string path = _request.substr(path_start + 1, path_end - path_start - 1);
     if (path.find("/cgi-bin/") != string::npos)
     {
-        cgi_path = path.substr(9); // Skip "/cgi-bin/" prefix
-        if (cgi_path.back() == '/')
-            cgi_path.pop_back();
+        cgi_file = path.substr(9); // Skip "/cgi-bin/" prefix
+        if (cgi_file.back() == '/')
+            cgi_file.pop_back();
     }
     else
     {
         cout << "Request is not a CGI request" << endl;
     }
-    // cout << "cgi_path: " << cgi_path << endl;
-    return (cgi_path);
+    return (cgi_file);
 }
 
 void    Response::setStatusCode(int code)
@@ -481,7 +480,7 @@ void Request::setEnvp()
     string content_type = "CONTENT_TYPE=" + this->getHeader("Content-Type");
     string content_length = "CONTENT_LENGTH=" + this->getHeader("Content-Length");
     string remote_addr = "REMOTE_ADDR=" + this->getAddress();
-    string script_name = "SCRIPT_NAME=" + this->parseCgiPath();
+    string script_name = "SCRIPT_NAME=" + this->parseRequestedFile();
     string script_path = "SCRIPT_PATH=" + _cgi_path;
 
     // char** envp = (char**) malloc((ENV_SIZE + 1) * sizeof(char*));

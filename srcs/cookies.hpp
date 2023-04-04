@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/04 15:56:58 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/04 17:04:41 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,7 @@ class Request
         string  setCgiPath(string path);
         void    setQuery(string& query);
         void    setRequest(string request);
-        string  parseCgiPath();
+        string  parseRequestedFile();
         void    setBuffer(string& buffer, int num_read);
         void    setEnvp();
         int     readRequest(int client_socket);
