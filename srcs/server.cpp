@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/04 22:08:00 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/05 16:27:04 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,10 +118,11 @@ void	Server::startListen()
 	int				bytes;
 	int				total_bytes = 0;
 	char			buffer[BUF_SIZE + 1];
-	const int		MAX_CLIENTS = 1000;
-	vector<struct pollfd>	fds(MAX_CLIENTS + total);
+	//const int		MAX_CLIENTS = 1000;
+	//vector<struct pollfd>	fds(MAX_CLIENTS + total);
+	vector<struct pollfd> fds;
 	//struct pollfd	*fds = new struct pollfd[MAX_CLIENTS + total];
-	int				nfds = total; // total of socket descriptors
+	//int				nfds = total; // total of socket descriptors
 	size_t			one_mb = 1024 * 1024;
 	size_t			limit_size = 1 * one_mb;
 	string			finalbuffer;
@@ -156,7 +157,7 @@ void	Server::startListen()
 	found_cgi = 0;
 	cout << RESET << endl;
 
-//	memset(fds, 0, sizeof(*fds) * (MAX_CLIENTS + total));
+	struct pollfd	new_poll;
 	for (size_t i = 0; i < total; i++)
 	{
 		int flags = fcntl(_sockfds[i], F_GETFL, 0);
@@ -166,54 +167,40 @@ void	Server::startListen()
 		ss << "\n*** Listening on ADDRESS: "
 			<< inet_ntoa(_socketAddrs[i].sin_addr) << " PORT: " << servers[i].port;
 		N_MY::msg(ss.str());
-		fds[i].fd = _sockfds[i];
-		fds[i].events = POLLIN;
+		new_poll.fd = _sockfds[i];
+		new_poll.events = POLLIN;
+		fds.push_back(new_poll);
 	}
 
 	while (1)
 	{
-		int rv = poll(&fds[0], nfds, -1);
+		int rv = poll(&fds[0], fds.size(), -1);
 		//cout << "POLLLLLLLLL" << endl;
 		if (rv == -1)
 			N_MY::ErrorExit("poll() failed");
-
-		// Check if there is a new connection waiting on ther listening
-		// check server fd's side
 		for (size_t i = 0; i < total; i++)
 		{
 			if (fds[i].revents & POLLIN)
 			{
 				cout << YELLOW << "NEW CLIENT FD" << RESET << endl;
 				acceptConnection(_clientfd, i);
-		//		int flags = fcntl(_clientfd, F_GETFL, 0);
-		//		fcntl(_clientfd, F_SETFL, flags |= O_NONBLOCK);
-				fds[nfds].fd = _clientfd;
-				fds[nfds].events = POLLIN | POLLERR | POLLHUP | POLLOUT;
-			//	fds[nfds].revents = 0;
-			//	cout << "fds[" << nfds << "] events: " << fds[nfds].events << " revents: " << fds[nfds].revents << endl; 
-				nfds++;
+				new_poll.fd = _clientfd;
+				new_poll.events = POLLIN | POLLERR | POLLHUP | POLLOUT;
+				fds.push_back(new_poll);
 				N_MY::msg("--- New client connected ---");
-				cout << "clientMaxBodySize: " << servers[i].clientMaxBodySize << endl;
 				if (servers[i].clientMaxBodySize != "")
 					limit_size = stoi(servers[i].clientMaxBodySize) * one_mb;
 				else 
 					limit_size = one_mb;
 			}
 		}
-		
-				//cout << "fds[" << nfds - 1<< "] events: " << fds[nfds -1].events << " revents: " << fds[i].revents << endl; 
-		
-		// Check client fd's side
-		// recv from client & also send to client fd too
-		for (int i = total; i < nfds; i++)
+		for (size_t i = total; i < fds.size(); i++)
 		{
 			if (fds[i].revents & (POLLERR | POLLHUP))
 			{
 				cout << "Enter POLLER || POLLHUP!!" << endl;
 				close(fds[i].fd);
-				nfds--;
 				fds.erase(fds.begin() + i);
-				//fds[i] = fds[nfds]; // what is this line for ?
 				i--;
 			}
 			else if (fds[i].revents & POLLIN)
@@ -225,87 +212,57 @@ void	Server::startListen()
 				while ((bytes = recv(fds[i].fd, buffer, BUF_SIZE, 0)) > 0)
 				{
 					buffer[bytes] = '\0';
-//					cout << "buffer: " << buffer << endl;
-//					cout << YELLOW << "new loop" << RESET << endl;
-//					cout << GREEN << "total bytes: " << total_bytes << endl;
-//					cout << "new bytes: " << bytes << endl;
 					finalbuffer += string(buffer, BUF_SIZE);
 					total_bytes += bytes;
 					if (buffer[BUF_SIZE - 1] == '\0')
 						break ;
-//					cout << CYAN << "finalbuffer: " << finalbuffer << RESET << endl;
 					bzero(buffer, BUF_SIZE);
-//					cout << "bzero done" << endl;
 				}
 				cout << YELLOW << "" << RESET << endl;
 				if (bytes  == -1 && finalbuffer.size() == 0)
-					N_MY::msg(RED"Failed to read bytes from client socket connection"RESET);
+					N_MY::msg(RED"Failed to read client request"RESET);
 				else if (bytes == 0)
-					N_MY::msg("The client has closed the connection"); // it triggered
+					N_MY::msg("The client has closed the connection");
 				else
 				{
-					// Check the limit of the client body size
-					//string clientRequest(buffer, bytes);
-					
 					string clientRequest = finalbuffer;
 					cout << "BYTES from client: " << total_bytes << endl;
 					cout << "clientRequest: " << clientRequest << endl;
-					cout << "clientRequest.find(\"\\r\\n\\r\\\"):" << clientRequest.find("\r\n\r\n") << endl;
 					size_t bodyPos = clientRequest.find("\r\n\r\n") + 4;
 					cout << "bodyPos: " << bodyPos << endl;
 					size_t bodySize = total_bytes;
-
 					cout << "bodySize: " << bodySize << endl;
 					cout << "limit_size: " << limit_size << " bytes" << endl;
-					if (bodySize <= limit_size) // bodysize from client, limit_size from conf
+					if (bodySize <= limit_size)
 					{
-						// can you print this?
-						cout << RED << "clientRequest"<< clientRequest  << RESET  << endl;
+						cout << RED << "clientRequest: "<< clientRequest  << RESET  << endl;
 						Request req(clientRequest, cgi_path);
 						size_t methodPos = clientRequest.find(" ");
 						cout << YELLOW << "methodPos: " << methodPos << RESET << endl;
-						// how to check if this is cgi request or not?
 						req.hasCookies();
 						if (req.is_cgi_request())
 						{
 							cout << "it has cgi request" << endl;
 							req.handle_cgi(fds[i].fd);
 						}
-					//	if (methodPos == string::npos)
-					//		sendErrorResponse(fds[i].fd, 400); 
 				//		if (methodPos == 10)
-				//			sendErrorResponse(fds[i].fd, 400); 
+				//			sendErrorResponse(fds[i].fd, 400);
 						else
 						{
 							N_MY::msg("--- Received Request from client ---");
-							cout << "after close fds[" << i << "] events: " << fds[i].events << " revents: " << fds[i].revents << endl; 
-					//		handle_non_cgi(fds[i].fd, req); // it is your request class
-					//		if (fds[i].revents & (POLLOUT))
-					//			cout << "POLLOUUUT!!" << endl;
-							sendResponse(fds[i].fd);			
+							cout << "after close fds[" << i << "] events: " << fds[i].events << " revents: " << fds[i].revents << endl;
+							sendResponse(fds[i].fd);
 						}
 					}
 					else
-						N_MY::msg("Client body size exceeded the limit\n\n"); // should this return or not?
+						N_MY::msg("Client body size exceeded the limit\n\n");
 				}
 				close(fds[i].fd);
-				// Remove the client socket from the array
-				nfds--;
-				fds[i] = fds[nfds];
+				fds.erase(fds.begin() + i);
 				i--;
 			}
-		//	else if (fds[i].revents & (POLLERR | POLLHUP))
-		//	{
-		//		cout << "Enter POLLER || POLLHUP!!" << endl;
-		//		close(fds[i].fd);
-		//		close(fds[i].fd);
-		//		nfds--;
-		//		fds[i] = fds[nfds];
-		//		i--;
-		//	}
-		}
+		} // end of main loop
 	}
-	//delete [] fds;
 }
 
 void	Server::acceptConnection(int &new_client, int index)
