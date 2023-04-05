@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/05 12:53:29 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/05 21:21:52 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -366,7 +366,7 @@ void	test(char **argv)
 	signal(SIGINT, Server::sig_handler);
 	signal(SIGTSTP, Server::sig_handler);
 	Server	s1(d_servers);
-	testing_limit_except(d_servers);
+	// testing_limit_except(d_servers); // this one ?
 	s1.startListen();
 
 

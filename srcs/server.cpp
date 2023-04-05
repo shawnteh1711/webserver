@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/05 20:41:12 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/05 21:26:37 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,9 +265,17 @@ void	Server::startListen()
 					cout << "clientRequest: " << clientRequest << endl;
 					
 					// get url from client
-					int first = clientRequest.find("localhost");
-					string tmp = clientRequest.substr(first, clientRequest.size());
-					string host = tmp.substr(0, tmp.find(" "));
+					cout << RED << "herererere" << RESET << endl;
+					string tmp, host;
+					if (clientRequest.find("localhost") != string::npos)
+					{
+						int first = clientRequest.find("localhost");
+						cout << RED << "herererere2" << RESET << endl;
+						tmp = clientRequest.substr(first, clientRequest.size());
+						cout << RED << "herererere3" << RESET << endl;
+						host = tmp.substr(0, tmp.find(" "));
+					}
+					
 
 					size_t bodyPos = clientRequest.find("\r\n\r\n") + 4;
 					cout << "bodyPos: " << bodyPos << endl;
