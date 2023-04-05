@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/03 21:06:44 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/05 12:53:29 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -306,8 +306,49 @@ void	setup(vector<Server_Detail> & d_servers, char **argv)
 //	config.print(config);
 	d_servers = config.setServer(config); 
 //	config.printServer(d_servers);
-//	alecprintlocation(d_servers);
+	// alecprintlocation(d_servers);
 
+}
+
+void	testing_limit_except(vector<Server_Detail> & d_servers)
+{
+	string	disable_path;
+	string	enable_method;
+
+	for (vector<Server_Detail>::iterator it = d_servers.begin(); it != d_servers.end(); ++it)
+	{
+		cout << RED << "Server: " << it->id << endl;
+		for (map<string, multimap<string, string> >::iterator mit = it->mylocations.begin(); mit != it->mylocations.end(); ++mit)
+		{
+			// cout << RED << "Location: " << mit->first << endl;
+			for (multimap<string, string>::iterator sit = mit->second.begin(); sit != mit->second.end(); ++sit)
+			{
+				// cout << RED << "Directive: " << sit->first << ", Argument: " << sit->second << RESET<< endl;
+				if (sit->first == "limit_except")
+				{
+					cout << RED << "Location: " << mit->first << endl;
+					disable_path = mit->first;
+					cout << RED << "Directive:|" << sit->first << "|, Argument: " << sit->second << RESET<< endl;
+					enable_method = sit->second;
+				}
+			}
+		}
+	}
+	string	request_path;
+	string  request_method;
+
+	request_path = "/example";
+	request_method = "POST";
+	if (request_path == disable_path)
+	{
+		cout << "enable_method: " << enable_method << endl;
+		if (enable_method.find(request_method) != string::npos)
+			cout << request_method << " method is able" << endl;
+		else
+			cout << "HTTP/1.1 405 Method Not Allowed\r\n\r\n" << endl;
+	}
+
+	cout << RESET << endl;
 }
 
 void	test(char **argv)
@@ -325,7 +366,7 @@ void	test(char **argv)
 	signal(SIGINT, Server::sig_handler);
 	signal(SIGTSTP, Server::sig_handler);
 	Server	s1(d_servers);
-
+	testing_limit_except(d_servers);
 	s1.startListen();
 
 
@@ -350,6 +391,26 @@ void	test(char **argv)
 	(void)argv;
 }
 
+bool isValidConfigFile(const char* path)
+{
+    ifstream configFile(path);
+
+    if (!configFile.is_open()) {
+        cerr << "Error: Unable to open config file" << endl;
+        return (false);
+    }
+
+    // Check if the file is empty
+    if (configFile.peek() == ifstream::traits_type::eof()) {
+        cerr << "Error: Config file is empty" << endl;
+        return (false);
+    }
+
+    // Additional checks to ensure that the file is in the correct format can be performed here
+    return (true);
+}
+
+
 int main(int argc, char* argv[])
 {
 	// shawn
@@ -359,6 +420,8 @@ int main(int argc, char* argv[])
         cerr << "Please enter: ./a.out [conf path]" << endl;
         return (1);
     }
+	if (!isValidConfigFile(argv[1]))
+		return (1);
 	test(argv);
 	// system("leaks webserv");
     return 0;

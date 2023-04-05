@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/04 22:08:00 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/05 16:07:11 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,8 @@ Server *Server::server_instance = NULL;
 Server::Server(vector<Server_Detail> & d_servers)
 	: servers(d_servers), total(d_servers.size()), 
 	_sockfds(total), _clientfd(),
-	_serverMsg(buildResponse()), _socketAddrs(total) , _socketAddr_len(sizeof(_socketAddrs[0]))
+	_serverMsg(buildResponse2()), _socketAddrs(total) , _socketAddr_len(sizeof(_socketAddrs[0]))
+	// _serverMsg(buildResponse()), _socketAddrs(total) , _socketAddr_len(sizeof(_socketAddrs[0]))
 //	_socketAddr(), _socketAddr_len(sizeof(_socketAddr))
 {
 	cout << "seervers: " << total << endl;
@@ -319,9 +320,41 @@ void	Server::acceptConnection(int &new_client, int index)
 	}
 }
 
+void generate_listing(string path, string &listing) {
+    DIR *dir;
+    struct dirent *ent;
+
+    // Open the directory
+    if ((dir = opendir(path.c_str())) != NULL) {
+        // Iterate through the directory entries
+		listing += "<p>Path: " + path + "</p>";
+        while ((ent = readdir(dir)) != NULL) {
+            listing += "<li>" + string(ent->d_name) + "</li>";
+        }
+        closedir(dir);
+    } else {
+        cerr << "Error opening directory: " << path << endl;
+    }
+}
+
 string Server::buildResponse()
 {
 	string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><h1> HOME </h1><p> Hello from your Server :) </p></body></html>";
+	ostringstream ss;
+	ss << "HTTP/1.1 200 OK\r\n"
+	   << "Content-Type: text/html\r\n"
+	   << "Content-Length: " << htmlFile.size() 
+	   << "\r\n\r\n"
+	   << htmlFile;
+	return ss.str();
+}
+
+string Server::buildResponse2()
+{
+	string htmlFile = "<html><body>Trying autoindex<ul>";
+	string 	path = "/Users/steh/Documents/own_folder/webserver/kapouet"; // now hardcode
+    generate_listing(path, htmlFile); //for autoindex directory
+	htmlFile += "</ul></body></html>";
 	ostringstream ss;
 	ss << "HTTP/1.1 200 OK\r\n"
 	   << "Content-Type: text/html\r\n"

@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/20 12:53:24 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/04 19:40:36 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/05 15:48:23 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@
 //#include <netdb.h> // for addrinfo struct
 #include <map>
 #include <fcntl.h>
+#include <dirent.h> //  for dirent struct autoindex
 
 #define RESET   "\033[0m"
 #define RED		"\033[31m"
@@ -42,5 +43,7 @@
 #define WHITE	"\033[37m"
 
 using namespace std;
+
+#define PWD getenv("PWD")
 
 #endif
