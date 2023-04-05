@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/05 16:39:21 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/05 20:41:12 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,6 +113,36 @@ void	Server::closeServer()
 //	exit(0);
 }
 
+string	Server::search_location(multimap<string, multimap<string, string> > & mylocations, string searchname)
+{
+	multimap<string, multimap<string, string> >::iterator it, ite;
+	multimap<string, string>::iterator f, fe;
+
+	it = mylocations.begin(), ite = mylocations.end();
+	while (it != ite) // actually two loop if i need to check mutli server.
+	{
+		cout << "===NEW ITERATOR===" << endl;
+		cout << CYAN << "KEY: ";
+		cout << YELLOW << it->first << endl;
+		f = it->second.begin(); fe = it->second.end();
+		//f = it->second.find("fastcgi_pass");
+		f = it->second.find(searchname);
+		if (f != fe)
+		{
+			cout << GREEN << "FIND: " << f->first << " ==> " << f->second << RESET << endl;
+		//	found_cgi = 1;
+			return (f->second);
+		}
+//		if (found_cgi)
+//		{
+//			cgi_path = it->first;
+//			cout << GREEN << cgi_path << RESET << endl;
+//		}
+		it++;
+	}
+	return ("");
+}
+
 void	Server::startListen()
 {
 	ostringstream	ss;
@@ -134,15 +164,15 @@ void	Server::startListen()
 	multimap<string, multimap<string, string> >::iterator it, ite;
 	multimap<string, string>::iterator f, fe;
 
-	// implementation to check if server has cgi request or not
 	it = servers[0].mylocations.begin(), ite = servers[0].mylocations.end();
-	while (it != ite)
+	while (it != ite) // actually two loop if i need to check mutli server.
 	{
 		cout << "===NEW ITERATOR===" << endl;
 		cout << CYAN << "KEY: ";
 		cout << YELLOW << it->first << endl;
 		f = it->second.begin(); fe = it->second.end();
-		f = it->second.find("fastcgi_pass");
+		//f = it->second.find("fastcgi_pass");
+		f = it->second.find("limit_except");
 		if (f != fe)
 		{
 			cout << GREEN << "FIND: " << f->first << " ==> " << f->second << RESET << endl;
@@ -155,9 +185,9 @@ void	Server::startListen()
 		}
 		it++;
 	}
+	// haha i think i done limit_except and cgi already for search
 	found_cgi = 0;
 	cout << RESET << endl;
-
 	struct pollfd	new_poll;
 	for (size_t i = 0; i < total; i++)
 	{
@@ -175,7 +205,11 @@ void	Server::startListen()
 
 	while (1)
 	{
-		int rv = poll(&fds[0], fds.size(), -1);
+		//usleep(2000);
+		int rv = poll(&fds[0], fds.size(), -1); // it make a bit better.
+		// haiz
+		// your coding is short
+
 		//cout << "POLLLLLLLLL" << endl;
 		if (rv == -1)
 			N_MY::ErrorExit("poll() failed");
@@ -227,16 +261,21 @@ void	Server::startListen()
 				else
 				{
 					string clientRequest = finalbuffer;
-					cout << "BYTES from client: " << total_bytes << endl;
+					cout << CYAN"BYTES from client: " << total_bytes << endl;
 					cout << "clientRequest: " << clientRequest << endl;
+					
+					// get url from client
+					int first = clientRequest.find("localhost");
+					string tmp = clientRequest.substr(first, clientRequest.size());
+					string host = tmp.substr(0, tmp.find(" "));
+
 					size_t bodyPos = clientRequest.find("\r\n\r\n") + 4;
 					cout << "bodyPos: " << bodyPos << endl;
 					size_t bodySize = total_bytes;
 					cout << "bodySize: " << bodySize << endl;
-					cout << "limit_size: " << limit_size << " bytes" << endl;
+					cout << "limit_size: " << limit_size << " bytes" << RESET << endl;
 					if (bodySize <= limit_size)
 					{
-						cout << RED << "clientRequest: "<< clientRequest  << RESET  << endl;
 						Request req(clientRequest, cgi_path);
 						size_t methodPos = clientRequest.find(" ");
 						cout << YELLOW << "methodPos: " << methodPos << RESET << endl;
@@ -251,8 +290,10 @@ void	Server::startListen()
 						else
 						{
 							N_MY::msg("--- Received Request from client ---");
-							cout << "after close fds[" << i << "] events: " << fds[i].events << " revents: " << fds[i].revents << endl;
-							sendResponse(fds[i].fd);
+							if (host.find("localhost:8080") != string::npos)
+								redirect_Response(fds[i].fd, "http://localhost:1024");
+							else
+								sendResponse(fds[i].fd);
 						}
 					}
 					else
@@ -319,6 +360,23 @@ string Server::buildResponse2()
 	   << "\r\n\r\n"
 	   << htmlFile;
 	return ss.str();
+}
+
+void Server::redirect_Response(int client_fd, const string & url) {
+	long bytesSent;
+
+    ostringstream ss;
+    ss << "HTTP/1.1 302 Found\r\n"
+       << "Location: " << url << "\r\n"
+       << "Connection: close"
+       << "\r\n\r\n";
+    bytesSent = send(client_fd, ss.str().c_str(), ss.str().length(), 0);
+	if (bytesSent == -1)
+		N_MY::msg("Error sending response to client");
+	else if (bytesSent == 0)
+		N_MY::msg("Server closed the connection with the client");
+	else
+		N_MY::msg("Server sent a response to the client\n\n");
 }
 
 void Server::sendResponse(int client_fd)

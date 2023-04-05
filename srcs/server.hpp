@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/05 16:39:36 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/05 20:41:43 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,8 @@ class	Server
 	void			sendResponse(int client_fd);
 	void			sendErrorResponse(int client_fd, int statuscode);
 	int				readClient(int fd, string & finalbuffer);
+	string			search_location(multimap<string, multimap<string, string> > & mylocations, string searchname);
+	void			redirect_Response(int client_fd, const string & url);
 
 	// static non-member
 	static Server		*server_instance;
