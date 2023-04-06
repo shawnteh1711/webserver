@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 12:59:30 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/06 14:21:02 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ int	alecprintf(vector<Server_Detail> *d_servers)
 		}
 		cout << "root: " << it->root << endl;
 		cout << "index: " << it->index << endl;
-		cout << "autoIndex: " << it->autoIndex << endl;
+		// cout << "autoIndex: " << it->autoIndex << endl;
 		cout << "redirection: " << it->redirection << endl;
 
 		vector<Directive>::iterator dit = it->locations.begin();
@@ -356,7 +356,8 @@ void	test(char **argv)
 	vector<Server_Detail>	d_servers;
 	int						max_servers; // total server
 //	vector<Server*>		servers;
-	map<string, string>::iterator 	it2;
+	map<string, string>::iterator	it2;
+	vector<string>::iterator 		it3;
 
 
 
@@ -368,14 +369,23 @@ void	test(char **argv)
 	signal(SIGINT, Server::sig_handler);
 	signal(SIGTSTP, Server::sig_handler);
 	Server	s1(d_servers);
-	// testing_limit_except(d_servers); // this one ?
-
-	// d_servers[1].search("root");
-	// for (it2 = d_servers[1].urlMethod.begin(); it2 != d_servers[1].urlMethod.end(); ++it2)
-	// {
-	// 	cout << RED << "it2->first: " << it2->first << endl;
-	// 	cout << RED << "it2->second: " << it2->second << endl;
-	// }
+	for (it3 = d_servers[0].urlIndexOn.begin();it3 != d_servers[0].urlIndexOn.end();it3++)
+	{
+		cout << RED << "urlIndexOn: "  << *it3 << RESET << endl;
+	}
+	for (it2 = d_servers[0].urlLimitExcept.begin();it2 != d_servers[0].urlLimitExcept.end();it2++)
+	{
+		cout << GREEN << "urlLimitExcept: " << it2->first << " " << it2->second << RESET << endl;
+	}
+	for (it2 = d_servers[0].urlRoot.begin();it2 != d_servers[0].urlRoot.end();it2++)
+	{
+		cout << BLUE << "urlRoot: " << it2->first << " " << it2->second << RESET  << endl;
+	}
+	for (it2 = d_servers[0].urlCgi.begin();it2 != d_servers[0].urlCgi.end();it2++)
+	{
+		cout << BLUE << "urlCgi: " << it2->first << " " << it2->second << RESET  << endl;
+	}
+	
 	s1.startListen();
 
 

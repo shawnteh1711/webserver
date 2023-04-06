@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/05 21:26:37 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/06 13:30:28 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,8 +39,8 @@ Server *Server::server_instance = NULL;
 Server::Server(vector<Server_Detail> & d_servers)
 	: servers(d_servers), total(d_servers.size()), 
 	_sockfds(total), _clientfd(),
-	_serverMsg(buildResponse2()), _socketAddrs(total) , _socketAddr_len(sizeof(_socketAddrs[0]))
-	// _serverMsg(buildResponse()), _socketAddrs(total) , _socketAddr_len(sizeof(_socketAddrs[0]))
+	// _serverMsg(buildResponse2()), _socketAddrs(total) , _socketAddr_len(sizeof(_socketAddrs[0]))
+	_serverMsg(buildResponse()), _socketAddrs(total) , _socketAddr_len(sizeof(_socketAddrs[0]))
 //	_socketAddr(), _socketAddr_len(sizeof(_socketAddr))
 {
 	cout << "seervers: " << total << endl;

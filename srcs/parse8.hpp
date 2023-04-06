@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/25 19:40:59 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 12:58:33 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/06 14:20:22 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,11 +28,23 @@ struct Server_Detail
     vector<string>      errorPage; // this is ok, one time loop
     string              root;
     string              index;
-    string              autoIndex;
+    // string              autoIndex;
     string              redirection;
     vector<Directive>   locations; // lol this is using 6 loops
 	multimap<string, multimap<string, string> >	mylocations; // this is using 3 loops only
-    map<string, string> urlMethod;
+    map<string, string> urlSearch;
+    map<string, string> urlLimitExcept;
+    vector<string>      urlIndexOn;
+    map<string, string> urlRoot;
+    map<string, string> urlCgi;
+
+    // map<string, string> urlMethod;
+
+    // url index on
+    // root
+    // fast_cgi
+    // all by default on right still neeed to save?
+    // so need to save what else?
 
     void	search(string search);
 };
