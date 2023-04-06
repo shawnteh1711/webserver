@@ -9,6 +9,7 @@ Request::Request() : _request()
 Request::Request(const string& request, const string & cgi_path)
 	: _request(request), _cgi_path(cgi_path)
 {
+    cout << RED <<  "cgi_path: " << _cgi_path << endl;
     return ;
 }
 
@@ -83,6 +84,7 @@ bool Request::is_cgi_request()
 
     val = false;
     // it keep running?
+    cout << GREEN << "sdfdsfdsfsdfsdfsdfsdfsdfsdf" << endl;
     cout << GREEN << "request: " << _request << endl;
 	cout << CYAN << "Enter is cgi-request" << endl;
     uri = getRequestUrl();
@@ -310,18 +312,19 @@ string Request::parseRequestedFile()
     // cout << RED << "path: " << path << endl;
     if (path.front() == '/')
         cgi_file = path.erase(0, 1);
-    // if (path.find("/cgi-bin/") != string::npos)
-    // {
-    //     cgi_file = path.substr(9); // Skip "/cgi-bin/" prefix
-    //     if (cgi_file.back() == '/')
-    //         cgi_file.pop_back();
-    // }
+    if (path.find("cgi-bin/") != string::npos)
+    {
+        cgi_file = path.substr(8); // Skip "/cgi-bin/" prefix
+        if (cgi_file.back() == '/')
+            cgi_file.pop_back();
+    }
     // else
     // {
     //     cout << "Request is not a CGI request" << endl;
     // }
     // cout << BLUE << "cgi_file: " << cgi_file << endl;
     // cout << RESET << endl;
+    // cout << "cgi_file parseRequested: " << cgi_file << endl;
     return (cgi_file);
 }
 
@@ -763,7 +766,7 @@ int Request::handle_cgi(int client_socket)
                 }
             }
             // count = read(pipes[0], buffer, BUFF_SIZE);
-            cout << RED << final_buffer << endl;
+            // cout << RED << final_buffer << endl;
             result = stat(_cgi_path.c_str(), &file_stat);
             if (exit_status != 0)
             {
