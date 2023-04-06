@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 17:22:53 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/06 19:35:17 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -225,7 +225,6 @@ void Server::sendResponse(int client_fd)
 
 void Server::sendErrorResponse(int client_fd, int statuscode)
 {
-	string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><center><h1> Error!! </h1><c/center></body></html>";
 	ostringstream ss;
 	ss << "HTTP/1.1 " << statuscode << " ";
 	string statusMessage;
@@ -245,10 +244,13 @@ void Server::sendErrorResponse(int client_fd, int statuscode)
 		default:
 			statusMessage = "Unknown Status Code";
 	}
+	string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><center><h1>  Error!! </h1><p>" + statusMessage + "</p></center></body></html>";
 	ss << statusMessage << "\r\n"
 	   << "Content-Length: " << htmlFile.size()
 	   << "\r\n\r\n"
-	   << htmlFile;
+	   << "<!DOCTYPE html><html lang=\"en\"><body><center><h1> "
+	   << statuscode << " Error!! </h1><p>" << statusMessage
+	   << "</p></center></body></html>";
 	string response = ss.str();
 	cout << response << endl;
 	bytesSent = send(client_fd, response.c_str(), response.size(), 0);
@@ -260,8 +262,10 @@ void Server::sendErrorResponse(int client_fd, int statuscode)
 
 int	Server::checkFileExist(string & filepath)
 {
-	ifstream file(filepath.c_str());
-	if (file.good())
+	ifstream	ifile(filepath);
+	char 		buffertest[256];
+	ifile.read(buffertest, sizeof(buffertest));
+	if (ifile) 
 		return (1);
 	return (0);
 }
@@ -348,7 +352,10 @@ void	Server::clientRequestStage(vector<struct pollfd> & fds)
 					sendClient(fds[i].fd, method_type, uri_path, req);
 				}
 				else
+				{
 					N_MY::msg("Client body size exceeded the limit\n\n");
+					sendErrorResponse(fds[i].fd, 400);
+				}
 			}
 			removeClientPoll(fds, i--);
 		}
