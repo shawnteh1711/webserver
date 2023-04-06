@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 19:35:17 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/06 22:03:32 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ Server::Server(vector<Server_Detail> & d_servers)
 	: servers(d_servers), total(d_servers.size()), _sockfds(total),
 	_clientfd(), _serverMsg(buildResponse2()), _socketAddrs(total), 
 	_socketAddr_len(sizeof(_socketAddrs[0])), _pwd(getenv("PWD")), _host(),
-	_one_mb(1024 * 1024), _limit_size(_one_mb)
+	_one_mb(1024 * 1024), _limit_size(_one_mb), _index(0), tracker(new vector<int>[total])
 {
 	cout << "seervers: " << total << endl;
 	vector<Server_Detail>::iterator it, ite;
@@ -63,6 +63,8 @@ Server::Server(vector<Server_Detail> & d_servers)
 		it++;
 		i++;
 	}
+//	map<string, string>::iterator tryit = servers[0].urlCgi.begin();
+//	(void)tryit;
 //	_socketAddr.sin_family = AF_INET;
 //	_socketAddr.sin_port = htons(stoi(servers[0].port));
 //	_socketAddr.sin_addr.s_addr = INADDR_ANY;
@@ -299,6 +301,7 @@ void	Server::addClientPoll(vector<struct pollfd> & fds)
 		{
 			cout << YELLOW << "NEW CLIENT FD" << RESET << endl;
 			acceptConnection(_clientfd, i);
+			tracker[i].push_back(_clientfd);
 			new_poll.fd = _clientfd;
 			new_poll.events = POLLIN | POLLERR | POLLHUP | POLLOUT;
 			fds.push_back(new_poll);
@@ -307,20 +310,41 @@ void	Server::addClientPoll(vector<struct pollfd> & fds)
 				_limit_size = stoi(servers[i].clientMaxBodySize) * _one_mb;
 			else 
 				_limit_size = _one_mb;
+			_index = i;
 		}
 	}
 }
 
+int	Server::getServerPoll(int & client_fd)
+{
+	vector<int>::iterator it, ite;
+	for (size_t i = 0; i < total; i++)
+	{
+		it = tracker[i].begin();
+		ite = tracker[i].end();
+		while (it != ite)
+		{
+			if (*it == client_fd)
+				return (i);
+			it++;
+		}
+	}
+	return (-1);
+}
+
 void	Server::removeClientPoll(vector<struct pollfd> & fds, int pos)
 {
-	close(fds[pos].fd);
+	int	cfd = fds[pos].fd;
+	int s = getServerPoll(cfd);
+	
+	tracker[s].erase(::find(tracker[s].begin(), tracker[s].end(), cfd));
+	close(cfd);
 	fds.erase(fds.begin() + pos);
 }
 
 void	Server::clientRequestStage(vector<struct pollfd> & fds)
 {
 	size_t					total_bytes = 0;
-	string					cgi_path = "";
 	string					clientRequest;
 	string					method_type;
 	string					uri_path;
@@ -347,8 +371,11 @@ void	Server::clientRequestStage(vector<struct pollfd> & fds)
 				cout << "_limit_size: " << _limit_size << " bytes" << RESET << endl;
 				if (total_bytes <= _limit_size)
 				{
-					Request req(clientRequest, cgi_path);
+					// here i add check if is cgi request
+					// coz check is cgi request is my task to do here server
+					// the server need check cgi request or not before send to you
 					setMethodUrl(method_type, uri_path, clientRequest);
+					Request req(clientRequest, uri_path);
 					sendClient(fds[i].fd, method_type, uri_path, req);
 				}
 				else
@@ -414,7 +441,7 @@ void	Server::setMethodUrl(string & method_type, string & uri_path, string & clie
 	method_type = clientRequest.substr(0, pos);
 	uri_path = clientRequest.substr(pos + 1, clientRequest.length());
 	pos = uri_path.find(" ");
-	uri_path = uri_path.substr(1, pos - 1);
+	uri_path = uri_path.substr(0, pos - 1);
 }
 
 void	Server::sendClient(int & client_fd, string & method_type,
@@ -422,12 +449,31 @@ void	Server::sendClient(int & client_fd, string & method_type,
 {
 	cout << YELLOW << "method Type: " << method_type << RESET << endl;
 	cout << YELLOW << "uri_path: " << uri_path << RESET << endl;
+	int s = getServerPoll(client_fd);
+	cout << YELLOW << "server poll id: " << s << RESET << endl;
+
+	cout << "server " << servers[s].port << " 's root => " << servers[s].root << endl;
+	
+	string full_path = servers[s].root + uri_path; // pls test this
+	map<string, string>::iterator it, ite;
+	it = servers[s].urlCgi.begin();
+	ite= servers[s].urlCgi.end();
+	// your cgi can return error page if the full path i passed to you is wrong or not found file. thats all.
+	while (it != ite)
+	{
+		cout << CYAN << endl;
+		cout << it->first << " => " << it->second << endl;
+		it++;
+	}
+	cout << RESET << endl;
 	if (!checkFileExist(uri_path) && uri_path != "")
 		sendErrorResponse(client_fd, 404);
 	else if (req.is_cgi_request())
 	{
 		cout << GREEN << "it has cgi request" << RESET << endl;
 		req.handle_cgi(client_fd);
+		// or req.handle_cgi(client_fd, full_path)
+		// create handle_cgi2 with new parameter full_path to path_info
 	}
 	else if (method_type == "GET")
 	{

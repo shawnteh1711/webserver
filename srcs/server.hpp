@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 17:02:48 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/06 21:39:52 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,8 @@ class	Server
 	string						_host;
 	size_t						_one_mb;
 	size_t						_limit_size;
+	size_t						_index;
+	vector<int>					*tracker;
 
 	int				startServer(int index);
 	void			closeServer();
@@ -58,6 +60,7 @@ class	Server
 					string & clientRequest);
 	void			sendClient(int & client_fd, string & method_type,
 					string & uri_path, Request & req);
+	int				getServerPoll(int & client_fd);
 
 	// static non-member
 	static Server		*server_instance;
