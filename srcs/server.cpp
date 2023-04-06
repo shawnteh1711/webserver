@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/05 21:26:37 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/06 14:15:09 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ Server *Server::server_instance = NULL;
 Server::Server(vector<Server_Detail> & d_servers)
 	: servers(d_servers), total(d_servers.size()), 
 	_sockfds(total), _clientfd(),
-	_serverMsg(buildResponse2()), _socketAddrs(total) , _socketAddr_len(sizeof(_socketAddrs[0]))
+	_serverMsg(buildResponse2()), _socketAddrs(total) , _socketAddr_len(sizeof(_socketAddrs[0])), _pwd(getenv("PWD"))
 	// _serverMsg(buildResponse()), _socketAddrs(total) , _socketAddr_len(sizeof(_socketAddrs[0]))
 //	_socketAddr(), _socketAddr_len(sizeof(_socketAddr))
 {
@@ -113,36 +113,6 @@ void	Server::closeServer()
 //	exit(0);
 }
 
-string	Server::search_location(multimap<string, multimap<string, string> > & mylocations, string searchname)
-{
-	multimap<string, multimap<string, string> >::iterator it, ite;
-	multimap<string, string>::iterator f, fe;
-
-	it = mylocations.begin(), ite = mylocations.end();
-	while (it != ite) // actually two loop if i need to check mutli server.
-	{
-		cout << "===NEW ITERATOR===" << endl;
-		cout << CYAN << "KEY: ";
-		cout << YELLOW << it->first << endl;
-		f = it->second.begin(); fe = it->second.end();
-		//f = it->second.find("fastcgi_pass");
-		f = it->second.find(searchname);
-		if (f != fe)
-		{
-			cout << GREEN << "FIND: " << f->first << " ==> " << f->second << RESET << endl;
-		//	found_cgi = 1;
-			return (f->second);
-		}
-//		if (found_cgi)
-//		{
-//			cgi_path = it->first;
-//			cout << GREEN << cgi_path << RESET << endl;
-//		}
-		it++;
-	}
-	return ("");
-}
-
 void	Server::startListen()
 {
 	ostringstream	ss;
@@ -150,45 +120,16 @@ void	Server::startListen()
 	int				total_bytes = 0;
 	char			buffer[BUF_SIZE + 1];
 	//const int		MAX_CLIENTS = 1000;
-	//vector<struct pollfd>	fds(MAX_CLIENTS + total);
 	vector<struct pollfd> fds;
-	//struct pollfd	*fds = new struct pollfd[MAX_CLIENTS + total];
-	//int				nfds = total; // total of socket descriptors
 	size_t			one_mb = 1024 * 1024;
 	size_t			limit_size = 1 * one_mb;
 	string			finalbuffer;
+	struct pollfd	new_poll;
+	int				pos;
 
 	// this block for checking the cgi request
 	string			cgi_path = "";
-	int				found_cgi = 0;
-	multimap<string, multimap<string, string> >::iterator it, ite;
-	multimap<string, string>::iterator f, fe;
-
-	it = servers[0].mylocations.begin(), ite = servers[0].mylocations.end();
-	while (it != ite) // actually two loop if i need to check mutli server.
-	{
-		cout << "===NEW ITERATOR===" << endl;
-		cout << CYAN << "KEY: ";
-		cout << YELLOW << it->first << endl;
-		f = it->second.begin(); fe = it->second.end();
-		//f = it->second.find("fastcgi_pass");
-		f = it->second.find("limit_except");
-		if (f != fe)
-		{
-			cout << GREEN << "FIND: " << f->first << " ==> " << f->second << RESET << endl;
-			found_cgi = 1;
-		}
-		if (found_cgi)
-		{
-			cgi_path = it->first;
-			cout << GREEN << cgi_path << RESET << endl;
-		}
-		it++;
-	}
-	// haha i think i done limit_except and cgi already for search
-	found_cgi = 0;
-	cout << RESET << endl;
-	struct pollfd	new_poll;
+	
 	for (size_t i = 0; i < total; i++)
 	{
 		int flags = fcntl(_sockfds[i], F_GETFL, 0);
@@ -206,9 +147,7 @@ void	Server::startListen()
 	while (1)
 	{
 		//usleep(2000);
-		int rv = poll(&fds[0], fds.size(), -1); // it make a bit better.
-		// haiz
-		// your coding is short
+		int rv = poll(&fds[0], fds.size(), -1);
 
 		//cout << "POLLLLLLLLL" << endl;
 		if (rv == -1)
@@ -265,18 +204,13 @@ void	Server::startListen()
 					cout << "clientRequest: " << clientRequest << endl;
 					
 					// get url from client
-					cout << RED << "herererere" << RESET << endl;
 					string tmp, host;
 					if (clientRequest.find("localhost") != string::npos)
 					{
-						int first = clientRequest.find("localhost");
-						cout << RED << "herererere2" << RESET << endl;
-						tmp = clientRequest.substr(first, clientRequest.size());
-						cout << RED << "herererere3" << RESET << endl;
+						pos = clientRequest.find("localhost");
+						tmp = clientRequest.substr(pos, clientRequest.size());
 						host = tmp.substr(0, tmp.find(" "));
 					}
-					
-
 					size_t bodyPos = clientRequest.find("\r\n\r\n") + 4;
 					cout << "bodyPos: " << bodyPos << endl;
 					size_t bodySize = total_bytes;
@@ -285,17 +219,20 @@ void	Server::startListen()
 					if (bodySize <= limit_size)
 					{
 						Request req(clientRequest, cgi_path);
-						size_t methodPos = clientRequest.find(" ");
+						pos = clientRequest.find(" ");
+						string methodPos = clientRequest.substr(0, pos);
+						string uri_path = clientRequest.substr(pos + 1, clientRequest.length());
+						uri_path = uri_path.substr(0, uri_path.find(" "));
+						
 						cout << YELLOW << "methodPos: " << methodPos << RESET << endl;
+						cout << YELLOW << "URI path: " << uri_path << RESET << endl;
 						req.hasCookies();
 						if (req.is_cgi_request())
 						{
 							cout << "it has cgi request" << endl;
 							req.handle_cgi(fds[i].fd);
 						}
-				//		if (methodPos == 10)
-				//			sendErrorResponse(fds[i].fd, 400);
-						else
+						else if (methodPos == "GET")
 						{
 							N_MY::msg("--- Received Request from client ---");
 							if (host.find("localhost:8080") != string::npos)
@@ -303,6 +240,8 @@ void	Server::startListen()
 							else
 								sendResponse(fds[i].fd);
 						}
+						else
+							sendErrorResponse(fds[i].fd, 404);
 					}
 					else
 						N_MY::msg("Client body size exceeded the limit\n\n");

@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/05 20:41:43 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/06 14:02:58 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ class	Server
 	vector<struct sockaddr_in>	_socketAddrs;
 //	struct sockaddr_in			_socketAddr;
 	unsigned int				_socketAddr_len;
+	string						_pwd;
 
 	int				startServer(int index);
 	void			closeServer();
@@ -42,22 +43,16 @@ class	Server
 	void			sendResponse(int client_fd);
 	void			sendErrorResponse(int client_fd, int statuscode);
 	int				readClient(int fd, string & finalbuffer);
-	string			search_location(multimap<string, multimap<string, string> > & mylocations, string searchname);
 	void			redirect_Response(int client_fd, const string & url);
 
 	// static non-member
 	static Server		*server_instance;
 	
 	public:
-	//	Server(void);
 		Server(vector<Server_Detail> & d_servers);
 		~Server();
-	//	Server(const Server & src);
 
 		void	startListen();
-
-		// getter
-		//int	get_port(void) const; // mine string
 	
 		// static non-member
 		static void		sig_handler(int signo);

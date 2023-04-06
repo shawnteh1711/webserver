@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 12:59:30 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/06 13:55:36 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -370,12 +370,12 @@ void	test(char **argv)
 	Server	s1(d_servers);
 	// testing_limit_except(d_servers); // this one ?
 
-	// d_servers[1].search("root");
-	// for (it2 = d_servers[1].urlMethod.begin(); it2 != d_servers[1].urlMethod.end(); ++it2)
-	// {
-	// 	cout << RED << "it2->first: " << it2->first << endl;
-	// 	cout << RED << "it2->second: " << it2->second << endl;
-	// }
+//	 d_servers[0].search("fastcgi_pass");
+//	 for (it2 = d_servers[0].urlMethod.begin(); it2 != d_servers[0].urlMethod.end(); ++it2)
+//	 {
+//	 	cout << RED << "it2->first: " << it2->first << endl;
+//	 	cout << RED << "it2->second: " << it2->second << endl;
+//	 }
 	s1.startListen();
 
 
