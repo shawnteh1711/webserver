@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 19:35:17 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/06 21:41:12 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -262,11 +262,14 @@ void Server::sendErrorResponse(int client_fd, int statuscode)
 
 int	Server::checkFileExist(string & filepath)
 {
+	cout << "filepath: " << filepath << endl;
 	ifstream	ifile(filepath);
 	char 		buffertest[256];
 	ifile.read(buffertest, sizeof(buffertest));
 	if (ifile) 
+	{
 		return (1);
+	}
 	return (0);
 }
 
