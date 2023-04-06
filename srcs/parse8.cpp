@@ -325,8 +325,16 @@ Server_Detail Config::createServer(const Directive& directive)
 
             for (nested_directive_it = block_directive_it->block.begin(); nested_directive_it != block_directive_it->block.end(); ++nested_directive_it)
             {
-                if (nested_directive_it->directive == "autoindex")
-                    new_server.autoIndex = nested_directive_it->args[0];
+                // if (nested_directive_it->directive == "autoindex")
+                //     new_server.autoIndex = nested_directive_it->args[0];
+                if (nested_directive_it->directive == "autoindex" && nested_directive_it->args[0] == "on")
+                        new_server.urlIndexOn.push_back(location_directive.args[0]);
+                if (nested_directive_it->directive == "limit_except")
+                        new_server.urlLimitExcept.insert(make_pair(location_directive.args[0], nested_directive_it->args[0]));
+                if (nested_directive_it->directive == "root")
+                        new_server.urlRoot.insert(make_pair(location_directive.args[0], nested_directive_it->args[0]));
+                if (nested_directive_it->directive == "fastcgi_pass")
+                        new_server.urlCgi.insert(make_pair(location_directive.args[0], nested_directive_it->args[0]));
                 location_directive.block.push_back(*nested_directive_it);
             }
             new_server.locations.push_back(location_directive);
@@ -353,7 +361,7 @@ void    Config::printServer(vector<Server_Detail>& servers)
         cout << endl;
         cout << "\troot " << server_it->root << ";" << endl;
         cout << "\tindex " << server_it->index << ";" << endl;
-        cout << "\tautoindex " << server_it->autoIndex << ";" << endl;
+        // cout << "\tautoindex " << server_it->autoIndex << ";" << endl;
         cout << "\treturn  " << server_it->redirection << ";" << endl;
 
         cout << RESET << BLUE;
@@ -391,7 +399,7 @@ void	Server_Detail::search(string search)
 				// cout << RED << "Location: " << mit->first << endl;
 				// cout << RED << "Directive:|" << sit->first << "|, Argument: " << sit->second << RESET<< endl;
 				value = sit->second;
-	            urlMethod.insert(make_pair(location, value));
+	            urlSearch.insert(make_pair(location, value));
 			}
 		}
 	}
