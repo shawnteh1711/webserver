@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 17:14:05 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/06 19:43:58 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -369,45 +369,31 @@ void	test(char **argv)
 	signal(SIGINT, Server::sig_handler);
 	signal(SIGTSTP, Server::sig_handler);
 	Server	s1(d_servers);
-	for (it3 = d_servers[0].urlIndexOn.begin();it3 != d_servers[0].urlIndexOn.end();it3++)
-	{
-		cout << RED << "urlIndexOn: "  << *it3 << RESET << endl;
-	}
-	for (it2 = d_servers[0].urlLimitExcept.begin();it2 != d_servers[0].urlLimitExcept.end();it2++)
-	{
-		cout << GREEN << "urlLimitExcept: " << it2->first << " " << it2->second << RESET << endl;
-	}
-	for (it2 = d_servers[0].urlRoot.begin();it2 != d_servers[0].urlRoot.end();it2++)
-	{
-		cout << BLUE << "urlRoot: " << it2->first << " " << it2->second << RESET  << endl;
-	}
-	for (it2 = d_servers[0].urlCgi.begin();it2 != d_servers[0].urlCgi.end();it2++)
-	{
-		cout << BLUE << "urlCgi: " << it2->first << " " << it2->second << RESET  << endl;
-	}
-	
-	s1.startListen();
+	// testing_limit_except(d_servers); // this one ?
 
-
-//	vector<pthread_t>	threads(max_servers);
-//	
-//	int i = 0;
+//	 d_servers[0].search("fastcgi_pass");
+//	 for (it2 = d_servers[0].urlMethod.begin(); it2 != d_servers[0].urlMethod.end(); ++it2)
+//	 {
+//	 	cout << RED << "it2->first: " << it2->first << endl;
+//	 	cout << RED << "it2->second: " << it2->second << endl;
+//	 }
+//	it = d_servers.begin();
+//	ite = d_servers.end();
 //	while (it != ite)
 //	{
-//		cout << "it->port: " << it->port << endl;
-//		servers.push_back(new Server("127.0.0.1", stoi(it->port)));
-//		pthread_create(&threads[i], NULL, startListen, servers[i]);
-//		i++;
+//		cout << "SERVER: " << it->id << endl;
+//		for (it3 = it->urlIndexOn.begin();it3 != it->urlIndexOn.end();it3++)
+//			cout << RED << "urlIndexOn: "  << *it3 << RESET << endl;
+//		for (it2 = it->urlLimitExcept.begin();it2 != it->urlLimitExcept.end();it2++)
+//			cout << GREEN << "urlLimitExcept: " << it2->first << " " << it2->second << RESET << endl;
+//		for (it2 = it->urlRoot.begin();it2 != it->urlRoot.end();it2++)
+//			cout << BLUE << "urlRoot: " << it2->first << " " << it2->second << RESET  << endl;
+//		for (it2 = it->urlCgi.begin();it2 != it->urlCgi.end();it2++)
+//			cout << BLUE << "urlCgi: " << it2->first << " " << it2->second << RESET  << endl;
 //		it++;
 //	}
-//	for (int s = 0; s < max_servers; s++)
-//		pthread_join(threads[s], NULL);
-
-//	get_ip();
-//	get_ip2();
-//	get_ip3();
-
-	(void)argv;
+	
+	s1.startListen();
 }
 
 bool isValidConfigFile(const char* path)

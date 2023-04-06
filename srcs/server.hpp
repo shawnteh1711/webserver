@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/05 20:41:43 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/06 17:02:48 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,10 @@ class	Server
 	vector<struct sockaddr_in>	_socketAddrs;
 //	struct sockaddr_in			_socketAddr;
 	unsigned int				_socketAddr_len;
+	string						_pwd;
+	string						_host;
+	size_t						_one_mb;
+	size_t						_limit_size;
 
 	int				startServer(int index);
 	void			closeServer();
@@ -42,22 +46,27 @@ class	Server
 	void			sendResponse(int client_fd);
 	void			sendErrorResponse(int client_fd, int statuscode);
 	int				readClient(int fd, string & finalbuffer);
-	string			search_location(multimap<string, multimap<string, string> > & mylocations, string searchname);
 	void			redirect_Response(int client_fd, const string & url);
+	int				checkFileExist(string & filepath);
+	void			addSocketPoll(vector<struct pollfd> & fds);
+	void			addClientPoll(vector<struct pollfd> & fds);
+	void			clientRequestStage(vector<struct pollfd> & fds);
+	void			removeClientPoll(vector<struct pollfd> & fds, int pos);
+	int				unChunkRequest(int client_fd, string & clientBuffer);
+	void			getHostUrl(string & clientRequest);
+	void			setMethodUrl(string & method_type, string & uri_path,
+					string & clientRequest);
+	void			sendClient(int & client_fd, string & method_type,
+					string & uri_path, Request & req);
 
 	// static non-member
 	static Server		*server_instance;
 	
 	public:
-	//	Server(void);
 		Server(vector<Server_Detail> & d_servers);
 		~Server();
-	//	Server(const Server & src);
 
 		void	startListen();
-
-		// getter
-		//int	get_port(void) const; // mine string
 	
 		// static non-member
 		static void		sig_handler(int signo);

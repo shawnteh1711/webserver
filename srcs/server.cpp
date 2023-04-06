@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 13:30:28 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/06 17:22:53 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,11 +37,10 @@ Server *Server::server_instance = NULL;
 
 // d_servers's port is string type
 Server::Server(vector<Server_Detail> & d_servers)
-	: servers(d_servers), total(d_servers.size()), 
-	_sockfds(total), _clientfd(),
-	// _serverMsg(buildResponse2()), _socketAddrs(total) , _socketAddr_len(sizeof(_socketAddrs[0]))
-	_serverMsg(buildResponse()), _socketAddrs(total) , _socketAddr_len(sizeof(_socketAddrs[0]))
-//	_socketAddr(), _socketAddr_len(sizeof(_socketAddr))
+	: servers(d_servers), total(d_servers.size()), _sockfds(total),
+	_clientfd(), _serverMsg(buildResponse2()), _socketAddrs(total), 
+	_socketAddr_len(sizeof(_socketAddrs[0])), _pwd(getenv("PWD")), _host(),
+	_one_mb(1024 * 1024), _limit_size(_one_mb)
 {
 	cout << "seervers: " << total << endl;
 	vector<Server_Detail>::iterator it, ite;
@@ -113,222 +112,42 @@ void	Server::closeServer()
 //	exit(0);
 }
 
-string	Server::search_location(multimap<string, multimap<string, string> > & mylocations, string searchname)
-{
-	multimap<string, multimap<string, string> >::iterator it, ite;
-	multimap<string, string>::iterator f, fe;
-
-	it = mylocations.begin(), ite = mylocations.end();
-	while (it != ite) // actually two loop if i need to check mutli server.
-	{
-		cout << "===NEW ITERATOR===" << endl;
-		cout << CYAN << "KEY: ";
-		cout << YELLOW << it->first << endl;
-		f = it->second.begin(); fe = it->second.end();
-		//f = it->second.find("fastcgi_pass");
-		f = it->second.find(searchname);
-		if (f != fe)
-		{
-			cout << GREEN << "FIND: " << f->first << " ==> " << f->second << RESET << endl;
-		//	found_cgi = 1;
-			return (f->second);
-		}
-//		if (found_cgi)
-//		{
-//			cgi_path = it->first;
-//			cout << GREEN << cgi_path << RESET << endl;
-//		}
-		it++;
-	}
-	return ("");
-}
-
 void	Server::startListen()
 {
-	ostringstream	ss;
-	int				bytes;
-	int				total_bytes = 0;
-	char			buffer[BUF_SIZE + 1];
-	//const int		MAX_CLIENTS = 1000;
-	//vector<struct pollfd>	fds(MAX_CLIENTS + total);
-	vector<struct pollfd> fds;
-	//struct pollfd	*fds = new struct pollfd[MAX_CLIENTS + total];
-	//int				nfds = total; // total of socket descriptors
-	size_t			one_mb = 1024 * 1024;
-	size_t			limit_size = 1 * one_mb;
-	string			finalbuffer;
+	vector<struct pollfd>	fds;
 
-	// this block for checking the cgi request
-	string			cgi_path = "";
-	int				found_cgi = 0;
-	multimap<string, multimap<string, string> >::iterator it, ite;
-	multimap<string, string>::iterator f, fe;
-
-	it = servers[0].mylocations.begin(), ite = servers[0].mylocations.end();
-	while (it != ite) // actually two loop if i need to check mutli server.
-	{
-		cout << "===NEW ITERATOR===" << endl;
-		cout << CYAN << "KEY: ";
-		cout << YELLOW << it->first << endl;
-		f = it->second.begin(); fe = it->second.end();
-		//f = it->second.find("fastcgi_pass");
-		f = it->second.find("limit_except");
-		if (f != fe)
-		{
-			cout << GREEN << "FIND: " << f->first << " ==> " << f->second << RESET << endl;
-			found_cgi = 1;
-		}
-		if (found_cgi)
-		{
-			cgi_path = it->first;
-			cout << GREEN << cgi_path << RESET << endl;
-		}
-		it++;
-	}
-	// haha i think i done limit_except and cgi already for search
-	found_cgi = 0;
-	cout << RESET << endl;
-	struct pollfd	new_poll;
-	for (size_t i = 0; i < total; i++)
-	{
-		int flags = fcntl(_sockfds[i], F_GETFL, 0);
-		fcntl(_sockfds[i], F_SETFL, flags |= O_NONBLOCK);
-		if (listen(_sockfds[i], 20) < 0)
-			N_MY::ErrorExit("Socket listen failed");
-		ss << "\n*** Listening on ADDRESS: "
-			<< inet_ntoa(_socketAddrs[i].sin_addr) << " PORT: " << servers[i].port;
-		N_MY::msg(ss.str());
-		new_poll.fd = _sockfds[i];
-		new_poll.events = POLLIN;
-		fds.push_back(new_poll);
-	}
-
+	addSocketPoll(fds);
 	while (1)
 	{
 		//usleep(2000);
-		int rv = poll(&fds[0], fds.size(), -1); // it make a bit better.
-		// haiz
-		// your coding is short
+		int rv = poll(&fds[0], fds.size(), -1);
 
 		//cout << "POLLLLLLLLL" << endl;
 		if (rv == -1)
 			N_MY::ErrorExit("poll() failed");
-		for (size_t i = 0; i < total; i++)
-		{
-			if (fds[i].revents & POLLIN)
-			{
-				cout << YELLOW << "NEW CLIENT FD" << RESET << endl;
-				acceptConnection(_clientfd, i);
-				new_poll.fd = _clientfd;
-				new_poll.events = POLLIN | POLLERR | POLLHUP | POLLOUT;
-				fds.push_back(new_poll);
-				N_MY::msg("--- New client connected ---");
-				if (servers[i].clientMaxBodySize != "")
-					limit_size = stoi(servers[i].clientMaxBodySize) * one_mb;
-				else 
-					limit_size = one_mb;
-			}
-		}
-		for (size_t i = total; i < fds.size(); i++)
-		{
-			if (fds[i].revents & (POLLERR | POLLHUP))
-			{
-				cout << "Enter POLLER || POLLHUP!!" << endl;
-				close(fds[i].fd);
-				fds.erase(fds.begin() + i);
-				i--;
-			}
-			else if (fds[i].revents & POLLIN)
-			{ 
-				std::cout << "client in POLLIN" << std::endl;
-				finalbuffer.clear();
-				bzero(buffer, BUF_SIZE);
-				total_bytes = 0;
-				while ((bytes = recv(fds[i].fd, buffer, BUF_SIZE, 0)) > 0)
-				{
-					buffer[bytes] = '\0';
-					finalbuffer += string(buffer, BUF_SIZE);
-					total_bytes += bytes;
-					if (buffer[BUF_SIZE - 1] == '\0')
-						break ;
-					bzero(buffer, BUF_SIZE);
-				}
-				cout << YELLOW << "" << RESET << endl;
-				if (bytes  == -1 && finalbuffer.size() == 0)
-					N_MY::msg(RED"Failed to read client request"RESET);
-				else if (bytes == 0)
-					N_MY::msg("The client has closed the connection");
-				else
-				{
-					string clientRequest = finalbuffer;
-					cout << CYAN"BYTES from client: " << total_bytes << endl;
-					cout << "clientRequest: " << clientRequest << endl;
-					
-					// get url from client
-					cout << RED << "herererere" << RESET << endl;
-					string tmp, host;
-					if (clientRequest.find("localhost") != string::npos)
-					{
-						int first = clientRequest.find("localhost");
-						cout << RED << "herererere2" << RESET << endl;
-						tmp = clientRequest.substr(first, clientRequest.size());
-						cout << RED << "herererere3" << RESET << endl;
-						host = tmp.substr(0, tmp.find(" "));
-					}
-					
-
-					size_t bodyPos = clientRequest.find("\r\n\r\n") + 4;
-					cout << "bodyPos: " << bodyPos << endl;
-					size_t bodySize = total_bytes;
-					cout << "bodySize: " << bodySize << endl;
-					cout << "limit_size: " << limit_size << " bytes" << RESET << endl;
-					if (bodySize <= limit_size)
-					{
-						Request req(clientRequest, cgi_path);
-						size_t methodPos = clientRequest.find(" ");
-						cout << YELLOW << "methodPos: " << methodPos << RESET << endl;
-						req.hasCookies();
-						if (req.is_cgi_request())
-						{
-							cout << "it has cgi request" << endl;
-							req.handle_cgi(fds[i].fd);
-						}
-				//		if (methodPos == 10)
-				//			sendErrorResponse(fds[i].fd, 400);
-						else
-						{
-							N_MY::msg("--- Received Request from client ---");
-							if (host.find("localhost:8080") != string::npos)
-								redirect_Response(fds[i].fd, "http://localhost:1024");
-							else
-								sendResponse(fds[i].fd);
-						}
-					}
-					else
-						N_MY::msg("Client body size exceeded the limit\n\n");
-				}
-				close(fds[i].fd);
-				fds.erase(fds.begin() + i);
-				i--;
-			}
-		} // end of main loop
+		addClientPoll(fds);
+		clientRequestStage(fds);
 	}
 }
 
 void	Server::acceptConnection(int &new_client, int index)
 {
-	new_client = accept(_sockfds[index], (sockaddr*)&_socketAddrs[index], &_socketAddr_len);
+	new_client = accept(_sockfds[index],
+			(sockaddr*)&_socketAddrs[index], &_socketAddr_len);
 	if (new_client < 0)
 	{
 		ostringstream ss;
-		ss << "Server failed to accept incoming connection from ADDRESS: " << inet_ntoa(_socketAddrs[index].sin_addr) << "; PORT: " << ntohs(_socketAddrs[index].sin_port);
+		ss << "Server failed to accept incoming connection from ADDRESS: "
+		   << inet_ntoa(_socketAddrs[index].sin_addr)
+		   << "; PORT: " << ntohs(_socketAddrs[index].sin_port);
 		N_MY::ErrorExit(ss.str());
 	}
 }
 
-void generate_listing(string path, string &listing) {
-    DIR *dir;
-    struct dirent *ent;
+void generate_listing(string path, string &listing)
+{
+    DIR				*dir;
+    struct dirent	*ent;
 
     // Open the directory
     if ((dir = opendir(path.c_str())) != NULL) {
@@ -345,7 +164,9 @@ void generate_listing(string path, string &listing) {
 
 string Server::buildResponse()
 {
-	string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><h1> HOME </h1><p> Hello from your Server :) </p></body></html>";
+	string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><h1> \
+					   HOME </h1><p> Hello from your Server :) \
+					   </p></body></html>";
 	ostringstream ss;
 	ss << "HTTP/1.1 200 OK\r\n"
 	   << "Content-Type: text/html\r\n"
@@ -370,7 +191,8 @@ string Server::buildResponse2()
 	return ss.str();
 }
 
-void Server::redirect_Response(int client_fd, const string & url) {
+void Server::redirect_Response(int client_fd, const string & url)
+{
 	long bytesSent;
 
     ostringstream ss;
@@ -403,7 +225,7 @@ void Server::sendResponse(int client_fd)
 
 void Server::sendErrorResponse(int client_fd, int statuscode)
 {
-	string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><center><h1> Bad Request </h1><c/center></body></html>";
+	string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><center><h1> Error!! </h1><c/center></body></html>";
 	ostringstream ss;
 	ss << "HTTP/1.1 " << statuscode << " ";
 	string statusMessage;
@@ -434,6 +256,182 @@ void Server::sendErrorResponse(int client_fd, int statuscode)
 		N_MY::msg("---- Server Error Response sent to client ---- \n\n");
 	else
 		N_MY::msg("Error sending response to client");
+}
+
+int	Server::checkFileExist(string & filepath)
+{
+	ifstream file(filepath.c_str());
+	if (file.good())
+		return (1);
+	return (0);
+}
+
+void	Server::addSocketPoll(vector<struct pollfd> & fds)
+{
+	struct pollfd	new_poll;
+	ostringstream	ss;
+	for (size_t i = 0; i < total; i++)
+	{
+		int flags = fcntl(_sockfds[i], F_GETFL, 0);
+		fcntl(_sockfds[i], F_SETFL, flags |= O_NONBLOCK);
+		if (listen(_sockfds[i], 20) < 0)
+			N_MY::ErrorExit("Socket listen failed");
+		ss << "\n*** Listening on ADDRESS: "
+			<< inet_ntoa(_socketAddrs[i].sin_addr) << " PORT: " << servers[i].port;
+		N_MY::msg(ss.str());
+		new_poll.fd = _sockfds[i];
+		new_poll.events = POLLIN;
+		fds.push_back(new_poll);
+	}
+}
+
+void	Server::addClientPoll(vector<struct pollfd> & fds)
+{
+	struct pollfd	new_poll;
+
+	for (size_t i = 0; i < total; i++)
+	{
+		if (fds[i].revents & POLLIN)
+		{
+			cout << YELLOW << "NEW CLIENT FD" << RESET << endl;
+			acceptConnection(_clientfd, i);
+			new_poll.fd = _clientfd;
+			new_poll.events = POLLIN | POLLERR | POLLHUP | POLLOUT;
+			fds.push_back(new_poll);
+			N_MY::msg("--- New client connected ---");
+			if (servers[i].clientMaxBodySize != "")
+				_limit_size = stoi(servers[i].clientMaxBodySize) * _one_mb;
+			else 
+				_limit_size = _one_mb;
+		}
+	}
+}
+
+void	Server::removeClientPoll(vector<struct pollfd> & fds, int pos)
+{
+	close(fds[pos].fd);
+	fds.erase(fds.begin() + pos);
+}
+
+void	Server::clientRequestStage(vector<struct pollfd> & fds)
+{
+	size_t					total_bytes = 0;
+	string					cgi_path = "";
+	string					clientRequest;
+	string					method_type;
+	string					uri_path;
+	
+	for (size_t i = total; i < fds.size(); i++)
+	{
+		if (fds[i].revents & (POLLERR | POLLHUP))
+		{
+			cout << "Enter POLLER || POLLHUP!!" << endl;
+			removeClientPoll(fds, i--);
+		}
+		else if (fds[i].revents & POLLIN)
+		{ 
+			std::cout << "client in POLLIN" << std::endl;
+			total_bytes = unChunkRequest(fds[i].fd, clientRequest);
+			if (total_bytes > 0)
+			{
+				cout << CYAN"BYTES from client: " << total_bytes << endl;
+				cout << "clientRequest: " << clientRequest << endl;
+				
+				// get url from client
+				getHostUrl(clientRequest);
+				cout << "bodySize(total bytes): " << total_bytes << endl;
+				cout << "_limit_size: " << _limit_size << " bytes" << RESET << endl;
+				if (total_bytes <= _limit_size)
+				{
+					Request req(clientRequest, cgi_path);
+					setMethodUrl(method_type, uri_path, clientRequest);
+					sendClient(fds[i].fd, method_type, uri_path, req);
+				}
+				else
+					N_MY::msg("Client body size exceeded the limit\n\n");
+			}
+			removeClientPoll(fds, i--);
+		}
+	}
+}
+
+int		Server::unChunkRequest(int client_fd, string & clientBuffer)
+{
+	char					buffer[BUF_SIZE + 1];
+	string					finalbuffer;
+	int						bytes;
+	size_t					total_bytes = 0;
+	
+	finalbuffer.clear();
+	bzero(buffer, BUF_SIZE);
+	while ((bytes = recv(client_fd, buffer, BUF_SIZE, 0)) > 0)
+	{
+		buffer[bytes] = '\0';
+		finalbuffer += string(buffer, BUF_SIZE);
+		total_bytes += bytes;
+		if (buffer[BUF_SIZE - 1] == '\0')
+			break ;
+		bzero(buffer, BUF_SIZE);
+	}
+	if (bytes == -1 && finalbuffer.size() == 0)
+	{
+		N_MY::msg(RED"Failed to read client request"RESET);
+		return (bytes);
+	}
+	else if (bytes == 0)
+	{
+		N_MY::msg("The client has closed the connection");
+		return (bytes);
+	}
+	clientBuffer = finalbuffer;
+	return (total_bytes);
+}
+
+void	Server::getHostUrl(string & clientRequest)
+{
+	string	tmp;
+	int		pos;
+	if (clientRequest.find("localhost") != string::npos)
+	{
+		pos = clientRequest.find("localhost");
+		tmp = clientRequest.substr(pos, clientRequest.size());
+		_host = tmp.substr(0, tmp.find(" "));
+	}
+}
+
+void	Server::setMethodUrl(string & method_type, string & uri_path, string & clientRequest)
+{
+	int	pos;
+
+	pos = clientRequest.find(" ");
+	method_type = clientRequest.substr(0, pos);
+	uri_path = clientRequest.substr(pos + 1, clientRequest.length());
+	pos = uri_path.find(" ");
+	uri_path = uri_path.substr(1, pos - 1);
+}
+
+void	Server::sendClient(int & client_fd, string & method_type,
+		string & uri_path, Request & req)
+{
+	cout << YELLOW << "method Type: " << method_type << RESET << endl;
+	cout << YELLOW << "uri_path: " << uri_path << RESET << endl;
+	if (!checkFileExist(uri_path) && uri_path != "")
+		sendErrorResponse(client_fd, 404);
+	else if (req.is_cgi_request())
+	{
+		cout << GREEN << "it has cgi request" << RESET << endl;
+		req.handle_cgi(client_fd);
+	}
+	else if (method_type == "GET")
+	{
+		N_MY::msg("--- Received Request from client ---");
+//		if (_host.find("localhost:8080") != string::npos)
+//			redirect_Response(client_fd, "http://localhost:1024");
+//		else
+			sendResponse(client_fd);
+	}
+	else
+		sendErrorResponse(client_fd, 400);
 }
 
 void	Server::sig_handler(int signo)
