@@ -84,7 +84,6 @@ bool Request::is_cgi_request()
 
     val = false;
     // it keep running?
-    cout << GREEN << "sdfdsfdsfsdfsdfsdfsdfsdfsdf" << endl;
     cout << GREEN << "request: " << _request << endl;
 	cout << CYAN << "Enter is cgi-request" << endl;
     uri = getRequestUrl();
@@ -254,16 +253,13 @@ string  Request::getRequest() const
     return (_request);
 }
 
-string    Request::setCgiPath(string cgi_path)
+string    Request::setCgiPath()
 {
     _pwd = getenv("PWD");
     const char* cgi_bin_path = "/cgi-bin/";
-    cgi_path = _pwd + cgi_bin_path + this->parseRequestedFile();
-    // cout << GREEN << "cgi_path: " << cgi_path << endl;
-    // cout << "_cgi_path: " << _cgi_path << endl;
-    // cout << RESET << endl;
-    _cgi_path = cgi_path;
-    return (_cgi_path);
+    _path_info = _pwd + cgi_bin_path + this->parseRequestedFile();
+    cout << "path_info: " << _path_info << endl;
+    return (_path_info);
 }
 
 void    Request::setRequest(string request)
@@ -469,7 +465,7 @@ void Request::setEnvp()
     string content_length = "CONTENT_LENGTH=" + this->getHeader("Content-Length");
     string remote_addr = "REMOTE_ADDR=" + this->getAddress();
     string script_name = "SCRIPT_NAME=" + this->parseRequestedFile();
-    string script_path = "SCRIPT_PATH=" + _cgi_path;
+    string script_path = "SCRIPT_PATH=" + _path_info;
 
     // char** envp = (char**) malloc((ENV_SIZE + 1) * sizeof(char*));
     vector<char *> envp2(8);
@@ -538,14 +534,14 @@ void    Request::printEnvp() const
     }
 }
 
-char** Request::handleArgs(const string& cgi_path)
+char** Request::handleArgs(const string& path_info)
 {
     vector<string>              commandArgs;
     char**                      args;
     int                         i;
     vector<string>::iterator    it;
 
-    _extension_map[".cgi"].push_back(cgi_path);
+    _extension_map[".cgi"].push_back(path_info);
     _extension_map[".php"].push_back("/usr/bin/php");
     _extension_map[".py"].push_back("/usr/bin/python");
     if (_extension_map.find(this->getExtension()) == _extension_map.end())
@@ -561,7 +557,7 @@ char** Request::handleArgs(const string& cgi_path)
         args[i] = const_cast<char*>(it->c_str());;
         i++;
     }
-    args[i++] = const_cast<char*>(_cgi_path.c_str());
+    args[i++] = const_cast<char*>(path_info.c_str());
     args[i] = NULL;
 
     char** args_copy = new char*[i + 1];
@@ -680,12 +676,13 @@ int Request::handle_cgi(int client_socket)
 {
     pid_t       pid;
     int         status;
-    string      cgi_path;
+    string      path_info;
     char**      args;
     int         pipes[2];
     Response    res;
 
-    cgi_path = this->setCgiPath(cgi_path);
+    path_info = this->setCgiPath();
+    // if u pass path_info ok
     if (pipe(pipes) == -1)
     {
         perror("pipe");
@@ -707,7 +704,124 @@ int Request::handle_cgi(int client_socket)
         }
         close(pipes[1]);
         this->setEnvp();
-        args = handleArgs(cgi_path);
+        args = handleArgs(path_info);
+        if (execve(args[0], args, this->getEnvp()) == -1)
+        {
+            cerr <<  "Error: " << strerror(errno) << endl;
+            exit(EXIT_FAILURE);
+        }
+    }
+    else
+    {
+        int         exit_status;
+        struct stat file_stat;
+        int         result;
+        char        buffer[BUFF_SIZE + 1];
+        string      root;
+        string      path;
+        int         count;
+        int         t_count;
+        string      final_buffer;
+
+        memset(buffer, 0, BUFF_SIZE + 1);
+        if (waitpid(pid, &status, 0) == -1)
+        {
+            perror("waitpid failed");
+            exit(EXIT_FAILURE);
+        }
+        if (WIFEXITED(status))
+        {
+            cout << "Child process exit status " << WIFEXITED(status) << endl;
+            exit_status = WEXITSTATUS(status);
+            close(pipes[1]);
+            t_count = 0;
+            if (this->getHeader("Content-Length").empty())
+            {
+                while ((count = read(pipes[0], buffer, BUFF_SIZE)) > 0)
+                {
+                    buffer[count] = '\0';
+                    final_buffer += string(buffer, BUFF_SIZE);
+                    t_count += count;
+                    if (buffer[BUFF_SIZE - 1] == EOF)
+						break ;
+                    // this->readPipe(count, buffer);
+                    memset(buffer, 0, BUFF_SIZE + 1);
+                }
+            }
+            else
+            {
+                _content_length = atoi(this->getHeader("Content-Length").c_str());
+                while (t_count < _content_length)
+                {
+                    count = read(pipes[0], buffer, min(BUFF_SIZE, _content_length - t_count));
+                    final_buffer += string(buffer, BUFF_SIZE);
+                    if (count == 0) 
+                        break ;
+                    t_count += count;
+                    memset(buffer, 0, BUFF_SIZE + 1);
+                    // this->readPipe(count, buffer);
+                }
+            }
+            // count = read(pipes[0], buffer, BUFF_SIZE);
+            // cout << RED << final_buffer << endl;
+            result = stat(_cgi_path.c_str(), &file_stat);
+            if (exit_status != 0)
+            {
+                if (result == -1)
+                {
+                    root = "/root/404.html";
+                    path = _pwd + root;
+                    res.sendErrorResponse(client_socket, 404, path);
+                }
+                else
+                {
+                    root = "/root/500.html";
+                    path = _pwd + root;
+                    res.sendErrorResponse(client_socket, 500, path);
+                }
+            }
+            else
+                res.sendCgiResponse(*this, client_socket, final_buffer.c_str(), t_count);
+            // system("leaks webserv");
+        }
+    }
+    return (client_socket);
+}
+
+int Request::handle_cgi2(int client_socket, string full_path)
+{
+    pid_t       pid;
+    int         status;
+    string      path_info;
+    char**      args;
+    int         pipes[2];
+    Response    res;
+
+    (void)full_path;
+    path_info = this->setCgiPath();
+    // if u pass path_info ok
+    if (pipe(pipes) == -1)
+    {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+    pid = fork();
+    if (pid == -1)
+    {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+    else if (pid == 0)
+    {
+        close(pipes[0]);
+        if (dup2(pipes[1], STDOUT_FILENO) == -1)
+        {
+            perror("dup2");
+            exit(EXIT_FAILURE);
+        }
+        close(pipes[1]);
+        this->setEnvp();
+        args = handleArgs(path_info);
         if (execve(args[0], args, this->getEnvp()) == -1)
         {
             cerr <<  "Error: " << strerror(errno) << endl;

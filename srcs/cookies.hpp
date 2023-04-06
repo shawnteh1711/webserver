@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 20:33:10 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/06 22:06:46 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ class Request
     private:
         string                          _request;
         string                          _cgi_path;
+        string                          _path_info;
         string                          _extension;
         int                             _read_size;
         int                             _total_read_size;
@@ -52,6 +53,7 @@ class Request
     public:
         Request();
         Request(const string& request, const string & cgi_path);
+        Request(const string& request, const string & cgi_path, map<string, string> & cgi_url_location);
         Request(string& request, int num_read);
         ~Request();
         bool isCgiRequest() const;
@@ -66,7 +68,7 @@ class Request
         int     getTotalReadSize() const;
         int     getReadSize() const;
         string  getRequest() const;
-        string  setCgiPath(string path);
+        string  setCgiPath();
         void    setQuery(string& query);
         void    setRequest(string request);
         string  parseRequestedFile();
@@ -77,6 +79,7 @@ class Request
         void    printEnvp() const;
         void    freeEnvp(char **envp);
         int     handle_cgi(int client_socket);
+        int     handle_cgi2(int client_socket, string full_path);
         char**  handleArgs(const string& cgi_path);
         bool    hasCookies();
         void    readPipe(int count, char* buffer);
