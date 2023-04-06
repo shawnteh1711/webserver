@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 16:59:35 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/06 17:22:53 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -225,7 +225,7 @@ void Server::sendResponse(int client_fd)
 
 void Server::sendErrorResponse(int client_fd, int statuscode)
 {
-	string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><center><h1> Bad Request </h1><c/center></body></html>";
+	string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><center><h1> Error!! </h1><c/center></body></html>";
 	ostringstream ss;
 	ss << "HTTP/1.1 " << statuscode << " ";
 	string statusMessage;
@@ -345,9 +345,7 @@ void	Server::clientRequestStage(vector<struct pollfd> & fds)
 				{
 					Request req(clientRequest, cgi_path);
 					setMethodUrl(method_type, uri_path, clientRequest);
-					cout << YELLOW << "method Type: " << method_type << RESET << endl;
-					cout << YELLOW << "URI path: " << uri_path << RESET << endl;
-					sendClient(fds[i].fd, method_type, req);
+					sendClient(fds[i].fd, method_type, uri_path, req);
 				}
 				else
 					N_MY::msg("Client body size exceeded the limit\n\n");
@@ -408,12 +406,18 @@ void	Server::setMethodUrl(string & method_type, string & uri_path, string & clie
 	pos = clientRequest.find(" ");
 	method_type = clientRequest.substr(0, pos);
 	uri_path = clientRequest.substr(pos + 1, clientRequest.length());
-	uri_path = uri_path.substr(0, uri_path.find(" "));
+	pos = uri_path.find(" ");
+	uri_path = uri_path.substr(1, pos - 1);
 }
 
-void	Server::sendClient(int & client_fd, string & method_type, Request & req)
+void	Server::sendClient(int & client_fd, string & method_type,
+		string & uri_path, Request & req)
 {
-	if (req.is_cgi_request())
+	cout << YELLOW << "method Type: " << method_type << RESET << endl;
+	cout << YELLOW << "uri_path: " << uri_path << RESET << endl;
+	if (!checkFileExist(uri_path) && uri_path != "")
+		sendErrorResponse(client_fd, 404);
+	else if (req.is_cgi_request())
 	{
 		cout << GREEN << "it has cgi request" << RESET << endl;
 		req.handle_cgi(client_fd);
@@ -421,13 +425,13 @@ void	Server::sendClient(int & client_fd, string & method_type, Request & req)
 	else if (method_type == "GET")
 	{
 		N_MY::msg("--- Received Request from client ---");
-		if (_host.find("localhost:8080") != string::npos)
-			redirect_Response(client_fd, "http://localhost:1024");
-		else
+//		if (_host.find("localhost:8080") != string::npos)
+//			redirect_Response(client_fd, "http://localhost:1024");
+//		else
 			sendResponse(client_fd);
 	}
 	else
-		sendErrorResponse(client_fd, 404);
+		sendErrorResponse(client_fd, 400);
 }
 
 void	Server::sig_handler(int signo)

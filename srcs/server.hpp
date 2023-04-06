@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 16:52:42 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/06 17:02:48 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,8 +54,10 @@ class	Server
 	void			removeClientPoll(vector<struct pollfd> & fds, int pos);
 	int				unChunkRequest(int client_fd, string & clientBuffer);
 	void			getHostUrl(string & clientRequest);
-	void			setMethodUrl(string & method_type, string & uri_path, string & clientRequest);
-	void			sendClient(int & client_fd, string & method_type, Request & req);
+	void			setMethodUrl(string & method_type, string & uri_path,
+					string & clientRequest);
+	void			sendClient(int & client_fd, string & method_type,
+					string & uri_path, Request & req);
 
 	// static non-member
 	static Server		*server_instance;
