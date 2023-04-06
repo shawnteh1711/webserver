@@ -372,3 +372,27 @@ void    Config::printServer(vector<Server_Detail>& servers)
         cout << "}" << endl << endl;
     }
 }
+
+void	Server_Detail::search(string search)
+{
+    string	location;
+	string	value;
+
+	// cout << RED << "Server: " << this->id << endl;
+	for (multimap<string, multimap<string, string> >::iterator mit = this->mylocations.begin(); mit != this->mylocations.end(); ++mit)
+	{
+		// cout << RED << "Location: " << mit->first << endl;
+		for (multimap<string, string>::iterator sit = mit->second.begin(); sit != mit->second.end(); ++sit)
+		{
+			// cout << RED << "Directive: " << sit->first << ", Argument: " << sit->second << RESET<< endl;
+			if (sit->first == search)
+			{
+				location = mit->first;
+				// cout << RED << "Location: " << mit->first << endl;
+				// cout << RED << "Directive:|" << sit->first << "|, Argument: " << sit->second << RESET<< endl;
+				value = sit->second;
+	            urlMethod.insert(make_pair(location, value));
+			}
+		}
+	}
+}

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parse8.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
+/*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/25 19:40:59 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/03 12:55:15 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/06 12:58:33 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,9 @@ struct Server_Detail
     string              redirection;
     vector<Directive>   locations; // lol this is using 6 loops
 	multimap<string, multimap<string, string> >	mylocations; // this is using 3 loops only
+    map<string, string> urlMethod;
+
+    void	search(string search);
 };
 
 struct Config

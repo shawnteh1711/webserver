@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/05 21:21:52 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/06 12:59:30 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -356,6 +356,8 @@ void	test(char **argv)
 	vector<Server_Detail>	d_servers;
 	int						max_servers; // total server
 //	vector<Server*>		servers;
+	map<string, string>::iterator 	it2;
+
 
 
 	setup(d_servers, argv);
@@ -367,6 +369,13 @@ void	test(char **argv)
 	signal(SIGTSTP, Server::sig_handler);
 	Server	s1(d_servers);
 	// testing_limit_except(d_servers); // this one ?
+
+	// d_servers[1].search("root");
+	// for (it2 = d_servers[1].urlMethod.begin(); it2 != d_servers[1].urlMethod.end(); ++it2)
+	// {
+	// 	cout << RED << "it2->first: " << it2->first << endl;
+	// 	cout << RED << "it2->second: " << it2->second << endl;
+	// }
 	s1.startListen();
 
 
