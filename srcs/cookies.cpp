@@ -69,6 +69,8 @@ cgi_extension  getEntensionType(const string& extension)
         return (PHP);
     else if (extension == ".cgi")
         return (CGI);
+    else if (extension == ".py")
+        return (PYTHON);
     else
         return (Unknown);
 }
@@ -81,6 +83,7 @@ bool Request::is_cgi_request()
 
     val = false;
     // it keep running?
+    cout << GREEN << "request: " << _request << endl;
 	cout << CYAN << "Enter is cgi-request" << endl;
     uri = getRequestUrl();
     cout << "uri: " << uri << endl;
@@ -93,8 +96,8 @@ bool Request::is_cgi_request()
         {
             if (getEntensionType(_extension) == static_cast<cgi_extension>(i))
             {
-                if (uri.find("/cgi-bin/") != std::string::npos) 
-                    val = true;
+                // if (uri.find("/cgi-bin/") != std::string::npos) 
+                val = true;
                 break;
             }
         }
@@ -304,16 +307,21 @@ string Request::parseRequestedFile()
     if (path_end == string::npos)
         return "";
     string path = _request.substr(path_start + 1, path_end - path_start - 1);
-    if (path.find("/cgi-bin/") != string::npos)
-    {
-        cgi_file = path.substr(9); // Skip "/cgi-bin/" prefix
-        if (cgi_file.back() == '/')
-            cgi_file.pop_back();
-    }
-    else
-    {
-        cout << "Request is not a CGI request" << endl;
-    }
+    // cout << RED << "path: " << path << endl;
+    if (path.front() == '/')
+        cgi_file = path.erase(0, 1);
+    // if (path.find("/cgi-bin/") != string::npos)
+    // {
+    //     cgi_file = path.substr(9); // Skip "/cgi-bin/" prefix
+    //     if (cgi_file.back() == '/')
+    //         cgi_file.pop_back();
+    // }
+    // else
+    // {
+    //     cout << "Request is not a CGI request" << endl;
+    // }
+    // cout << BLUE << "cgi_file: " << cgi_file << endl;
+    // cout << RESET << endl;
     return (cgi_file);
 }
 
@@ -394,38 +402,14 @@ int create_server_socket()
         perror("In bind");
         exit(EXIT_FAILURE);
     }
-
     // listen for incoming connections.
     if (listen(server_socket, SOMAXCONN) == -1)
     {
         perror("In listen");
         exit(EXIT_FAILURE);
     }
-
-    // accept a connection
-
     return (server_socket);
 }
-
-// int accept_connection(char* buffer, int server_socket, struct sockaddr_in client_address)
-// {
-//     int client_socket;
-
-//     client_socket = 0;
-//     socklen_t client_address_len = sizeof(client_address);
-//     client_socket = accept(server_socket, (struct sockaddr*)&client_address, &client_address_len);
-//     if (client_socket < 0)
-//     {
-//         perror("In accept");
-//         exit(EXIT_FAILURE);
-//     }
-//     fill(buffer, buffer + BUFF_SIZE, 0);
-//     read(client_socket, buffer, BUFF_SIZE);
-//     cout << buffer << endl;
-//     const char* hello = "hello from server";
-//     write(client_socket, hello, strlen(hello));
-//     return (client_socket);
-// }
 
 int accept_connection(int server_socket)
 {
@@ -560,6 +544,7 @@ char** Request::handleArgs(const string& cgi_path)
 
     _extension_map[".cgi"].push_back(cgi_path);
     _extension_map[".php"].push_back("/usr/bin/php");
+    _extension_map[".py"].push_back("/usr/bin/python");
     if (_extension_map.find(this->getExtension()) == _extension_map.end())
     {
         cerr << "Error: No CGI program found for extension " << this->getExtension() << endl;
@@ -614,7 +599,7 @@ string  Response::getRequestCookies(Request& request)
 }
 
 
-void    Response::sendCgiResponse(Request& request, int client_socket, char *buffer, int count)
+void    Response::sendCgiResponse(Request& request, int client_socket, const char *buffer, int count)
 {
     Response    res;
     string      response_str;
@@ -672,6 +657,7 @@ void    Response::sendErrorResponse(int client_socket, int status_code, string p
 
 void Request::readPipe(int count, char* buffer)
 {
+    (void)buffer;
     if (count == -1)
     {
         perror("read");
@@ -695,7 +681,6 @@ int Request::handle_cgi(int client_socket)
     char**      args;
     int         pipes[2];
     Response    res;
-    ssize_t     count;
 
     cgi_path = this->setCgiPath(cgi_path);
     if (pipe(pipes) == -1)
@@ -711,7 +696,6 @@ int Request::handle_cgi(int client_socket)
     }
     else if (pid == 0)
     {
-		cout << GREEN << "ENTER CHILD PROCESS" << RESET << endl;
         close(pipes[0]);
         if (dup2(pipes[1], STDOUT_FILENO) == -1)
         {
@@ -732,11 +716,14 @@ int Request::handle_cgi(int client_socket)
         int         exit_status;
         struct stat file_stat;
         int         result;
-        char        buffer[BUFF_SIZE];
+        char        buffer[BUFF_SIZE + 1];
         string      root;
         string      path;
+        int         count;
+        int         t_count;
+        string      final_buffer;
 
-        cout << GREEN << "ENTER PARENT PROCESS" << RESET << endl;
+        memset(buffer, 0, BUFF_SIZE + 1);
         if (waitpid(pid, &status, 0) == -1)
         {
             perror("waitpid failed");
@@ -747,8 +734,36 @@ int Request::handle_cgi(int client_socket)
             cout << "Child process exit status " << WIFEXITED(status) << endl;
             exit_status = WEXITSTATUS(status);
             close(pipes[1]);
-            count = read(pipes[0], buffer, BUFF_SIZE);
-            this->readPipe(count, buffer);
+            t_count = 0;
+            if (this->getHeader("Content-Length").empty())
+            {
+                while ((count = read(pipes[0], buffer, BUFF_SIZE)) > 0)
+                {
+                    buffer[count] = '\0';
+                    final_buffer += string(buffer, BUFF_SIZE);
+                    t_count += count;
+                    if (buffer[BUFF_SIZE - 1] == EOF)
+						break ;
+                    // this->readPipe(count, buffer);
+                    memset(buffer, 0, BUFF_SIZE + 1);
+                }
+            }
+            else
+            {
+                _content_length = atoi(this->getHeader("Content-Length").c_str());
+                while (t_count < _content_length)
+                {
+                    count = read(pipes[0], buffer, min(BUFF_SIZE, _content_length - t_count));
+                    final_buffer += string(buffer, BUFF_SIZE);
+                    if (count == 0) 
+                        break ;
+                    t_count += count;
+                    memset(buffer, 0, BUFF_SIZE + 1);
+                    // this->readPipe(count, buffer);
+                }
+            }
+            // count = read(pipes[0], buffer, BUFF_SIZE);
+            cout << RED << final_buffer << endl;
             result = stat(_cgi_path.c_str(), &file_stat);
             if (exit_status != 0)
             {
@@ -766,9 +781,9 @@ int Request::handle_cgi(int client_socket)
                 }
             }
             else
-                res.sendCgiResponse(*this, client_socket, buffer, count);
+                res.sendCgiResponse(*this, client_socket, final_buffer.c_str(), t_count);
+            // system("leaks webserv");
         }
-        // system("leaks webserv");
     }
     return (client_socket);
 }

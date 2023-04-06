@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/04 17:04:41 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/06 18:10:44 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 #ifndef COOKIES_HPP
 #define COOKIES_HPP
 
-#define BUFF_SIZE 4096
+#define BUFF_SIZE 1024
 #define ENV_SIZE 8
 
 #include "lib.hpp"
@@ -30,6 +30,7 @@ enum cgi_extension
 {
     PHP,
     CGI,
+    PYTHON,
     Unknown
 };
 
@@ -46,6 +47,7 @@ class Request
         string                          _cookies;
         string                          _query;
         string                          _pwd;
+        int                             _content_length;
 
     public:
         Request();
@@ -92,7 +94,7 @@ class Response
         string  restoString() const;
         void    setHeader(const string& name, const string& value);
         void    printCookies() const;
-        void    sendCgiResponse(Request& request, int client_socket, char *buffer, int num_read);
+        void    sendCgiResponse(Request& request, int client_socket, const char *buffer, int num_read);
         void    sendErrorResponse(int client_socket,  int status_code, string path);
         bool    checkRequestCookies(Request& request);
         string  getRequestCookies(Request& request);
