@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 14:04:02 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/07 14:15:25 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,7 @@ class	Server
 	void			sendErrorResponse(int client_fd, int statuscode);
 	int				readClient(int fd, string & finalbuffer);
 	void			redirect_Response(int client_fd, const string & url);
+	int				checkPathExist(string & filepath);
 	int				checkFileExist(string & filepath);
 	void			addSocketPoll(vector<struct pollfd> & fds);
 	void			addClientPoll(vector<struct pollfd> & fds);
