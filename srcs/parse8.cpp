@@ -45,8 +45,9 @@ Directive parseDirective(string& line, int lineNum) // i think here got issue
         directive.directive = line.substr(0, argStart);
         if (directive.directive == "location" || directive.directive == "limit_except" || directive.directive == "upstream")
         {
-            size_t  argEnd = line.find_last_not_of(' ', line.size() - 2);
+            size_t  argEnd = line.find_last_not_of("{", line.size() - 2);
             line = line.substr(argStart + 1, argEnd - argStart);
+            line = trimLine(line);
         }
         else
         {
@@ -321,6 +322,7 @@ Server_Detail Config::createServer(const Directive& directive)
             Directive location_directive;
             location_directive.directive = block_directive_it->directive;
             location_directive.args.push_back(block_directive_it->args[0]);
+            new_server.urlLocation.push_back(location_directive.args[0]);
             vector<Directive>::const_iterator nested_directive_it;
 
             for (nested_directive_it = block_directive_it->block.begin(); nested_directive_it != block_directive_it->block.end(); ++nested_directive_it)

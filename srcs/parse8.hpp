@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/25 19:40:59 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 15:34:02 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/07 18:56:43 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ struct Server_Detail
     vector<string>      urlIndexOn;
     map<string, string> urlRoot;
     map<string, string> urlCgi;
+    vector<string>      urlLocation;
 
     // map<string, string> urlMethod;
 

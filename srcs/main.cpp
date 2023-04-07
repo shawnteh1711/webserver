@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 15:21:01 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/07 20:06:15 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -351,48 +351,63 @@ void	testing_limit_except(vector<Server_Detail> & d_servers)
 	cout << RESET << endl;
 }
 
-void	test(char **argv)
+void	printServerDetail(vector<Server_Detail>	d_servers)
 {
-	vector<Server_Detail>	d_servers;
-	int						max_servers; // total server
-//	vector<Server*>		servers;
+	vector<Server_Detail>::iterator it, ite;
 	map<string, string>::iterator	it2;
 	vector<string>::iterator 		it3;
 
-
-
-	setup(d_servers, argv);
-	max_servers = alecprintf(&d_servers);
-	vector<Server_Detail>::iterator it, ite;
+	//  for (it2 = d_servers[0].urlMethod.begin(); it2 != d_servers[0].urlMethod.end(); ++it2)
+	//  {
+	//  	cout << RED << "it2->first: " << it2->first << endl;
+	//  	cout << RED << "it2->second: " << it2->second << endl;
+	//  }
 	it = d_servers.begin();
 	ite = d_servers.end();
+	while (it != ite)
+	{
+
+		cout << "SERVER: " << it->id << endl;
+		cout << "serverName: " << it->serverName << endl;
+		cout << "port: " << it->port << endl;
+		cout << "clientMaxBodySize: " << it->clientMaxBodySize << endl;
+		for (it3 = it->errorPage.begin(); it3 != it->errorPage.end(); it3++)
+		{
+			cout << "errorPage: " << *it3 << endl;
+		}
+		cout << "root: " << it->root << endl;
+		cout << "index: " << it->index << endl;
+		cout << "redirection: " << it->redirection << endl;
+		for (it3 = it->urlIndexOn.begin();it3 != it->urlIndexOn.end();it3++)
+			cout << RED << "urlIndexOn: "  << *it3 << RESET << endl;
+		for (it2 = it->urlLimitExcept.begin();it2 != it->urlLimitExcept.end();it2++)
+			cout << GREEN << "urlLimitExcept: " << it2->first << " " << it2->second << RESET << endl;
+		for (it2 = it->urlRoot.begin();it2 != it->urlRoot.end();it2++)
+			cout << BLUE << "urlRoot: " << it2->first << " " << it2->second << RESET  << endl;
+		for (it2 = it->urlCgi.begin();it2 != it->urlCgi.end();it2++)
+			cout << BLUE << "urlCgi: " << it2->first << " " << it2->second << RESET  << endl;
+		for (it3 = it->urlLocation.begin(); it3 != it->urlLocation.end(); it3++)
+		{
+			cout << YELLOW << "urlLocation: " << *it3 << RESET << endl;
+		}
+		it++;
+	}
+	
+}
+
+void	test(char **argv)
+{
+	vector<Server_Detail>	d_servers;
+	// int						max_servers; // total server
+//	vector<Server*>		servers;
+	setup(d_servers, argv);
+	// max_servers = alecprintf(&d_servers);
 	signal(SIGINT, Server::sig_handler);
 	signal(SIGTSTP, Server::sig_handler);
 	Server	s1(d_servers);
 	// testing_limit_except(d_servers); // this one ?
-
-//	 d_servers[0].search("fastcgi_pass");
-//	 for (it2 = d_servers[0].urlMethod.begin(); it2 != d_servers[0].urlMethod.end(); ++it2)
-//	 {
-//	 	cout << RED << "it2->first: " << it2->first << endl;
-//	 	cout << RED << "it2->second: " << it2->second << endl;
-//	 }
-	// it = d_servers.begin();
-	// ite = d_servers.end();
-	// while (it != ite)
-	// {
-	// 	cout << "SERVER: " << it->id << endl;
-	// 	for (it3 = it->urlIndexOn.begin();it3 != it->urlIndexOn.end();it3++)
-	// 		cout << RED << "urlIndexOn: "  << *it3 << RESET << endl;
-	// 	for (it2 = it->urlLimitExcept.begin();it2 != it->urlLimitExcept.end();it2++)
-	// 		cout << GREEN << "urlLimitExcept: " << it2->first << " " << it2->second << RESET << endl;
-	// 	for (it2 = it->urlRoot.begin();it2 != it->urlRoot.end();it2++)
-	// 		cout << BLUE << "urlRoot: " << it2->first << " " << it2->second << RESET  << endl;
-	// 	for (it2 = it->urlCgi.begin();it2 != it->urlCgi.end();it2++)
-	// 		cout << BLUE << "urlCgi: " << it2->first << " " << it2->second << RESET  << endl;
-	// 	it++;
-	// }
-	
+	//  d_servers[0].search("fastcgi_pass");
+	printServerDetail(d_servers);
 	s1.startListen();
 }
 

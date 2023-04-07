@@ -13,5 +13,23 @@
         <ul>
             <li><a href="location.html">location in Server</a></li>
         </ul>
+        <h1>POST and DELETE Example</h1>
+        <form action="/kapouet" method="post">
+            <input type="text" id="name" name="name" placeholder="Name">
+            <input type="text" id="email" name="email" placeholder="Email">
+            <input type="submit" value="Submit">
+        </form>
+        <p><a href="/kapouet/1" onclick="event.preventDefault(); document.getElementById('delete-form').submit();">Delete Example 1</a></p>
+
+        <form id="delete-form" action="/kapouet/file1.txt" method="post" style="display: none;">
+            <input type="hidden" name="_method" value="DELETE">
+        </form>
+
+        <h1>File Upload Example</h1>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <label for="file">Select a file:</label>
+            <input type="file" id="file" name="file"><br>
+            <input type="submit" value="Upload">
+        </form>
     </body>
 </html>

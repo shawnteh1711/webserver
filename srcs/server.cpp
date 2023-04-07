@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 18:23:09 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/07 20:24:01 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ Server::Server(vector<Server_Detail> & d_servers)
 	_socketAddr_len(sizeof(_socketAddrs[0])), _pwd(getenv("PWD")), _host(),
 	_one_mb(1024 * 1024), _limit_size(_one_mb), _index(0), tracker(new vector<int>[total])
 {
-	cout << "seervers: " << total << endl;
+	// cout << "seervers: " << total << endl;
 	vector<Server_Detail>::iterator it, ite;
 	it = d_servers.begin();
 	ite = d_servers.end();
@@ -290,7 +290,7 @@ int	Server::checkFileExist(const string & filepath)
 {
 	cout << "filepath: " << filepath << endl;
 	ifstream	ifile(filepath);
-	char 		buffertest[BUF_SIZE];
+	char 		buffertest[BUF_SIZE + 100000];
 	struct stat file_stat;
 	
 	if (stat(filepath.c_str(), &file_stat) == 0)
@@ -586,6 +586,7 @@ string	Server::getLocationRoot(const string & s_uri, const int & svr_id)
 	it = servers[svr_id].urlRoot.find(newslash);
 	if (it != ite)
 	{
+		cout << RED << it->second << RESET << endl;
 		if (it->second[it->second.length() - 1] != '/')
 			return (it->second + "/");
 		else
