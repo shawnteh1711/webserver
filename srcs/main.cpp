@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 19:43:58 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/07 15:21:01 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -377,21 +377,21 @@ void	test(char **argv)
 //	 	cout << RED << "it2->first: " << it2->first << endl;
 //	 	cout << RED << "it2->second: " << it2->second << endl;
 //	 }
-//	it = d_servers.begin();
-//	ite = d_servers.end();
-//	while (it != ite)
-//	{
-//		cout << "SERVER: " << it->id << endl;
-//		for (it3 = it->urlIndexOn.begin();it3 != it->urlIndexOn.end();it3++)
-//			cout << RED << "urlIndexOn: "  << *it3 << RESET << endl;
-//		for (it2 = it->urlLimitExcept.begin();it2 != it->urlLimitExcept.end();it2++)
-//			cout << GREEN << "urlLimitExcept: " << it2->first << " " << it2->second << RESET << endl;
-//		for (it2 = it->urlRoot.begin();it2 != it->urlRoot.end();it2++)
-//			cout << BLUE << "urlRoot: " << it2->first << " " << it2->second << RESET  << endl;
-//		for (it2 = it->urlCgi.begin();it2 != it->urlCgi.end();it2++)
-//			cout << BLUE << "urlCgi: " << it2->first << " " << it2->second << RESET  << endl;
-//		it++;
-//	}
+	// it = d_servers.begin();
+	// ite = d_servers.end();
+	// while (it != ite)
+	// {
+	// 	cout << "SERVER: " << it->id << endl;
+	// 	for (it3 = it->urlIndexOn.begin();it3 != it->urlIndexOn.end();it3++)
+	// 		cout << RED << "urlIndexOn: "  << *it3 << RESET << endl;
+	// 	for (it2 = it->urlLimitExcept.begin();it2 != it->urlLimitExcept.end();it2++)
+	// 		cout << GREEN << "urlLimitExcept: " << it2->first << " " << it2->second << RESET << endl;
+	// 	for (it2 = it->urlRoot.begin();it2 != it->urlRoot.end();it2++)
+	// 		cout << BLUE << "urlRoot: " << it2->first << " " << it2->second << RESET  << endl;
+	// 	for (it2 = it->urlCgi.begin();it2 != it->urlCgi.end();it2++)
+	// 		cout << BLUE << "urlCgi: " << it2->first << " " << it2->second << RESET  << endl;
+	// 	it++;
+	// }
 	
 	s1.startListen();
 }

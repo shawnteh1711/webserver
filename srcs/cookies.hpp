@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 22:06:46 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/07 14:48:44 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,7 @@ class Request
         int     getReadSize() const;
         string  getRequest() const;
         string  setCgiPath();
+        void    setCgiPath2(string path);
         void    setQuery(string& query);
         void    setRequest(string request);
         string  parseRequestedFile();
@@ -80,7 +81,7 @@ class Request
         void    freeEnvp(char **envp);
         int     handle_cgi(int client_socket);
         int     handle_cgi2(int client_socket, string full_path);
-        char**  handleArgs(const string& cgi_path);
+        char**  handleArgs();
         bool    hasCookies();
         void    readPipe(int count, char* buffer);
         string  getCookies() const;
