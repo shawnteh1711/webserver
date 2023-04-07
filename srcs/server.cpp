@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 12:46:37 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/07 14:07:52 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -262,7 +262,7 @@ void Server::sendErrorResponse(int client_fd, int statuscode)
 		N_MY::msg("Error sending response to client");
 }
 
-int	Server::checkFileExist(string & filepath)
+int	Server::checkFileExist(string & filepath) // it checks both file and directory exist
 {
 	cout << "filepath: " << filepath << endl;
 	ifstream	ifile(filepath);
@@ -458,6 +458,7 @@ void	Server::setMethodUrl(string & method_type, string & uri_path, string & clie
 void	Server::sendClient(int & client_fd, string & method_type,
 		string & uri_path, Request & req)
 {
+	string cgi_path = "";
 	cout << YELLOW << "method Type: " << method_type << RESET << endl;
 	cout << YELLOW << "uri_path: " << uri_path << RESET << endl;
 	int s = getServerPoll(client_fd);
@@ -466,26 +467,15 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	cout << "server " << servers[s].port << " 's root => " << servers[s].root << endl;
 	
 	string full_path = servers[s].root + uri_path; // pls test this
-	map<string, string>::iterator it, ite;
-	it = servers[s].urlCgi.begin();
-	ite= servers[s].urlCgi.end();
-	// your cgi can return error page if the full path i passed to you is wrong or not found file. thats all.
-	while (it != ite)
+	if (isCgiRequest(uri_path, s, cgi_path))
 	{
-		cout << CYAN << endl;
-		cout << it->first << " => " << it->second << endl;
-		it++;
+		cout << GREEN << "it has cgi request" << endl;
+		cout << "cgi_path i give to you: " << cgi_path << RESET << endl;
+		//req.handle_cgi(client_fd);
+		req.handle_cgi2(client_fd, cgi_path);
 	}
-	cout << RESET << endl;
-	if (!checkFileExist(uri_path) && uri_path != "")
+	else if (!checkFileExist(uri_path) && uri_path != "")
 		sendErrorResponse(client_fd, 404);
-	else if (req.is_cgi_request())
-	{
-		cout << GREEN << "it has cgi request" << RESET << endl;
-		req.handle_cgi(client_fd);
-		// or req.handle_cgi(client_fd, full_path)
-		// create handle_cgi2 with new parameter full_path to path_info
-	}
 	else if (method_type == "GET")
 	{
 		N_MY::msg("--- Received Request from client ---");
@@ -496,6 +486,23 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	}
 	else
 		sendErrorResponse(client_fd, 400);
+}
+
+int		Server::isCgiRequest(const string & search_uri, const int & spoll_id, string & cgi_path)
+{
+	map<string, string>::iterator it, ite;
+	string newslash = "/" + search_uri;
+
+
+	cout << "ENTER" << endl;
+	ite = servers[spoll_id].urlCgi.end();
+	it = servers[spoll_id].urlCgi.find(newslash);
+	if (it != ite)
+	{
+		cgi_path = it->second;
+		return (1);
+	}
+	return (0);
 }
 
 void	Server::sig_handler(int signo)

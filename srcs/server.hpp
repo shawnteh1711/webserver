@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 22:06:12 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/07 14:04:02 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,8 @@ class	Server
 	void			sendClient(int & client_fd, string & method_type,
 					string & uri_path, Request & req);
 	int				getServerPoll(int & client_fd);
+	int				isCgiRequest(const string & search_uri, const int & spoll_id,
+			string & cgi_path);
 
 	// static non-member
 	static Server		*server_instance;
