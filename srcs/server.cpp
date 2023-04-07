@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 22:06:20 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/07 12:46:37 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -266,12 +266,20 @@ int	Server::checkFileExist(string & filepath)
 {
 	cout << "filepath: " << filepath << endl;
 	ifstream	ifile(filepath);
-	char 		buffertest[256];
-	ifile.read(buffertest, sizeof(buffertest));
-	if (ifile) 
+	char 		buffertest[BUF_SIZE];
+	
+	// ifile.read(buffertest, sizeof(buffertest));
+	// cout << YELLOW << "buffertest: " << buffertest << RESET << endl;
+	memset(buffertest, 0, sizeof(buffertest)); // initialize buffer with zeros
+	if (ifile.good()) 
 	{
+		ifile.read(buffertest, sizeof(buffertest));
+		if (ifile.gcount() > 0)
+			buffertest[ifile.gcount()] = '\0';
+		cout << YELLOW << "buffertest: " << buffertest << RESET << endl;
 		return (1);
 	}
+	cout << RED << "File not exist" << RESET << endl;
 	return (0);
 }
 
@@ -444,7 +452,7 @@ void	Server::setMethodUrl(string & method_type, string & uri_path, string & clie
 	method_type = clientRequest.substr(0, pos);
 	uri_path = clientRequest.substr(pos + 1, clientRequest.length());
 	pos = uri_path.find(" ");
-	uri_path = uri_path.substr(0, pos - 1);
+	uri_path = uri_path.substr(1, pos - 1);
 }
 
 void	Server::sendClient(int & client_fd, string & method_type,
