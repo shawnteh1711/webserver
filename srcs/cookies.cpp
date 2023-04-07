@@ -10,6 +10,7 @@ Request::Request(const string& request, const string & cgi_path)
 	: _request(request), _cgi_path(cgi_path)
 {
     cout << RED <<  "cgi_path: " << _cgi_path << endl;
+    this->is_cgi_request();
     return ;
 }
 
@@ -262,6 +263,13 @@ string    Request::setCgiPath()
     return (_path_info);
 }
 
+void    Request::setCgiPath2(string path)
+{
+    _pwd = getenv("PWD");
+    const char* cgi_bin_path = "/cgi-bin/";
+    _path_info = _pwd + cgi_bin_path + path;
+}
+
 void    Request::setRequest(string request)
 {
     _request = request;
@@ -320,7 +328,6 @@ string Request::parseRequestedFile()
     // }
     // cout << BLUE << "cgi_file: " << cgi_file << endl;
     // cout << RESET << endl;
-    // cout << "cgi_file parseRequested: " << cgi_file << endl;
     return (cgi_file);
 }
 
@@ -534,14 +541,14 @@ void    Request::printEnvp() const
     }
 }
 
-char** Request::handleArgs(const string& path_info)
+char** Request::handleArgs()
 {
     vector<string>              commandArgs;
     char**                      args;
     int                         i;
     vector<string>::iterator    it;
 
-    _extension_map[".cgi"].push_back(path_info);
+    _extension_map[".cgi"].push_back(_path_info);
     _extension_map[".php"].push_back("/usr/bin/php");
     _extension_map[".py"].push_back("/usr/bin/python");
     if (_extension_map.find(this->getExtension()) == _extension_map.end())
@@ -557,7 +564,7 @@ char** Request::handleArgs(const string& path_info)
         args[i] = const_cast<char*>(it->c_str());;
         i++;
     }
-    args[i++] = const_cast<char*>(path_info.c_str());
+    args[i++] = const_cast<char*>(_path_info.c_str());
     args[i] = NULL;
 
     char** args_copy = new char*[i + 1];
@@ -676,12 +683,11 @@ int Request::handle_cgi(int client_socket)
 {
     pid_t       pid;
     int         status;
-    string      path_info;
     char**      args;
     int         pipes[2];
     Response    res;
 
-    path_info = this->setCgiPath();
+    _path_info = this->setCgiPath();
     // if u pass path_info ok
     if (pipe(pipes) == -1)
     {
@@ -704,7 +710,7 @@ int Request::handle_cgi(int client_socket)
         }
         close(pipes[1]);
         this->setEnvp();
-        args = handleArgs(path_info);
+        args = handleArgs();
         if (execve(args[0], args, this->getEnvp()) == -1)
         {
             cerr <<  "Error: " << strerror(errno) << endl;
@@ -792,14 +798,16 @@ int Request::handle_cgi2(int client_socket, string full_path)
 {
     pid_t       pid;
     int         status;
-    string      path_info;
     char**      args;
     int         pipes[2];
     Response    res;
 
-    (void)full_path;
-    path_info = this->setCgiPath();
-    // if u pass path_info ok
+    // _pwd = getenv("PWD");
+    // const char* cgi_bin_path = "/cgi-bin/";
+    // _path_info = _pwd + cgi_bin_path + full_path;
+    this->setCgiPath2(full_path);
+    cout << "paste path info: " << _path_info << endl;
+    _extension = full_path.substr(full_path.find_last_of("."));
     if (pipe(pipes) == -1)
     {
         perror("pipe");
@@ -821,7 +829,7 @@ int Request::handle_cgi2(int client_socket, string full_path)
         }
         close(pipes[1]);
         this->setEnvp();
-        args = handleArgs(path_info);
+        args = handleArgs();
         if (execve(args[0], args, this->getEnvp()) == -1)
         {
             cerr <<  "Error: " << strerror(errno) << endl;
@@ -852,6 +860,19 @@ int Request::handle_cgi2(int client_socket, string full_path)
             exit_status = WEXITSTATUS(status);
             close(pipes[1]);
             t_count = 0;
+            if (this->getMethod() == "POST")
+            {
+                while ((count = read(pipes[0], buffer, BUFF_SIZE)) > 0)
+                {
+                    buffer[count] = '\0';
+                    final_buffer += string(buffer, BUFF_SIZE);
+                    t_count += count;
+                    if (buffer[BUFF_SIZE - 1] == EOF)
+						break ;
+                    // this->readPipe(count, buffer);
+                    memset(buffer, 0, BUFF_SIZE + 1);
+                }
+            }
             if (this->getHeader("Content-Length").empty())
             {
                 while ((count = read(pipes[0], buffer, BUFF_SIZE)) > 0)
@@ -865,7 +886,7 @@ int Request::handle_cgi2(int client_socket, string full_path)
                     memset(buffer, 0, BUFF_SIZE + 1);
                 }
             }
-            else
+            else if (this->getMethod() == "GET")
             {
                 _content_length = atoi(this->getHeader("Content-Length").c_str());
                 while (t_count < _content_length)
