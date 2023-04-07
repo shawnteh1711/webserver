@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/25 19:40:59 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 20:48:36 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/07 15:34:02 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ struct Server_Detail
     string              clientMaxBodySize;
     vector<string>      errorPage; // this is ok, one time loop
     string              root;
-    string              index;
+    string              index; //
     // string              autoIndex;
     string              redirection;
     vector<Directive>   locations; // lol this is using 6 loops

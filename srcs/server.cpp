@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 14:15:50 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/07 17:59:11 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ Server *Server::server_instance = NULL;
 // d_servers's port is string type
 Server::Server(vector<Server_Detail> & d_servers)
 	: servers(d_servers), total(d_servers.size()), _sockfds(total),
-	_clientfd(), _serverMsg(buildResponse2()), _socketAddrs(total), 
+	_clientfd(), _serverMsg(buildResponse()), _socketAddrs(total), 
 	_socketAddr_len(sizeof(_socketAddrs[0])), _pwd(getenv("PWD")), _host(),
 	_one_mb(1024 * 1024), _limit_size(_one_mb), _index(0), tracker(new vector<int>[total])
 {
@@ -164,7 +164,7 @@ void generate_listing(string path, string &listing)
     }
 }
 
-string Server::buildResponse()
+string Server::buildResponse(void)
 {
 	string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><h1> \
 					   HOME </h1><p> Hello from your Server :) \
@@ -178,7 +178,7 @@ string Server::buildResponse()
 	return ss.str();
 }
 
-string Server::buildResponse2()
+string Server::buildIndexList(void)
 {
 	string htmlFile = "<html><body>Trying autoindex<ul>";
 	string 	path = "/Users/steh/Documents/own_folder/webserver/kapouet"; // now hardcode
@@ -240,6 +240,9 @@ void Server::sendErrorResponse(int client_fd, int statuscode)
 		case 404:
 			statusMessage = "Not Found";
 			break ;
+		case 405:
+			statusMessage = "Method Not Allowed";
+			break ;
 		case 500:
 			statusMessage = "Internal Server Error";
 			break ;
@@ -283,7 +286,7 @@ int	Server::checkPathExist(string & filepath)
 	return (0);
 }
 
-int	Server::checkFileExist(string & filepath)
+int	Server::checkFileExist(const string & filepath)
 {
 	cout << "filepath: " << filepath << endl;
 	ifstream	ifile(filepath);
@@ -307,6 +310,7 @@ int	Server::checkFileExist(string & filepath)
 				return (0);
 		}
 	}
+	cout << "File NOT FOUND" << endl;
 	return (0);
 }
 
@@ -483,52 +487,164 @@ void	Server::setMethodUrl(string & method_type, string & uri_path, string & clie
 }
 
 void	Server::sendClient(int & client_fd, string & method_type,
-		string & uri_path, Request & req)
+		const string & uri_path, Request & req)
 {
-	string cgi_path = "";
-	cout << YELLOW << "method Type: " << method_type << RESET << endl;
-	cout << YELLOW << "uri_path: " << uri_path << RESET << endl;
-	int s = getServerPoll(client_fd);
-	cout << YELLOW << "server poll id: " << s << RESET << endl;
+	string	cgi_path, root_path, full_path, index_file;
+	int		s;
+	//string full_path = servers[s].root + uri_path;
 
-	cout << "server " << servers[s].port << " 's root => " << servers[s].root << endl;
+	s = getServerPoll(client_fd);
+	index_file = servers[s].index;
+	cgi_path = "";
+	if (index_file == "")
+		index_file = "index.html";
+	if (((root_path = getLocationRoot(uri_path, s)) == ""))
+		root_path = servers[s].root;
 	
-	string full_path = servers[s].root + uri_path; // pls test this
-	if (isCgiRequest(uri_path, s, cgi_path))
+	isIndexOn(uri_path, s);
+	cout << YELLOW << "uri_path: " << uri_path << RESET << endl;
+	cout << YELLOW << "root_path: " << root_path << RESET << endl;
+	cout << YELLOW << "index filename: " << index_file << RESET << endl;
+	cout << YELLOW << "server poll id: " << s << RESET << endl;
+	cout << YELLOW << "AutoIndex: "; isIndexOn(uri_path, s) ? cout << "ON" : cout << "OFF"; cout << endl;
+	cout << RESET << endl;
+
+	full_path = root_path + index_file;
+	cout << YELLOW << "Full path: " << full_path << RESET << endl;
+	if (full_path[0] == '/')
+		full_path = full_path.substr(1, full_path.length());
+
+	if (root_path == "")
+		sendErrorResponse(client_fd, 404);
+	else if (isCgiRequest(uri_path, s, cgi_path))
 	{
 		cout << GREEN << "it has cgi request" << endl;
 		cout << "cgi_path i give to you: " << cgi_path << RESET << endl;
-		//req.handle_cgi(client_fd);
 		req.handle_cgi2(client_fd, cgi_path);
 	}
-	else if (!checkFileExist(uri_path) && uri_path != "")
+	else if (!isMethod(method_type))
+		sendErrorResponse(client_fd, 400);
+	else if (!isAllowUrlMethod(uri_path, s, method_type))
+		sendErrorResponse(client_fd, 405);
+	else if (!checkFileExist(full_path) && uri_path != "")
 		sendErrorResponse(client_fd, 404);
 	else if (method_type == "GET")
 	{
-		N_MY::msg("--- Received Request from client ---");
-//		if (_host.find("localhost:8080") != string::npos)
-//			redirect_Response(client_fd, "http://localhost:1024");
-//		else
+		if  (isIndexOn(uri_path, s))
+		{
+			_serverMsg = buildIndexList();
 			sendResponse(client_fd);
+		}
+		else
+			sendResponse(client_fd);
+	}
+	else if (method_type == "POST")
+	{
+		if  (isIndexOn(uri_path, s))
+			sendErrorResponse(client_fd, 500);
+		cout << GREEN"METHOD_TYPE: "YELLOW << method_type << RESET << endl; 
+		sendResponse(client_fd);
+	}
+	else if (method_type == "DELETE")
+	{
+		if  (isIndexOn(uri_path, s))
+			sendErrorResponse(client_fd, 500);
+		cout << GREEN"METHOD_TYPE: "YELLOW << method_type << RESET << endl; 
+		sendResponse(client_fd);
 	}
 	else
 		sendErrorResponse(client_fd, 400);
 }
 
-int		Server::isCgiRequest(const string & search_uri, const int & spoll_id, string & cgi_path)
+int		Server::isCgiRequest(const string & s_uri, const int & svr_id, string & cgi_path)
 {
 	map<string, string>::iterator it, ite;
-	string newslash = "/" + search_uri;
+	string newslash = addslash(s_uri);
 
-
-	cout << "ENTER" << endl;
-	ite = servers[spoll_id].urlCgi.end();
-	it = servers[spoll_id].urlCgi.find(newslash);
+	ite = servers[svr_id].urlCgi.end();
+	it = servers[svr_id].urlCgi.find(newslash);
 	if (it != ite)
 	{
 		cgi_path = it->second;
 		return (1);
 	}
+	return (0);
+}
+
+string	Server::getLocationRoot(const string & s_uri, const int & svr_id)
+{
+	map<string, string>::iterator it, ite;
+	string newslash = addslash(s_uri);
+
+	ite = servers[svr_id].urlRoot.end();
+	it = servers[svr_id].urlRoot.find(newslash);
+	if (it != ite)
+	{
+		if (it->second[it->second.length() - 1] != '/')
+			return (it->second + "/");
+		else
+			return (it->second);
+	}
+	return ("");
+}
+
+string	Server::addslash(const string & s_uri)
+{
+	return ("/" + s_uri);
+}
+
+int		Server::isIndexOn(const string & s_uri, const int & svr_id)
+{
+	vector<string>::iterator it, ite;
+	string newslash = addslash(s_uri);
+
+	ite = servers[svr_id].urlIndexOn.end();
+	it = servers[svr_id].urlIndexOn.begin();
+	if (::find(it, ite, newslash) != ite)
+		return (1);
+	return (0);
+}
+
+int	Server::isAllowUrlMethod(const string & s_uri, const int & svr_id, string & method_type)
+{
+	map<string, string>::iterator it, ite;
+	string newslash = addslash(s_uri);
+	vector<string> method_list;
+	vector<string>::iterator vit, vite;
+
+	it = servers[svr_id].urlLimitExcept.find(newslash);
+	ite = servers[svr_id].urlLimitExcept.end();
+	if (it != ite)
+	{
+		cout << it->first << " --- " << it->second << endl;
+		string tmp = it->second;
+		while (tmp.find(" ") != string::npos)
+		{
+			string sub = tmp.substr(0, tmp.find(" "));
+			tmp = tmp.substr(tmp.find(" ") + 1, tmp.length());
+			method_list.push_back(sub);
+		}
+		method_list.push_back(tmp);
+	}
+	else
+		return (1);
+	vit = method_list.begin(), vite = method_list.end();
+	while (vit != vite)
+	{
+		if (*vit++ == method_type)
+		{
+			cout << method_type << "is allowed!" << endl;
+			return (1);
+		}
+	}
+	cout << method_type << " is not allowed sad" << endl;
+	return (0);
+}
+
+int		Server::isMethod(string & method_type)
+{
+	if (method_type == "GET" || method_type == "POST" || method_type == "DELETE")
+		return (1);
 	return (0);
 }
 

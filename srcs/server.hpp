@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 14:15:25 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/07 17:11:35 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,14 +43,14 @@ class	Server
 	int				startServer(int index);
 	void			closeServer();
 	void			acceptConnection(int &new_socket, int index);
-	string			buildResponse();
-	string			buildResponse2();
+	string			buildResponse(void);
+	string			buildIndexList(void);
 	void			sendResponse(int client_fd);
 	void			sendErrorResponse(int client_fd, int statuscode);
 	int				readClient(int fd, string & finalbuffer);
 	void			redirect_Response(int client_fd, const string & url);
 	int				checkPathExist(string & filepath);
-	int				checkFileExist(string & filepath);
+	int				checkFileExist(const string & filepath);
 	void			addSocketPoll(vector<struct pollfd> & fds);
 	void			addClientPoll(vector<struct pollfd> & fds);
 	void			clientRequestStage(vector<struct pollfd> & fds);
@@ -60,10 +60,16 @@ class	Server
 	void			setMethodUrl(string & method_type, string & uri_path,
 					string & clientRequest);
 	void			sendClient(int & client_fd, string & method_type,
-					string & uri_path, Request & req);
+					const string & uri_path, Request & req);
 	int				getServerPoll(int & client_fd);
-	int				isCgiRequest(const string & search_uri, const int & spoll_id,
+	int				isCgiRequest(const string & s_uri, const int & svr_id,
 			string & cgi_path);
+	string			getLocationRoot(const string & s_uri, const int & svr_id);
+	string			addslash(const string & s_uri);
+	int				isIndexOn(const string & s_uri, const int & svr_id);
+	int				isAllowUrlMethod(const string & s_uri, const int & svr_id,
+			string & method_type);
+	int				isMethod(string & method_type);
 
 	// static non-member
 	static Server		*server_instance;
