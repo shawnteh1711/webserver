@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 17:59:11 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/07 18:23:09 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -532,25 +532,31 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	{
 		if  (isIndexOn(uri_path, s))
 		{
-			_serverMsg = buildIndexList();
-			sendResponse(client_fd);
+			cout << CYAN"build display Index on" << endl;
+			_serverMsg = buildIndexList(); 
+			sendResponse(client_fd); // not defalt, it get index
 		}
 		else
-			sendResponse(client_fd);
+		{
+			sendCustomResponse(client_fd, full_path);
+		//	sendResponse(client_fd); // default
+		}
 	}
 	else if (method_type == "POST")
 	{
 		if  (isIndexOn(uri_path, s))
 			sendErrorResponse(client_fd, 500);
 		cout << GREEN"METHOD_TYPE: "YELLOW << method_type << RESET << endl; 
-		sendResponse(client_fd);
+		//sendResponse(client_fd); // same
+		sendCustomResponse(client_fd, full_path);
 	}
 	else if (method_type == "DELETE")
 	{
 		if  (isIndexOn(uri_path, s))
 			sendErrorResponse(client_fd, 500);
 		cout << GREEN"METHOD_TYPE: "YELLOW << method_type << RESET << endl; 
-		sendResponse(client_fd);
+		sendCustomResponse(client_fd, full_path);
+		//sendResponse(client_fd); // same
 	}
 	else
 		sendErrorResponse(client_fd, 400);
@@ -646,6 +652,35 @@ int		Server::isMethod(string & method_type)
 	if (method_type == "GET" || method_type == "POST" || method_type == "DELETE")
 		return (1);
 	return (0);
+}
+
+void	Server::sendCustomResponse(int client_fd, string & full_path)
+{
+	Response		res;
+	stringstream	tmp;
+	ostringstream	ss;
+	string			response_str;
+	int				bytesSent;
+	string			html_content;
+
+	ifstream file(full_path);
+	tmp << file.rdbuf();
+	html_content = tmp.str();
+
+	ss << "HTTP/1.1 200 OK\r\n"
+	   << "Content-Type: text/html\r\n"
+	   << "Content-Length: " << html_content.size()
+	   << "\r\n\r\n"
+	   << html_content;
+
+	_serverMsg = ss.str();
+	bytesSent = send(client_fd, _serverMsg.c_str(), _serverMsg.size(), 0);
+	if (bytesSent == -1)
+		N_MY::msg("Error sending response to client");
+	else if (bytesSent == 0)
+		N_MY::msg("Server closed the connection with the client");
+	else
+		N_MY::msg("Server sent a response to the client\n\n");
 }
 
 void	Server::sig_handler(int signo)
