@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 12:46:37 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/07 13:45:11 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -262,7 +262,7 @@ void Server::sendErrorResponse(int client_fd, int statuscode)
 		N_MY::msg("Error sending response to client");
 }
 
-int	Server::checkFileExist(string & filepath)
+int	Server::checkPathExist(string & filepath) // m
 {
 	cout << "filepath: " << filepath << endl;
 	ifstream	ifile(filepath);
@@ -280,6 +280,33 @@ int	Server::checkFileExist(string & filepath)
 		return (1);
 	}
 	cout << RED << "File not exist" << RESET << endl;
+	return (0);
+}
+
+int	Server::checkFileExist(string & filepath)
+{
+	cout << "filepath: " << filepath << endl;
+	ifstream	ifile(filepath);
+	char 		buffertest[BUF_SIZE];
+	struct stat file_stat;
+	
+	if (stat(filepath.c_str(), &file_stat) == 0)
+	{
+		if (!S_ISDIR(file_stat.st_mode)) // only check is not directory
+		{
+			memset(buffertest, 0, sizeof(buffertest));
+			if (ifile.good()) 
+			{
+				ifile.read(buffertest, sizeof(buffertest));
+				if (ifile.gcount() > 0)
+					buffertest[ifile.gcount()] = '\0';
+				cout << YELLOW << "buffertest: " << buffertest << RESET << endl;
+				return (1);
+			}
+			else
+				return (0);
+		}
+	}
 	return (0);
 }
 
