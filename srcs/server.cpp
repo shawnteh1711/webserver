@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/08 13:48:33 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/08 14:13:12 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -501,7 +501,6 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	if (((root_path = getLocationRoot(uri_path, s)) == ""))
 		root_path = servers[s].root;
 	
-	isIndexOn(uri_path, s);
 	cout << YELLOW << "uri_path: " << uri_path << RESET << endl;
 	cout << YELLOW << "root_path: " << root_path << RESET << endl;
 	cout << YELLOW << "index filename: " << index_file << RESET << endl;
@@ -511,8 +510,8 @@ void	Server::sendClient(int & client_fd, string & method_type,
 
 	full_path = root_path + index_file;
 	cout << YELLOW << "Full path: " << full_path << RESET << endl;
-	if (full_path[0] == '/')
-		full_path = full_path.substr(1, full_path.length());
+//	if (full_path[0] == '/')
+//		full_path = full_path.substr(1, full_path.length());
 	if (root_path == "")
 		sendErrorResponse(client_fd, 404);
 	else if (isCgiRequest(uri_path, s, cgi_path))
@@ -525,7 +524,7 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		sendErrorResponse(client_fd, 400);
 	else if (!isAllowUrlMethod(uri_path, s, method_type))
 		sendErrorResponse(client_fd, 405);
-	else if (!checkFileExist(full_path) && uri_path != "")
+	else if (!checkFileExist(full_path) && uri_path != "" && !(isIndexOn(uri_path, s)))
 		sendErrorResponse(client_fd, 404);
 	else if (method_type == "GET")
 	{
