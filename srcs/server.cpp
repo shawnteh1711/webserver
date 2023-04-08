@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/08 17:40:46 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/08 18:24:56 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -570,7 +570,10 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	if (!isMethod(method_type))
 		sendCustomErrorResponse(client_fd, 400, s, root_path);
 	else if (root_path == "" || !isLocationExist(s, uri_path))
+	{
+		cout << "here" << endl;
 		sendCustomErrorResponse(client_fd, 404, s, root_path);
+	}
 	else if (isCgiRequest(uri_path, s, cgi_path))
 	{
 		cout << GREEN << "it has cgi request" << endl;
@@ -754,13 +757,23 @@ void	Server::sendCustomResponse(int client_fd, string & full_path)
 int		Server::isLocationExist(int const & svr_id, const string & s_uri)
 {
 	vector<string>::iterator it, ite;
-	string newslash = addslash(s_uri);
 
+	int pos = s_uri.find("/");
+	string d_url = s_uri.substr(0, pos);
+	string file_path = s_uri.substr(pos + 1, s_uri.length());
+	string newslash = addslash(d_url);
+	
+	string root_path = servers[svr_id].root;
+	if (((root_path = getLocationRoot(d_url, svr_id)) == ""))
+		root_path = servers[svr_id].root;
+
+	string full_path = root_path + file_path;
+	
 	if (s_uri == "")
 		return (1);
 	it = servers[svr_id].urlLocation.begin();
 	ite = servers[svr_id].urlLocation.end();
-	if (::find(it, ite, newslash) != ite)
+	if (::find(it, ite, newslash) != ite && checkFileExist(full_path))
 		return (1);
 	return (0);
 }
