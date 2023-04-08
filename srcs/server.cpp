@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/08 20:27:47 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/08 21:06:14 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,7 +167,7 @@ void generate_listing(string path, string &listing)
 string Server::buildResponse(void)
 {
 	string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><h1> \
-					   HOME </h1><p> Hello from your Server :) \
+					   DEFAULT PAGE </h1><p> Hello!! :DD \
 					   </p></body></html>";
 	ostringstream ss;
 	ss << "HTTP/1.1 200 OK\r\n"
@@ -216,7 +216,6 @@ void Server::sendResponse(int client_fd)
 {
 	long	bytesSent;
 
-	// send(client_fd, _serverMsg.c_str()n
 	bytesSent = send(client_fd, _serverMsg.c_str(), _serverMsg.size(), 0);
 	if (bytesSent == -1)
 		N_MY::msg("Error sending response to client");
@@ -339,6 +338,23 @@ int	Server::checkPathExist(string & filepath)
 		return (1);
 	}
 	cout << RED << "File not exist" << RESET << endl;
+	return (0);
+}
+
+int	Server::checkDirectoryExist(const string & filepath)
+{
+	cout << "filepath in checkDirectoryExist: " << filepath << endl;
+	ifstream	ifile(filepath);
+	struct stat	file_stat;
+
+	if (stat(filepath.c_str(), &file_stat) == 0)
+	{
+		if (S_ISDIR(file_stat.st_mode))
+		{
+			_serverMsg = buildResponse();
+			return (1);
+		}
+	}
 	return (0);
 }
 
@@ -590,6 +606,7 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		sendCustomErrorResponse(client_fd, 404, s, root_path);
 	else if (method_type == "GET")
 	{
+		checkFullPath(uri_path, s, root_path, full_path);
 		if  (isIndexOn(uri_path, s))
 		{
 			cout << CYAN"build display Index on" << endl;
@@ -598,6 +615,8 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		}
 		else if (servers[s].redirection != "")
 			redirect_Response(client_fd, servers[s].redirection);
+		else if (checkDirectoryExist(full_path))
+			sendResponse(client_fd);
 		else
 			sendCustomResponse(client_fd, full_path);
 	}
@@ -631,6 +650,24 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	}
 	else
 		sendErrorResponse(client_fd, 400);
+}
+
+void	Server::checkFullPath(const string & s_uri, const int & svr_id,
+		string & root_path, string & full_path)
+{
+	int pos = s_uri.find("/");
+	string d_url = s_uri.substr(0, pos);
+	string file_path = s_uri.substr(pos + 1, s_uri.length());
+	if (pos == -1)
+		file_path = "";
+	string newslash = addslash(d_url);
+
+	string new_root = servers[svr_id].root;
+	if (((new_root = getLocationRoot(d_url, svr_id)) == ""))
+		new_root = servers[svr_id].root;
+	string new_path = new_root + file_path;
+	if (root_path != new_root)
+		full_path = new_path;
 }
 
 int		Server::isCgiRequest(const string & s_uri, const int & svr_id, string & cgi_path)
