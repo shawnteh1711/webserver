@@ -972,7 +972,6 @@ void    deleteFile(const char *path)
         cout << "Error: unable to delete the file" << endl;
 }
 
-
 //  curl --cookie "name=shawn; name2=alec" http://localhost:80
 //  curl -b "name=shawn; name2=alec" http://localhost:80
 // curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "name=shawn&age=30" "127.0.0.1/cgi-bin/hello.cgi?name=shawn&age=23&hobby=sport"

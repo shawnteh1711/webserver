@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/08 18:50:05 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/08 19:21:04 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -628,17 +628,13 @@ void	Server::sendClient(int & client_fd, string & method_type,
 			sendCustomErrorResponse(client_fd, 500, s, root_path);
 		else
 		{
-			cout << "uri_path before: " << uri_path << endl;
-			int pos = uri_path.find_last_not_of("/");
-			cout << "char: " << uri_path[pos] << endl;
-			cout << "pos: " << pos << endl;
+			int pos = uri_path.find("/");
 			string newfile = uri_path.substr(pos, uri_path.length());
-			string folderpath = uri_path.substr(0, pos - 1);
+			string folderpath = uri_path.substr(0, pos);
 			if (((root_path = getLocationRoot(folderpath, s)) == ""))
 				root_path = servers[s].root;
 			full_path = root_path + newfile;
 			deleteFile(full_path.c_str());
-			cout << "POST PATH:" << full_path << endl;
 			cout << GREEN"METHOD_TYPE: "YELLOW << method_type << RESET << endl; 
 			sendCustomResponse(client_fd, full_path);
 		}

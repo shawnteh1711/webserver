@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/08 18:24:15 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/08 19:19:17 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,8 @@
 #define ENV_SIZE 8
 
 #include "lib.hpp"
+
+class Server;
 
 enum cgi_extension
 {
