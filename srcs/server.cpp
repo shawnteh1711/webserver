@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/08 17:39:26 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/08 17:40:46 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,7 +172,7 @@ string Server::buildResponse(void)
 	ostringstream ss;
 	ss << "HTTP/1.1 200 OK\r\n"
 	   << "Content-Type: text/html\r\n"
-	   << "Content-Length: " << htmlFile.size() 
+	   << "Content-Length: " << htmlFile.size()
 	   << "\r\n\r\n"
 	   << htmlFile;
 	return ss.str();
@@ -187,7 +187,7 @@ string Server::buildIndexList(void)
 	ostringstream ss;
 	ss << "HTTP/1.1 200 OK\r\n"
 	   << "Content-Type: text/html\r\n"
-	   << "Content-Length: " << htmlFile.size() 
+	   << "Content-Length: " << htmlFile.size()
 	   << "\r\n\r\n"
 	   << htmlFile;
 	return ss.str();
@@ -225,13 +225,9 @@ void Server::sendResponse(int client_fd)
 		N_MY::msg("Server sent a response to the client\n\n");
 }
 
-void Server::sendErrorResponse(int client_fd, int statuscode)
+string	Server::getStatusMessage(int statuscode)
 {
-	ostringstream ss;
-	ss << "HTTP/1.1 " << statuscode << " ";
 	string statusMessage;
-	long	bytesSent;
-
 	switch (statuscode)
 	{
 		case 400:
@@ -249,13 +245,25 @@ void Server::sendErrorResponse(int client_fd, int statuscode)
 		default:
 			statusMessage = "Unknown Status Code";
 	}
-	string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><center><h1>  Error!! </h1><p>" + statusMessage + "</p></center></body></html>";
-	ss << statusMessage << "\r\n"
+	return (statusMessage);
+}
+
+void Server::sendErrorResponse(int client_fd, int statuscode)
+{
+	ostringstream ss;
+	stringstream i2s;
+	string statusMessage, code;
+	long	bytesSent;
+
+	i2s << statuscode;
+	i2s >> code;
+	statusMessage = getStatusMessage(statuscode);
+	string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body><center><h1> " + code + " Default Error!! </h1><p>" + statusMessage + "</p></center></body></html>";
+	ss << "HTTP/1.1 " << statuscode << " "
+	   << statusMessage << "\r\n"
 	   << "Content-Length: " << htmlFile.size()
 	   << "\r\n\r\n"
-	   << "<!DOCTYPE html><html lang=\"en\"><body><center><h1> "
-	   << statuscode << " Error!! </h1><p>" << statusMessage
-	   << "</p></center></body></html>";
+	   << htmlFile;
 	string response = ss.str();
 	cout << response << endl;
 	bytesSent = send(client_fd, response.c_str(), response.size(), 0);
@@ -263,6 +271,53 @@ void Server::sendErrorResponse(int client_fd, int statuscode)
 		N_MY::msg("---- Server Error Response sent to client ---- \n\n");
 	else
 		N_MY::msg("Error sending response to client");
+}
+
+int	Server::sendCustomErrorResponse(int client_fd, int statuscode,
+		int svr_id, const string & root)
+{
+	map<int, string>::iterator	it, ite;
+	stringstream				tmp;
+	ostringstream				ss;
+	int							bytesSent;
+	string						full_path, erroroot, html_content, statusMessage;
+
+	erroroot = root;
+	it = servers[svr_id].errorPageMap.find(statuscode);
+	ite = servers[svr_id].errorPageMap.end();
+	if (it != ite)
+	{
+		if (root[root.length() - 1] == '/' && it->second[0] == '/')
+			erroroot.pop_back();
+		full_path = erroroot + it->second;
+		cout << "full path to custom error: " << full_path << endl;
+		if (!checkFileExist(full_path))
+		{
+			cout << "Custom Error path not exist!!" << endl;
+			sendErrorResponse(client_fd, statuscode);
+			return (0);
+		}
+		ifstream file(full_path);
+		tmp << file.rdbuf();
+		html_content = tmp.str();
+		
+		ss << "HTTP/1.1 " << statuscode << " "
+		   << getStatusMessage(statuscode) << "\r\n"
+		   << "Content-Length: " << html_content.size()
+		   << "\r\n\r\n"
+		   << html_content;
+		_serverMsg = ss.str();
+		bytesSent = send(client_fd, _serverMsg.c_str(), _serverMsg.size(), 0);
+		if (bytesSent == -1)
+			N_MY::msg("Error sending response to client");
+		else if (bytesSent == 0)
+			N_MY::msg("Server closed the connection with the client");
+		else
+			N_MY::msg("Server sent a response to the client\n\n");
+		return (1);
+	}
+	sendErrorResponse(client_fd, statuscode);
+	return (0);
 }
 
 int	Server::checkPathExist(string & filepath)
@@ -501,32 +556,31 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	if (((root_path = getLocationRoot(uri_path, s)) == ""))
 		root_path = servers[s].root;
 	
-	isIndexOn(uri_path, s);
+	cout << YELLOW << "method_type: " << method_type << RESET << endl;
 	cout << YELLOW << "uri_path: " << uri_path << RESET << endl;
 	cout << YELLOW << "root_path: " << root_path << RESET << endl;
 	cout << YELLOW << "index filename: " << index_file << RESET << endl;
 	cout << YELLOW << "server poll id: " << s << RESET << endl;
 	cout << YELLOW << "AutoIndex: "; isIndexOn(uri_path, s) ? cout << "ON" : cout << "OFF"; cout << endl;
+	cout << YELLOW << "Is Location Existing?: "; isLocationExist(s, uri_path) ? cout << "YES" : cout << "NOT EXIST"; cout << endl;
 	cout << RESET << endl;
 
 	full_path = root_path + index_file;
 	cout << YELLOW << "Full path: " << full_path << RESET << endl;
-	if (full_path[0] == '/')
-		full_path = full_path.substr(1, full_path.length());
-	if (root_path == "")
-		sendErrorResponse(client_fd, 404);
+	if (!isMethod(method_type))
+		sendCustomErrorResponse(client_fd, 400, s, root_path);
+	else if (root_path == "" || !isLocationExist(s, uri_path))
+		sendCustomErrorResponse(client_fd, 404, s, root_path);
 	else if (isCgiRequest(uri_path, s, cgi_path))
 	{
 		cout << GREEN << "it has cgi request" << endl;
 		cout << "cgi_path i give to you: " << cgi_path << RESET << endl;
 		req.handle_cgi2(client_fd, cgi_path);
 	}
-	else if (!isMethod(method_type))
-		sendErrorResponse(client_fd, 400);
 	else if (!isAllowUrlMethod(uri_path, s, method_type))
-		sendErrorResponse(client_fd, 405);
-	else if (!checkFileExist(full_path) && uri_path != "")
-		sendErrorResponse(client_fd, 404);
+		sendCustomErrorResponse(client_fd, 405, s, root_path);
+	else if (!checkFileExist(full_path) && uri_path != "" && !(isIndexOn(uri_path, s)))
+		sendCustomErrorResponse(client_fd, 404, s, root_path);
 	else if (method_type == "GET")
 	{
 		if  (isIndexOn(uri_path, s))
@@ -535,11 +589,10 @@ void	Server::sendClient(int & client_fd, string & method_type,
 			_serverMsg = buildIndexList(); 
 			sendResponse(client_fd); // not defalt, it get index
 		}
+		else if (servers[s].redirection != "")
+			redirect_Response(client_fd, servers[s].redirection);
 		else
-		{
 			sendCustomResponse(client_fd, full_path);
-		//	sendResponse(client_fd); // default
-		}
 	}
 	else if (method_type == "POST")
 	{
@@ -567,10 +620,12 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	{
 		// here need to do when method is delete
 		if  (isIndexOn(uri_path, s))
-			sendErrorResponse(client_fd, 500);
-		cout << GREEN"METHOD_TYPE: "YELLOW << method_type << RESET << endl; 
-		sendCustomResponse(client_fd, full_path);
-		//sendResponse(client_fd); // same
+			sendCustomErrorResponse(client_fd, 500, s, root_path);
+		else
+		{
+			cout << GREEN"METHOD_TYPE: "YELLOW << method_type << RESET << endl; 
+			sendCustomResponse(client_fd, full_path);
+		}
 	}
 	else
 		sendErrorResponse(client_fd, 400);
@@ -671,10 +726,8 @@ int		Server::isMethod(string & method_type)
 
 void	Server::sendCustomResponse(int client_fd, string & full_path)
 {
-	Response		res;
 	stringstream	tmp;
 	ostringstream	ss;
-	string			response_str;
 	int				bytesSent;
 	string			html_content;
 
@@ -696,6 +749,20 @@ void	Server::sendCustomResponse(int client_fd, string & full_path)
 		N_MY::msg("Server closed the connection with the client");
 	else
 		N_MY::msg("Server sent a response to the client\n\n");
+}
+
+int		Server::isLocationExist(int const & svr_id, const string & s_uri)
+{
+	vector<string>::iterator it, ite;
+	string newslash = addslash(s_uri);
+
+	if (s_uri == "")
+		return (1);
+	it = servers[svr_id].urlLocation.begin();
+	ite = servers[svr_id].urlLocation.end();
+	if (::find(it, ite, newslash) != ite)
+		return (1);
+	return (0);
 }
 
 void	Server::sig_handler(int signo)

@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 18:13:36 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/08 15:41:12 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,11 +66,15 @@ class	Server
 			string & cgi_path);
 	string			getLocationRoot(const string & s_uri, const int & svr_id);
 	string			addslash(const string & s_uri);
+	string			getStatusMessage(int statuscode);
 	int				isIndexOn(const string & s_uri, const int & svr_id);
 	int				isAllowUrlMethod(const string & s_uri, const int & svr_id,
 			string & method_type);
 	int				isMethod(string & method_type);
 	void			sendCustomResponse(int client_fd, string & full_path);
+	int				isLocationExist(int const & svr_id, const string & s_uri);
+	int				sendCustomErrorResponse(int client_fd, int statuscode,
+			int svr_id, const string & root);
 
 	// static non-member
 	static Server		*server_instance;
