@@ -311,7 +311,13 @@ Server_Detail Config::createServer(const Directive& directive)
         else if (block_directive_it->directive == "client_max_body_size")
             new_server.clientMaxBodySize = block_directive_it->args[0];
         else if (block_directive_it->directive == "error_page")
+        {
             new_server.errorPage.push_back(block_directive_it->args[0]);
+            string code_str = block_directive_it->args[0].substr(0,  block_directive_it->args[0].find(' '));
+            int code = atoi(code_str.c_str());
+            string file = block_directive_it->args[0].substr(block_directive_it->args[0].find(' ') + 1);
+            new_server.errorPageMap.insert(make_pair(code, file));
+        }
         else if (block_directive_it->directive == "root")
             new_server.root = block_directive_it->args[0];
         else if (block_directive_it->directive == "index")

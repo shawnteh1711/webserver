@@ -961,7 +961,16 @@ bool Request::hasCookies()
 string  Request::getCookies() const
 {
     return (_cookies);
-}   
+}
+
+void    deleteFile(const char *path)
+{
+    int result = remove(path);
+    if (result == 0)
+        cout << "File deleted successfully" << endl;
+    else
+        cout << "Error: unable to delete the file" << endl;
+}
 
 
 //  curl --cookie "name=shawn; name2=alec" http://localhost:80
