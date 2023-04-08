@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/08 15:41:12 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/08 20:58:58 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,7 @@ class	Server
 	int				readClient(int fd, string & finalbuffer);
 	void			redirect_Response(int client_fd, const string & url);
 	int				checkPathExist(string & filepath);
+	int				checkDirectoryExist(const string & filepath);
 	int				checkFileExist(const string & filepath);
 	void			addSocketPoll(vector<struct pollfd> & fds);
 	void			addClientPoll(vector<struct pollfd> & fds);
@@ -75,6 +76,8 @@ class	Server
 	int				isLocationExist(int const & svr_id, const string & s_uri);
 	int				sendCustomErrorResponse(int client_fd, int statuscode,
 			int svr_id, const string & root);
+	void			checkFullPath(const string & s_uri, const int & svr_id,
+			string & root_path, string & full_path);
 
 	// static non-member
 	static Server		*server_instance;
