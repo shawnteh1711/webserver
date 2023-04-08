@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:53:17 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 20:06:15 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/08 14:35:56 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -356,6 +356,7 @@ void	printServerDetail(vector<Server_Detail>	d_servers)
 	vector<Server_Detail>::iterator it, ite;
 	map<string, string>::iterator	it2;
 	vector<string>::iterator 		it3;
+	map<int, string>::iterator		it4;
 
 	//  for (it2 = d_servers[0].urlMethod.begin(); it2 != d_servers[0].urlMethod.end(); ++it2)
 	//  {
@@ -387,9 +388,9 @@ void	printServerDetail(vector<Server_Detail>	d_servers)
 		for (it2 = it->urlCgi.begin();it2 != it->urlCgi.end();it2++)
 			cout << BLUE << "urlCgi: " << it2->first << " " << it2->second << RESET  << endl;
 		for (it3 = it->urlLocation.begin(); it3 != it->urlLocation.end(); it3++)
-		{
 			cout << YELLOW << "urlLocation: " << *it3 << RESET << endl;
-		}
+		for	(it4 = it->errorPageMap.begin(); it4 != it->errorPageMap.end(); it4++)
+			cout << YELLOW << "errorPageMap: " << it4->first << " " << it4->second << endl;
 		it++;
 	}
 	

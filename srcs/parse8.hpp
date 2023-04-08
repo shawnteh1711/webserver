@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/25 19:40:59 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 18:56:43 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/08 14:24:18 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ struct Server_Detail
     string              port;
     string              clientMaxBodySize;
     vector<string>      errorPage; // this is ok, one time loop
+    map<int, string>    errorPageMap;
     string              root;
     string              index; //
     // string              autoIndex;

@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 14:48:44 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/08 14:21:19 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,5 +115,5 @@ class Response
 };
 
 void	handle_non_cgi(int client_socket, Request & req);
-
+void    deleteFile(const char* path);
 #endif
