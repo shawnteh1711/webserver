@@ -4,32 +4,44 @@
         h1 {
             font-size: 36px;
         }
+        section {
+            border: 1px solid black;
+            padding: 10px;
+            margin: 10px;
+        }
     </style>
     <head>
         <h1>Index Page</h1>
     </head>
     <body>
-        <p>Thanks for visiting my website! Feel free to look around and explore</p>
-        <ul>
-            <li><a href="location.html">location in Server</a></li>
-        </ul>
-        <h1>POST and DELETE Example</h1>
-        <form action="/kapouet" method="post">
-            <input type="text" id="name" name="name" placeholder="Name">
-            <input type="text" id="email" name="email" placeholder="Email">
-            <input type="submit" value="Submit">
-        </form>
-        <p><a href="/kapouet/1" onclick="event.preventDefault(); document.getElementById('delete-form').submit();">Delete Example 1</a></p>
-
-        <form id="delete-form" action="/kapouet/file1.txt" method="post" style="display: none;">
-            <input type="hidden" name="_method" value="DELETE">
-        </form>
-
-        <h1>File Upload Example</h1>
-        <form action="/upload" method="post" enctype="multipart/form-data">
-            <label for="file">Select a file:</label>
-            <input type="file" id="file" name="file"><br>
-            <input type="submit" value="Upload">
-        </form>
-    </body>
+        <section>
+            <p>Thanks for visiting my website! Feel free to look around and explore</p>
+            <ul>
+                <li><a href="location.html">location in Server</a></li>
+            </ul>
+        </section>
+        <section>
+            <h1>POST Example</h1>
+            <form action="/kapouet" method="post">
+                <input type="text" id="name" name="name" placeholder="Name">
+                <input type="text" id="email" name="email" placeholder="Email">
+                <input type="submit" value="Submit">
+            </form>
+        </section>
+        <section>
+            <h1>DELETE Example</h1>
+            <p><a href="kapouet/1" onclick="event.preventDefault(); document.getElementById('delete-form').submit();">Delete Example 1</a></p>
+            <form id="delete-form" action="kapouet/1" method="post" style="display: none;">
+                <input type="hidden" name="_method" value="DELETE">
+            </form>
+        </section>
+        <section>
+            <h1>File Upload Example</h1>
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <label for="file">Select a file:</label>
+                <input type="file" id="file" name="file"><br>
+                <input type="submit" value="Upload">
+            </form>
+        </section>    
+        </body>
 </html>

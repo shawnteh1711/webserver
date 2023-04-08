@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 20:24:01 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/08 13:48:33 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -513,7 +513,6 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	cout << YELLOW << "Full path: " << full_path << RESET << endl;
 	if (full_path[0] == '/')
 		full_path = full_path.substr(1, full_path.length());
-
 	if (root_path == "")
 		sendErrorResponse(client_fd, 404);
 	else if (isCgiRequest(uri_path, s, cgi_path))
