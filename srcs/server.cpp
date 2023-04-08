@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/08 14:13:12 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/08 14:38:13 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -507,12 +507,14 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	cout << YELLOW << "server poll id: " << s << RESET << endl;
 	cout << YELLOW << "AutoIndex: "; isIndexOn(uri_path, s) ? cout << "ON" : cout << "OFF"; cout << endl;
 	cout << RESET << endl;
+	if (isLocationExist(s, uri_path))
+		cout << "FOUND LOCATION !!! " << endl;
+	else
+		cout << "NOT FOUND LOCATION !!! " << endl;
 
 	full_path = root_path + index_file;
 	cout << YELLOW << "Full path: " << full_path << RESET << endl;
-//	if (full_path[0] == '/')
-//		full_path = full_path.substr(1, full_path.length());
-	if (root_path == "")
+	if (root_path == "" || !isLocationExist(s, uri_path))
 		sendErrorResponse(client_fd, 404);
 	else if (isCgiRequest(uri_path, s, cgi_path))
 	{
@@ -680,6 +682,18 @@ void	Server::sendCustomResponse(int client_fd, string & full_path)
 		N_MY::msg("Server closed the connection with the client");
 	else
 		N_MY::msg("Server sent a response to the client\n\n");
+}
+
+int		Server::isLocationExist(int const & svr_id, const string & s_uri)
+{
+	vector<string>::iterator it, ite;
+	string newslash = addslash(s_uri);
+
+	it = servers[svr_id].urlLocation.begin();
+	ite = servers[svr_id].urlLocation.end();
+	if (::find(it, ite, newslash) != ite)
+		return (1);
+	return (0);
 }
 
 void	Server::sig_handler(int signo)

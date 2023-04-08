@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/07 18:13:36 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/08 14:28:56 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,7 @@ class	Server
 			string & method_type);
 	int				isMethod(string & method_type);
 	void			sendCustomResponse(int client_fd, string & full_path);
+	int				isLocationExist(int const & svr_id, const string & s_uri);
 
 	// static non-member
 	static Server		*server_instance;
