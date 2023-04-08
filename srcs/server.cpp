@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/08 18:24:56 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/08 18:48:16 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -322,7 +322,7 @@ int	Server::sendCustomErrorResponse(int client_fd, int statuscode,
 
 int	Server::checkPathExist(string & filepath)
 {
-	cout << "filepath: " << filepath << endl;
+	cout << "filepath in checkPathExist: " << filepath << endl;
 	ifstream	ifile(filepath);
 	char 		buffertest[BUF_SIZE];
 	
@@ -343,7 +343,7 @@ int	Server::checkPathExist(string & filepath)
 
 int	Server::checkFileExist(const string & filepath)
 {
-	cout << "filepath: " << filepath << endl;
+	cout << "filepath in checkFileExist: " << filepath << endl;
 	ifstream	ifile(filepath);
 	char 		buffertest[BUF_SIZE + 100000];
 	struct stat file_stat;
@@ -553,6 +553,7 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	cgi_path = "";
 	if (index_file == "")
 		index_file = "index.html";
+	cout << "STARTTTT" << endl;
 	if (((root_path = getLocationRoot(uri_path, s)) == ""))
 		root_path = servers[s].root;
 	
@@ -567,6 +568,7 @@ void	Server::sendClient(int & client_fd, string & method_type,
 
 	full_path = root_path + index_file;
 	cout << YELLOW << "Full path: " << full_path << RESET << endl;
+	cout << "======Before enter Method=====" << endl;
 	if (!isMethod(method_type))
 		sendCustomErrorResponse(client_fd, 400, s, root_path);
 	else if (root_path == "" || !isLocationExist(s, uri_path))
@@ -654,6 +656,8 @@ string	Server::getLocationRoot(const string & s_uri, const int & svr_id)
 	map<string, string>::iterator it, ite;
 	string newslash = addslash(s_uri);
 
+	if (newslash[newslash.length() - 1] == '/')
+		newslash.pop_back();
 	ite = servers[svr_id].urlRoot.end();
 	it = servers[svr_id].urlRoot.find(newslash);
 	if (it != ite)
@@ -761,6 +765,8 @@ int		Server::isLocationExist(int const & svr_id, const string & s_uri)
 	int pos = s_uri.find("/");
 	string d_url = s_uri.substr(0, pos);
 	string file_path = s_uri.substr(pos + 1, s_uri.length());
+	if (pos == -1)
+		file_path = "";
 	string newslash = addslash(d_url);
 	
 	string root_path = servers[svr_id].root;
@@ -773,7 +779,7 @@ int		Server::isLocationExist(int const & svr_id, const string & s_uri)
 		return (1);
 	it = servers[svr_id].urlLocation.begin();
 	ite = servers[svr_id].urlLocation.end();
-	if (::find(it, ite, newslash) != ite && checkFileExist(full_path))
+	if (::find(it, ite, newslash) != ite && checkPathExist(full_path))
 		return (1);
 	return (0);
 }
