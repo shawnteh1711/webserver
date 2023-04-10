@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 19:58:47 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/10 21:46:14 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,10 +153,12 @@ void generate_listing(const string & path, string &listing)
     struct dirent	*ent;
 
     // Open the directory
-    if ((dir = opendir(path.c_str())) != NULL) {
+    if ((dir = opendir(path.c_str())) != NULL)
+	{
         // Iterate through the directory entries
 		listing += "<p>Path: " + path + "</p>";
-        while ((ent = readdir(dir)) != NULL) {
+        while ((ent = readdir(dir)) != NULL)
+		{
             listing += "<li>" + string(ent->d_name) + "</li>";
         }
         closedir(dir);
@@ -164,6 +166,29 @@ void generate_listing(const string & path, string &listing)
         cerr << "Error opening directory: " << path << endl;
     }
 }
+
+// void generate_listing(const string & path, string &listing)
+// {
+//     DIR				*dir;
+//     struct dirent	*ent;
+// 	cout << "path: " << path << endl;
+//     if ((dir = opendir(path.c_str())) != NULL) {
+//         // Iterate through the directory entries
+// 		listing += "<p>Path: " + path + "</p>";
+//         while ((ent = readdir(dir)) != NULL) {
+// 			string name = ent->d_name;
+// 			if (name == "." || name == "..")
+// 				continue;
+// 			string link = path + name;
+// 			cout << "link: " << link << endl;
+// 			listing += "<li><a href=\"" + link + "\">" + name + "</a></li>";
+//             // listing += "<li>" + string(ent->d_name) + "</li>"; //previous
+//         }
+//         closedir(dir);
+//     } else {
+//         cerr << "Error opening directory: " << path << endl;
+//     }
+// }
 
 string Server::buildResponse(void)
 {
@@ -181,7 +206,7 @@ string Server::buildResponse(void)
 
 string Server::buildIndexList(const string & full_path)
 {
-	string htmlFile = "<html><body>Trying autoindex<ul>";
+	string htmlFile = "<html><body>INDEX FILE<ul>";
 	// need to change path using ROOT?
     generate_listing(full_path, htmlFile);
 	htmlFile += "</ul></body></html>";
@@ -567,6 +592,7 @@ void	Server::copyFiles(string &file_path, string &root_path)
 	string filename = (pos == string::npos) ? file_path : file_path.substr(pos + 1);
 	cout << "filename: " << filename << endl;
 	root_path += filename;
+	cout << "root_path: " << root_path << endl;
 	FILE* source = fopen(file_path.c_str(), "rb");
 	FILE* dest = fopen(root_path.c_str(), "ab");
 
@@ -650,7 +676,7 @@ void	Server::sendClient(int & client_fd, string & method_type,
 			cout << CYAN"build display Index on" << endl;
 			int pos = full_path.find(index_file);
 			full_path = full_path.substr(0, pos);
-			_serverMsg = buildIndexList(full_path); 
+			_serverMsg = buildIndexList(full_path); // can pas new_uri
 			sendResponse(client_fd); // not defalt, it get index
 		}
 		else if (servers[s].redirection != "")
@@ -662,24 +688,24 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	}
 	else if (method_type == "POST")
 	{
-		// LOCAL VARIABLE? NEED TO USE UR REQ'S CLIENTREQUEST
+		cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl;
 		cout << "server client_request:\n" << req.getRequest() << endl;
-		// how do i get request here or you save request body?
 		if  (isIndexOn(uri_path, s))
 			sendErrorResponse(client_fd, 500);
-		map<string, string> key_value_body = req.getKeyValueBody();
-		map<string, string>::iterator it = key_value_body.begin();
-		if (it->first == "file" && checkFileExist(it->second))
-		{
-			copyFiles(it->second, root_path);
-		}
 		else
 		{
-			_store_body.insert(key_value_body.begin(), key_value_body.end());
-			printMap(_store_body);
-			sendCustomPostResponse(client_fd, full_path, _store_body);
+			// cout << "before root_path: " << root_path << endl;
+			map<string, string> key_value_body = req.getKeyValueBody();
+			map<string, string>::iterator it = key_value_body.begin();
+			if (it->first == "file" && checkFileExist(it->second))
+				copyFiles(it->second, root_path);
+			else
+			{
+				_store_body.insert(key_value_body.begin(), key_value_body.end());
+				printMap(_store_body);
+				sendCustomPostResponse(client_fd, full_path, _store_body);
+			} 
 		}
-		cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl; 
 	}
 	else if (method_type == "DELETE")
 	{
