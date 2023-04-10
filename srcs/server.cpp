@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 17:37:16 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/10 18:48:59 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -607,8 +607,11 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		sendCustomErrorResponse(client_fd, 404, s, root_path);
 	else if (method_type == "GET")
 	{
+		cout << "ENTER GET" << endl;
+		cout << "uri_path: " << uri_path << endl;
 		new_uri = uri_path;
-		checkFullPath(new_uri, s, root_path, full_path);
+		checkFullPath(new_uri, s, root_path, full_path, index_file);
+		cout << "after check full_path: " << full_path << endl;
 		if (checkDirectoryExist(full_path))
 		{
 			if (full_path[full_path.length() - 1] != '/')
@@ -669,7 +672,7 @@ void	Server::sendClient(int & client_fd, string & method_type,
 }
 
 void	Server::checkFullPath(string & s_uri, const int & svr_id,
-		string & root_path, string & full_path)
+		string & root_path, string & full_path, const string & indexfile)
 {
 	int pos = s_uri.find("/");
 	string d_url = s_uri.substr(0, pos);
@@ -679,14 +682,14 @@ void	Server::checkFullPath(string & s_uri, const int & svr_id,
 	if (pos != -1)
 		s_uri = s_uri.substr(0, pos);
 	string newslash = addslash(d_url);
-
 	string new_root = servers[svr_id].root;
 	if (((new_root = getLocationRoot(d_url, svr_id)) == ""))
 		new_root = servers[svr_id].root;
 	string new_path = new_root + file_path;
 	if (root_path != new_root)
 		full_path = new_path;
-	
+	else if (file_path != indexfile)
+		full_path = new_path;
 }
 
 int		Server::isCgiRequest(const string & s_uri, const int & svr_id, string & cgi_path)
