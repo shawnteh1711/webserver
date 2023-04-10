@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 15:33:57 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/10 17:02:39 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +81,8 @@ class	Server
 	void			sendCustomPostResponse(int client_fd, string & full_path, multimap<string, string> & key_value_body);
 	void			checkFullPath(string & s_uri, const int & svr_id,
 			string & root_path, string & full_path);
+	void			checkServers(vector<Server_Detail> & servers);
+	int				checkPort(vector<Server_Detail> & servers, string & defaultport);
 
 	// static non-member
 	static Server		*server_instance;
