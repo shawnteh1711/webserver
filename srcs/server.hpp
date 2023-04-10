@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 19:57:49 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/10 21:38:16 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,16 @@
 //#define BUF_SIZE	10
 #define BUF_SIZE	1024
 #define LIMIT_SIZE	1000 // for limit client body size
+
+typedef struct s_server
+{
+	string	cgi_path;
+	string	root_path;
+	string	full_path;
+	string	index_file;
+	string	new_uri;
+	int		s;
+}	t_server;
 
 class	Server
 {
@@ -39,7 +49,8 @@ class	Server
 	size_t						_limit_size;
 	size_t						_index;
 	vector<int>					*tracker;
-	multimap<string, string> 		_store_body;
+	multimap<string, string>	_store_body;
+	t_server					s_t;
 
 	int				startServer(int index);
 	void			closeServer();
