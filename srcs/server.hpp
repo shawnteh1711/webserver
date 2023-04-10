@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 12:30:06 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/10 13:37:26 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ class	Server
 	void			closeServer();
 	void			acceptConnection(int &new_socket, int index);
 	string			buildResponse(void);
-	string			buildIndexList(void);
+	string			buildIndexList(const string & full_path);
 	void			sendResponse(int client_fd);
 	void			sendErrorResponse(int client_fd, int statuscode);
 	int				readClient(int fd, string & finalbuffer);
@@ -91,5 +91,7 @@ class	Server
 		// static non-member
 		static void		sig_handler(int signo);
 };
+
+void	generate_listing(const string & path, string & listing);
 
 #endif

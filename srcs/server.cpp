@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 12:55:39 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/10 13:42:36 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,7 +146,7 @@ void	Server::acceptConnection(int &new_client, int index)
 	}
 }
 
-void generate_listing(string path, string &listing)
+void generate_listing(const string & path, string &listing)
 {
     DIR				*dir;
     struct dirent	*ent;
@@ -178,12 +178,11 @@ string Server::buildResponse(void)
 	return ss.str();
 }
 
-string Server::buildIndexList(void)
+string Server::buildIndexList(const string & full_path)
 {
 	string htmlFile = "<html><body>Trying autoindex<ul>";
 	// need to change path using ROOT?
-	string 	path = "/Users/steh/Documents/own_folder/webserver/kapouet"; // now hardcode
-    generate_listing(path, htmlFile); //for autoindex directory
+    generate_listing(full_path, htmlFile);
 	htmlFile += "</ul></body></html>";
 	ostringstream ss;
 	ss << "HTTP/1.1 200 OK\r\n"
@@ -620,7 +619,9 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		if  (isIndexOn(new_uri, s))
 		{
 			cout << CYAN"build display Index on" << endl;
-			_serverMsg = buildIndexList(); 
+			int pos = full_path.find(index_file);
+			full_path = full_path.substr(0, pos);
+			_serverMsg = buildIndexList(full_path); 
 			sendResponse(client_fd); // not defalt, it get index
 		}
 		else if (servers[s].redirection != "")
