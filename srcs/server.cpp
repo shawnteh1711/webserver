@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 12:49:59 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/10 12:55:39 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -181,6 +181,7 @@ string Server::buildResponse(void)
 string Server::buildIndexList(void)
 {
 	string htmlFile = "<html><body>Trying autoindex<ul>";
+	// need to change path using ROOT?
 	string 	path = "/Users/steh/Documents/own_folder/webserver/kapouet"; // now hardcode
     generate_listing(path, htmlFile); //for autoindex directory
 	htmlFile += "</ul></body></html>";
@@ -522,7 +523,9 @@ int		Server::unChunkRequest(int client_fd, string & clientBuffer)
 	}
 	if (bytes == -1 && finalbuffer.size() == 0)
 	{
-		N_MY::msg(RED"Failed to read client request"RESET);
+		RED;
+		N_MY::msg("Failed to read client request");
+		RESET;
 		return (bytes);
 	}
 	else if (bytes == 0)
@@ -589,7 +592,6 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		sendCustomErrorResponse(client_fd, 400, s, root_path);
 	else if (root_path == "" || !isLocationExist(s, uri_path))
 	{
-		cout << "here" << endl;
 		sendCustomErrorResponse(client_fd, 404, s, root_path);
 	}
 	else if (isCgiRequest(uri_path, s, cgi_path))
@@ -630,41 +632,29 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	}
 	else if (method_type == "POST")
 	{
+		// LOCAL VARIABLE? NEED TO USE UR REQ'S CLIENTREQUEST
+		cout << "server client_request:\n" << req.getRequest() << endl;
+		// how do i get request here or you save request body?
 		if  (isIndexOn(uri_path, s))
 			sendErrorResponse(client_fd, 500);
-		cout << GREEN"METHOD_TYPE: "YELLOW << method_type << RESET << endl; 
-		//sendResponse(client_fd); // same
-		// why root_path can become root/
-		// root need to be tmp/www again
-		// ur parsing has any trimmming function till the last /?
-		// is "\\" same as "/" same result , why use \\?
-		// cout << "uri_path before: " << uri_path << endl;
-		// int pos = uri_path.find_last_not_of("/");
-		// cout << "char: " << uri_path[pos] << endl;
-		// cout << "pos: " << pos << endl;
-		// string newfile = uri_path.substr(pos, uri_path.length());
-		// string folderpath = uri_path.substr(0, pos - 1);
-		// if (((root_path = getLocationRoot(folderpath, s)) == ""))
-		// 	root_path = servers[s].root;
-		// full_path = root_path + newfile;
-		// cout << "POST PATH:" << full_path << endl;
+		cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl; 
 		sendCustomResponse(client_fd, full_path);
 	}
 	else if (method_type == "DELETE")
 	{
-		// here need to do when method is delete
 		if  (isIndexOn(uri_path, s))
 			sendCustomErrorResponse(client_fd, 500, s, root_path);
 		else
 		{
 			int pos = uri_path.find("/");
-			string newfile = uri_path.substr(pos, uri_path.length());
+			string newfile = uri_path.substr(pos);
 			string folderpath = uri_path.substr(0, pos);
-			if (((root_path = getLocationRoot(folderpath, s)) == ""))
+			root_path = getLocationRoot(folderpath, s);
+			if (root_path == "")
 				root_path = servers[s].root;
 			full_path = root_path + newfile;
 			deleteFile(full_path.c_str());
-			cout << GREEN"METHOD_TYPE: "YELLOW << method_type << RESET << endl; 
+			cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl; 
 			sendCustomResponse(client_fd, full_path);
 		}
 	}
@@ -799,7 +789,8 @@ void	Server::sendCustomResponse(int client_fd, string & full_path)
 	tmp << file.rdbuf();
 	html_content = tmp.str();
 
-	ss << "HTTP/1.1 200 OK\r\n"
+	// you get in server reason swithc? if success all 200. here dont handle error, if file not exits?
+	ss << "HTTP/1.1 200 Ok\r\n"
 	   << "Content-Type: text/html\r\n"
 	   << "Content-Length: " << html_content.size()
 	   << "\r\n\r\n"

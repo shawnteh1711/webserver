@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/08 19:19:17 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/08 20:55:33 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,8 @@ class Request
         string                          _query;
         string                          _pwd;
         int                             _content_length;
+        string                          _req_body;
+        map<string, string>             _key_value;
 
     public:
         Request();
@@ -87,6 +89,9 @@ class Request
         bool    hasCookies();
         void    readPipe(int count, char* buffer);
         string  getCookies() const;
+        string  getReqBody() const;
+        void    ParseReqBody();
+        map<string, string>    getKeyValueBody() const;
 
 };
 

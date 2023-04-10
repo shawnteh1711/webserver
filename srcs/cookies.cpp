@@ -10,6 +10,7 @@ Request::Request(const string& request, const string & cgi_path)
 	: _request(request), _cgi_path(cgi_path)
 {
     cout << RED <<  "cgi_path: " << _cgi_path << endl;
+    this->ParseReqBody();
     this->is_cgi_request();
     return ;
 }
@@ -20,6 +21,53 @@ Request::Request(string& request, int num_read)
     setBuffer(request, num_read);
     return ;
 }
+
+void    split(string& str, char delimiter, vector<string>& key_value)
+{
+    size_t pos = 0;
+    string token;
+    while ((pos = str.find(delimiter)) != string::npos)
+    {
+        token = str.substr(0, pos);
+        key_value.push_back(token);
+        str.erase(0, pos + 1);
+    }
+    key_value.push_back(str);
+}
+
+void    Request::ParseReqBody()
+{
+    size_t black_line_index = _request.find("\r\n\r\n");
+    if (black_line_index != string::npos)
+    {
+        _req_body = _request.substr(black_line_index + 4);
+        cout << "post_body: " << _req_body << endl;
+        vector<string> key_value;
+        split(_req_body, '&', key_value);
+        for (size_t i = 0; i < key_value.size(); ++i)
+        {
+            vector<string> key_value2;
+            split(key_value[i], '=', key_value2);
+            _key_value[key_value2[0]] = key_value2[1];
+        }
+        map<string, string>::iterator _key_value_it;
+        for (_key_value_it = _key_value.begin(); _key_value_it != _key_value.end(); ++_key_value_it)
+        {
+            cout << "key: " << _key_value_it->first << " value: " << _key_value_it->second << endl;
+        }
+    }
+}
+
+string    Request::getReqBody() const //raw body
+{
+    return (_req_body);
+}
+
+map<string, string>    Request::getKeyValueBody() const // map key value
+{
+    return (_key_value);
+}
+
 
 void    Request::setBuffer(string& request, int num_read)
 {
