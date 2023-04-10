@@ -6,6 +6,7 @@ Request::Request() : _request()
     return ;
 }
 
+// do you put this in your other than cgi request
 Request::Request(const string& request, const string & cgi_path)
 	: _request(request), _cgi_path(cgi_path)
 {
@@ -60,6 +61,8 @@ void    Request::ParseReqBody()
             cout << "key: " << _key_value_it->first << " value: " << _key_value_it->second << endl;
         }
     }
+    else
+        _req_body  = "";
 }
 
 string    Request::getReqBody() const //raw body
