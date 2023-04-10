@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 21:59:34 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/10 22:03:39 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -692,7 +692,7 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		cout << "server client_request:\n" << req.getRequest() << endl;
 		// how do i get request here or you save request body?
 		if  (isIndexOn(uri_path, s_t.s))
-			sendErrorResponse(client_fd, 500);
+			sendCustomErrorResponse(client_fd, 500, s_t.s, s_t.root_path);
 		else
 		{
 			map<string, string> key_value_body = req.getKeyValueBody();
