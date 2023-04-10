@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/20 12:53:24 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/06 12:37:12 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/10 13:36:04 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,5 +46,17 @@
 using namespace std;
 
 #define PWD getenv("PWD")
+
+// make a template function to print map
+template<typename T, typename U>
+void    printMap(map<T, U> & pmap)
+{
+    typename std::map<T, U>::iterator it = pmap.begin();
+    while (it != pmap.end())
+    {
+        cout << YELLOW << it->first << " : " << it->second << RESET << endl;
+        it++;
+    }
+}
 
 #endif

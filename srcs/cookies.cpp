@@ -6,6 +6,7 @@ Request::Request() : _request()
     return ;
 }
 
+// do you put this in your other than cgi request
 Request::Request(const string& request, const string & cgi_path)
 	: _request(request), _cgi_path(cgi_path)
 {
@@ -44,18 +45,24 @@ void    Request::ParseReqBody()
         cout << "post_body: " << _req_body << endl;
         vector<string> key_value;
         split(_req_body, '&', key_value);
-        for (size_t i = 0; i < key_value.size(); ++i)
+        for (size_t i = 0; i < key_value.size(); i++)
         {
             vector<string> key_value2;
             split(key_value[i], '=', key_value2);
-            _key_value[key_value2[0]] = key_value2[1];
+            if (key_value2.size() == 2) // check if key and value are present
+            {
+                _key_value[key_value2[0]] = key_value2[1];
+            }
+            // _key_value[key_value2[0]] = key_value2[1];
         }
         map<string, string>::iterator _key_value_it;
-        for (_key_value_it = _key_value.begin(); _key_value_it != _key_value.end(); ++_key_value_it)
+        for (_key_value_it = _key_value.begin(); _key_value_it != _key_value.end(); _key_value_it++)
         {
             cout << "key: " << _key_value_it->first << " value: " << _key_value_it->second << endl;
         }
     }
+    else
+        _req_body  = "";
 }
 
 string    Request::getReqBody() const //raw body

@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 14:49:59 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/10 15:08:08 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,6 +76,7 @@ class	Server
 	int				isLocationExist(int const & svr_id, const string & s_uri);
 	int				sendCustomErrorResponse(int client_fd, int statuscode,
 			int svr_id, const string & root);
+	void			sendCustomPostResponse(int client_fd, string & full_path, map<string, string> & key_value_body);
 	void			checkFullPath(string & s_uri, const int & svr_id,
 			string & root_path, string & full_path);
 	void			checkServers(vector<Server_Detail> & servers);
