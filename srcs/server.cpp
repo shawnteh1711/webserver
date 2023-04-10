@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/08 21:06:14 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/10 13:35:34 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -627,6 +627,8 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		// how do i get request here or you save request body?
 		if  (isIndexOn(uri_path, s))
 			sendErrorResponse(client_fd, 500);
+		map<string, string> key_value_body = req.getKeyValueBody();
+		printMap(key_value_body); // make a template for printMap;
 		cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl; 
 		sendCustomResponse(client_fd, full_path);
 	}
