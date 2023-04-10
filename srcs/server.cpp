@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 13:42:36 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/10 15:04:53 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,9 +43,10 @@ Server::Server(vector<Server_Detail> & d_servers)
 	_one_mb(1024 * 1024), _limit_size(_one_mb), _index(0), tracker(new vector<int>[total])
 {
 	// cout << "seervers: " << total << endl;
+	checkServers(servers);
 	vector<Server_Detail>::iterator it, ite;
-	it = d_servers.begin();
-	ite = d_servers.end();
+	it = servers.begin();
+	ite = servers.end();
 	int	i = 0;
 	while (it != ite)
 	{
@@ -831,6 +832,36 @@ int		Server::isLocationExist(int const & svr_id, const string & s_uri)
 	if (::find(it, ite, newslash) != ite && checkPathExist(full_path))
 		return (1);
 	return (0);
+}
+
+int		Server::checkPort(vector<Server_Detail> & servers, string & defaultport)
+{
+	vector<Server_Detail>::iterator it, ite;
+
+	it = servers.begin();
+	ite = servers.end();
+	int findefault = 0;
+	while (it != ite)
+	{
+		if ((it->port == "" || defaultport == it->port) && findefault)
+		{
+			servers.erase(it);
+			total--;
+			return (1);
+		}
+		else if (defaultport == "")
+			defaultport = it->port;
+		if (defaultport == it->port)
+			findefault = 1;
+		it++;
+	}
+	return (0);
+}
+
+void	Server::checkServers(vector<Server_Detail> & servers)
+{
+	string	defaultport = "";
+	while (checkPort(servers, defaultport)) ;
 }
 
 void	Server::sig_handler(int signo)
