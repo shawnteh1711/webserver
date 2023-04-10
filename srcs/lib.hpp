@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/20 12:53:24 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 13:36:04 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/10 15:34:55 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,20 @@ using namespace std;
 template<typename T, typename U>
 void    printMap(map<T, U> & pmap)
 {
+    cout << YELLOW << "map size: " << pmap.size() << RESET << endl;
     typename std::map<T, U>::iterator it = pmap.begin();
+    while (it != pmap.end())
+    {
+        cout << YELLOW << it->first << " : " << it->second << RESET << endl;
+        it++;
+    }
+}
+
+template<typename T, typename U>
+void    printMap(multimap<T, U> & pmap)
+{
+    cout << YELLOW << "map size: " << pmap.size() << RESET << endl;
+    typename std::multimap<T, U>::iterator it = pmap.begin();
     while (it != pmap.end())
     {
         cout << YELLOW << it->first << " : " << it->second << RESET << endl;

@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 14:58:45 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/10 16:52:34 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -564,7 +564,6 @@ void	Server::sendClient(int & client_fd, string & method_type,
 {
 	string	cgi_path, root_path, full_path, index_file, new_uri;
 	int		s;
-	map<string, string> store_body;
 
 	//string full_path = servers[s].root + uri_path;
 
@@ -641,11 +640,10 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		if  (isIndexOn(uri_path, s))
 			sendErrorResponse(client_fd, 500);
 		map<string, string> key_value_body = req.getKeyValueBody();
-		// printMap(key_value_body);
-		store_body.insert(key_value_body.begin(), key_value_body.end());
-		printMap(store_body);
+		_store_body.insert(key_value_body.begin(), key_value_body.end());//you know why it didn't append and keep overwrite
+		printMap(_store_body); // didn't add
 		cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl; 
-		sendCustomPostResponse(client_fd, full_path, store_body);
+		sendCustomPostResponse(client_fd, full_path, _store_body);
 	}
 	else if (method_type == "DELETE")
 	{
@@ -798,6 +796,42 @@ void	Server::sendCustomPostResponse(int client_fd, string & full_path, map<strin
 
 	html_content += "<html><body><h1>Posted example</h1>";
 	map<string, string>::iterator it;
+	for (it = key_value_body.begin(); it != key_value_body.end(); it++)
+	{
+		html_content += "<p>" + it->first + ": " + it->second + "</p>";
+	}
+	html_content += "</body></html>";
+
+	ss 
+	<< "HTTP/1.1 200 OK\r\n"
+	<< "Content-Type: text/html\r\n"
+	<< "Content-Length: " << html_content.size()
+	<< "\r\n\r\n"
+	<< html_content;
+
+	_serverMsg = ss.str();
+	bytesSent = send(client_fd, _serverMsg.c_str(), _serverMsg.size(), 0);
+	if (bytesSent == -1)
+		N_MY::msg("Error sending response to client");
+	else if (bytesSent == 0)
+		N_MY::msg("Server closed the connection with the client");
+	else
+		N_MY::msg("Server sent a response to the client\n\n");
+}
+
+void	Server::sendCustomPostResponse(int client_fd, string & full_path, multimap<string, string> & key_value_body)
+{
+	stringstream	tmp;
+	ostringstream	ss;
+	int				bytesSent;
+	string			html_content;
+
+	ifstream file(full_path);
+	tmp << file.rdbuf();
+	html_content = tmp.str();
+
+	html_content += "<html><body><h1>Posted example</h1>";
+	multimap<string, string>::iterator it;
 	for (it = key_value_body.begin(); it != key_value_body.end(); it++)
 	{
 		html_content += "<p>" + it->first + ": " + it->second + "</p>";
