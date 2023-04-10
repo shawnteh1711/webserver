@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 13:13:21 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/10 13:46:10 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ class	Server
 	void			closeServer();
 	void			acceptConnection(int &new_socket, int index);
 	string			buildResponse(void);
-	string			buildIndexList(void);
+	string			buildIndexList(const string & full_path);
 	void			sendResponse(int client_fd);
 	void			sendErrorResponse(int client_fd, int statuscode);
 	int				readClient(int fd, string & finalbuffer);
@@ -76,7 +76,7 @@ class	Server
 	int				isLocationExist(int const & svr_id, const string & s_uri);
 	int				sendCustomErrorResponse(int client_fd, int statuscode,
 			int svr_id, const string & root);
-	void			checkFullPath(const string & s_uri, const int & svr_id,
+	void			checkFullPath(string & s_uri, const int & svr_id,
 			string & root_path, string & full_path);
 
 	// static non-member
@@ -91,5 +91,7 @@ class	Server
 		// static non-member
 		static void		sig_handler(int signo);
 };
+
+void	generate_listing(const string & path, string & listing);
 
 #endif

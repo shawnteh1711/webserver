@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 13:35:34 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/10 13:46:20 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,7 +146,7 @@ void	Server::acceptConnection(int &new_client, int index)
 	}
 }
 
-void generate_listing(string path, string &listing)
+void generate_listing(const string & path, string &listing)
 {
     DIR				*dir;
     struct dirent	*ent;
@@ -178,12 +178,11 @@ string Server::buildResponse(void)
 	return ss.str();
 }
 
-string Server::buildIndexList(void)
+string Server::buildIndexList(const string & full_path)
 {
 	string htmlFile = "<html><body>Trying autoindex<ul>";
 	// need to change path using ROOT?
-	string 	path = "/Users/steh/Documents/own_folder/webserver/kapouet"; // now hardcode
-    generate_listing(path, htmlFile); //for autoindex directory
+    generate_listing(full_path, htmlFile);
 	htmlFile += "</ul></body></html>";
 	ostringstream ss;
 	ss << "HTTP/1.1 200 OK\r\n"
@@ -563,7 +562,7 @@ void	Server::setMethodUrl(string & method_type, string & uri_path, string & clie
 void	Server::sendClient(int & client_fd, string & method_type,
 		const string & uri_path, Request & req)
 {
-	string	cgi_path, root_path, full_path, index_file;
+	string	cgi_path, root_path, full_path, index_file, new_uri;
 	int		s;
 	//string full_path = servers[s].root + uri_path;
 
@@ -606,19 +605,31 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		sendCustomErrorResponse(client_fd, 404, s, root_path);
 	else if (method_type == "GET")
 	{
-		checkFullPath(uri_path, s, root_path, full_path);
-		if  (isIndexOn(uri_path, s))
+		new_uri = uri_path;
+		checkFullPath(new_uri, s, root_path, full_path);
+		if (checkDirectoryExist(full_path))
+		{
+			if (full_path[full_path.length() - 1] != '/')
+				full_path += "/";
+			full_path += index_file;
+		}
+		cout << "new_uri " << new_uri << endl;
+		cout << "root_path: " << root_path << endl;
+		cout << "full_path: " << full_path << endl;
+		if  (isIndexOn(new_uri, s))
 		{
 			cout << CYAN"build display Index on" << endl;
-			_serverMsg = buildIndexList(); 
+			int pos = full_path.find(index_file);
+			full_path = full_path.substr(0, pos);
+			_serverMsg = buildIndexList(full_path); 
 			sendResponse(client_fd); // not defalt, it get index
 		}
 		else if (servers[s].redirection != "")
 			redirect_Response(client_fd, servers[s].redirection);
-		else if (checkDirectoryExist(full_path))
-			sendResponse(client_fd);
-		else
+		else if (checkFileExist(full_path))
 			sendCustomResponse(client_fd, full_path);
+		else
+			sendCustomErrorResponse(client_fd, 404, s, root_path);
 	}
 	else if (method_type == "POST")
 	{
@@ -654,7 +665,7 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		sendErrorResponse(client_fd, 400);
 }
 
-void	Server::checkFullPath(const string & s_uri, const int & svr_id,
+void	Server::checkFullPath(string & s_uri, const int & svr_id,
 		string & root_path, string & full_path)
 {
 	int pos = s_uri.find("/");
@@ -662,6 +673,8 @@ void	Server::checkFullPath(const string & s_uri, const int & svr_id,
 	string file_path = s_uri.substr(pos + 1, s_uri.length());
 	if (pos == -1)
 		file_path = "";
+	if (pos != -1)
+		s_uri = s_uri.substr(0, pos);
 	string newslash = addslash(d_url);
 
 	string new_root = servers[svr_id].root;
@@ -670,6 +683,7 @@ void	Server::checkFullPath(const string & s_uri, const int & svr_id,
 	string new_path = new_root + file_path;
 	if (root_path != new_root)
 		full_path = new_path;
+	
 }
 
 int		Server::isCgiRequest(const string & s_uri, const int & svr_id, string & cgi_path)
