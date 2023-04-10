@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 18:46:14 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/10 19:57:49 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,7 @@ class	Server
 			string & root_path, string & full_path, const string & indexfile);
 	void			checkServers(vector<Server_Detail> & servers);
 	int				checkPort(vector<Server_Detail> & servers, string & defaultport);
+	void			copyFiles(string &file_path, string &root_path);
 
 	// static non-member
 	static Server		*server_instance;

@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 18:48:59 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/10 19:58:47 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -560,6 +560,30 @@ void	Server::setMethodUrl(string & method_type, string & uri_path, string & clie
 	uri_path = uri_path.substr(1, pos - 1);
 }
 
+void	Server::copyFiles(string &file_path, string &root_path)
+{
+	cout << "it->second: " << file_path << endl;
+	size_t pos = file_path.find_last_of('/');
+	string filename = (pos == string::npos) ? file_path : file_path.substr(pos + 1);
+	cout << "filename: " << filename << endl;
+	root_path += filename;
+	FILE* source = fopen(file_path.c_str(), "rb");
+	FILE* dest = fopen(root_path.c_str(), "ab");
+
+	if (source == NULL || dest == NULL)
+	{
+		printf("Failed to open files for copying.\n");
+	 	return ;	
+	}
+	char buffer[BUFSIZ + 100000];
+	size_t nread;
+	while ((nread = fread(buffer, 1, BUFSIZ, source)) > 0)
+		fwrite(buffer, 1, nread, dest);
+	fclose(source);
+	fclose(dest);
+}
+
+
 void	Server::sendClient(int & client_fd, string & method_type,
 		const string & uri_path, Request & req)
 {
@@ -644,10 +668,18 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		if  (isIndexOn(uri_path, s))
 			sendErrorResponse(client_fd, 500);
 		map<string, string> key_value_body = req.getKeyValueBody();
-		_store_body.insert(key_value_body.begin(), key_value_body.end());//you know why it didn't append and keep overwrite
-		printMap(_store_body); // didn't add
+		map<string, string>::iterator it = key_value_body.begin();
+		if (it->first == "file" && checkFileExist(it->second))
+		{
+			copyFiles(it->second, root_path);
+		}
+		else
+		{
+			_store_body.insert(key_value_body.begin(), key_value_body.end());
+			printMap(_store_body);
+			sendCustomPostResponse(client_fd, full_path, _store_body);
+		}
 		cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl; 
-		sendCustomPostResponse(client_fd, full_path, _store_body);
 	}
 	else if (method_type == "DELETE")
 	{
@@ -834,7 +866,6 @@ void	Server::sendCustomPostResponse(int client_fd, string & full_path, multimap<
 	tmp << file.rdbuf();
 	html_content = tmp.str();
 
-	html_content += "<html><body><h1>Posted example</h1>";
 	multimap<string, string>::iterator it;
 	for (it = key_value_body.begin(); it != key_value_body.end(); it++)
 	{
