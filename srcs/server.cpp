@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 17:02:45 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/10 17:37:16 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -841,7 +841,8 @@ void	Server::sendCustomPostResponse(int client_fd, string & full_path, multimap<
 
 	ss 
 	<< "HTTP/1.1 200 OK\r\n"
-	<< "Content-Type: text/html\r\n"
+	<< "Content-Type: text/plain\r\n"
+	// << "Content-Type: image/png\r\n"
 	<< "Content-Length: " << html_content.size()
 	<< "\r\n\r\n"
 	<< html_content;
