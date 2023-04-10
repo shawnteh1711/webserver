@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 15:17:07 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/10 17:02:39 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ class	Server
 	size_t						_limit_size;
 	size_t						_index;
 	vector<int>					*tracker;
+	multimap<string, string> 		_store_body;
 
 	int				startServer(int index);
 	void			closeServer();
@@ -77,6 +78,7 @@ class	Server
 	int				sendCustomErrorResponse(int client_fd, int statuscode,
 			int svr_id, const string & root);
 	void			sendCustomPostResponse(int client_fd, string & full_path, map<string, string> & key_value_body);
+	void			sendCustomPostResponse(int client_fd, string & full_path, multimap<string, string> & key_value_body);
 	void			checkFullPath(string & s_uri, const int & svr_id,
 			string & root_path, string & full_path);
 	void			checkServers(vector<Server_Detail> & servers);
