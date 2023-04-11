@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 16:46:18 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 18:37:12 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ Server::Server(vector<Server_Detail> & d_servers)
 	: servers(d_servers), total(d_servers.size()), _sockfds(total),
 	_clientfd(), _serverMsg(buildResponse()), _socketAddrs(total), 
 	_socketAddr_len(sizeof(_socketAddrs[0])), _pwd(getenv("PWD")), _host(),
-	_one_mb(1024 * 1024), _limit_size(_one_mb), _index(0),
+	_one_mb(1024), _limit_size(_one_mb), _index(0),
 	tracker(new vector<int>[total]), s_t()
 {
 	// cout << "seervers: " << total << endl;
@@ -600,6 +600,8 @@ void	Server::clientRequestStage(vector<struct pollfd> & fds)
 				cout << "bodySize(total bytes): " << total_bytes << endl;
 				cout << "_limit_size: " << _limit_size << " bytes" << RESET << endl;
 				cout << "Hostname: " << _host << RESET << endl;
+				cout << "LIMIT BODY: " << _limit_size << endl;
+				cout << "TOTAL_BYTES: " << total_bytes << endl;
 				if (total_bytes <= _limit_size)
 				{
 					// here i add check if is cgi request
@@ -634,6 +636,7 @@ int		Server::unChunkRequest(const int client_fd, string & clientBuffer)
 		buffer[bytes] = '\0';
 		finalbuffer += string(buffer, BUF_SIZE);
 		total_bytes += bytes;
+		cout << YELLOW << buffer << RESET << endl;
 		if (buffer[BUF_SIZE - 1] == '\0')
 			break ;
 		bzero(buffer, BUF_SIZE);
@@ -757,6 +760,11 @@ void	Server::initServer(const int & client_fd, const string & uri_path, const st
 		s_t.index_file = "index.html";
 	if (((s_t.root_path = getLocationRoot(uri_path, s_t.s)) == ""))
 		s_t.root_path = servers[s_t.s].root;
+	cout << "ROOT_PATH: " << s_t.root_path << endl;
+	int len = s_t.root_path.length() - 1;
+	if (s_t.root_path[len] != '/')
+		s_t.root_path += "/";
+	cout << "INDEX: " << s_t.index_file << endl;
 	s_t.full_path = s_t.root_path + s_t.index_file;
 }
 
@@ -781,7 +789,9 @@ void	Server::sendClient(const int & client_fd, string & method_type,
 	if (!isMethod(method_type))
 		sendCustomErrorResponse(client_fd, 400);
 	else if (s_t.root_path == "" || !isLocationExist(s_t.s, uri_path))
+	{
 		sendCustomErrorResponse(client_fd, 404);
+	}
 	else if (isCgiRequest(uri_path, s_t.s, s_t.cgi_path))
 	{
 		cout << GREEN << "it has cgi request" << endl;
