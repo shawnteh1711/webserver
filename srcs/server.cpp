@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 22:03:39 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 11:53:22 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,48 +148,52 @@ void	Server::acceptConnection(int &new_client, int index)
 	}
 }
 
-void generate_listing(const string & path, string &listing)
+//void generate_listing(const string & path, string &listing)
+//{
+//    DIR				*dir;
+//    struct dirent	*ent;
+//
+//    // Open the directory
+//    if ((dir = opendir(path.c_str())) != NULL)
+//	{
+//        // Iterate through the directory entries
+//		listing += "<p>Path: " + path + "</p>";
+//        while ((ent = readdir(dir)) != NULL)
+//		{
+//            listing += "<li>" + string(ent->d_name) + "</li>";
+//        }
+//        closedir(dir);
+//    } else {
+//        cerr << "Error opening directory: " << path << endl;
+//    }
+//}
+
+void generate_listing(t_server *s_t, string &listing)
 {
-    DIR				*dir;
-    struct dirent	*ent;
-
-    // Open the directory
-    if ((dir = opendir(path.c_str())) != NULL)
+	DIR				*dir;
+	struct dirent	*ent;
+   
+	if ((dir = opendir(s_t->full_path.c_str())) != NULL)
 	{
-        // Iterate through the directory entries
-		listing += "<p>Path: " + path + "</p>";
-        while ((ent = readdir(dir)) != NULL)
-		{
-            listing += "<li>" + string(ent->d_name) + "</li>";
-        }
-        closedir(dir);
-    } else {
-        cerr << "Error opening directory: " << path << endl;
-    }
+	    listing += "<p>Path: " + s_t->full_path + "</p>";
+	    while ((ent = readdir(dir)) != NULL)
+	    {
+	 	   string name = ent->d_name;
+	 	   if (name == "." || name == "..")
+	 		   continue;
+	 	   string link = s_t->client_uri;
+	 	   if (s_t->client_uri[s_t->client_uri.length() - 1] != '/')
+	 		   link += "/";
+	 	   link += name;
+	 	   cout << "link: " << link << endl;
+	 	   listing += "<li><a href=\"" + link + "\">" + name + "</a></li>";
+	 	  // listing += "<li>" + string(ent->d_name) + "</li>"; //pr
+	    }
+	    closedir(dir);
+	}
+	 else
+	     cerr << "Error opening directory: " << s_t->full_path << endl;
 }
-
-// void generate_listing(const string & path, string &listing)
-// {
-//     DIR				*dir;
-//     struct dirent	*ent;
-// 	cout << "path: " << path << endl;
-//     if ((dir = opendir(path.c_str())) != NULL) {
-//         // Iterate through the directory entries
-// 		listing += "<p>Path: " + path + "</p>";
-//         while ((ent = readdir(dir)) != NULL) {
-// 			string name = ent->d_name;
-// 			if (name == "." || name == "..")
-// 				continue;
-// 			string link = path + name;
-// 			cout << "link: " << link << endl;
-// 			listing += "<li><a href=\"" + link + "\">" + name + "</a></li>";
-//             // listing += "<li>" + string(ent->d_name) + "</li>"; //previous
-//         }
-//         closedir(dir);
-//     } else {
-//         cerr << "Error opening directory: " << path << endl;
-//     }
-// }
 
 string Server::buildResponse(void)
 {
@@ -205,18 +209,49 @@ string Server::buildResponse(void)
 	return ss.str();
 }
 
-string Server::buildIndexList(const string & full_path)
+string Server::buildIndexList(void)
 {
-	string htmlFile = "<html><body>INDEX FILE<ul>";
-	// need to change path using ROOT?
-    generate_listing(full_path, htmlFile);
-	htmlFile += "</ul></body></html>";
-	ostringstream ss;
+	ostringstream	ss;
+	string			html_content = "";
+	string			c;
+	string			fpath;
+	int				ff = 0;
+
 	ss << "HTTP/1.1 200 OK\r\n"
-	   << "Content-Type: text/html\r\n"
-	   << "Content-Length: " << htmlFile.size()
-	   << "\r\n\r\n"
-	   << htmlFile;
+	   << "Content-Type: text/html\r\n";
+	c = s_t.client_uri;
+	if (c[c.length() - 1] == '/')
+		c.pop_back();
+	if (c != s_t.new_uri)
+	{
+		string ffile = c.substr(c.rfind("/") + 1, c.length());
+		fpath = s_t.full_path + ffile;
+		if (checkFileExist(fpath) || checkFileExist(s_t.full_path))
+		{
+			ff = 1;
+			ifstream file;
+			if (checkFileExist(s_t.full_path))
+				file.open(s_t.full_path);
+			else
+				file.open(fpath);
+			stringstream tmp;
+			tmp << file.rdbuf();
+			html_content = tmp.str();
+			ss << "Content-Length: " << html_content.size()
+			   << "\r\n\r\n"
+			   << html_content;
+			file.close();
+		}
+	}
+	if (html_content == "" && ff == 0)
+	{
+		string htmlFile = "<html><body>INDEX FILE<ul>";
+		generate_listing(&s_t, htmlFile);
+		htmlFile += "</ul></body></html>";
+		ss << "Content-Length: " << htmlFile.size()
+		   << "\r\n\r\n"
+		   << htmlFile;
+	}
 	return ss.str();
 }
 
@@ -620,6 +655,7 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	s_t.s = getServerPoll(client_fd);
 	s_t.index_file = servers[s_t.s].index;
 	s_t.cgi_path = "";
+	s_t.client_uri = uri_path;
 	if (s_t.index_file == "")
 		s_t.index_file = "index.html";
 	cout << "STARTTTT" << endl;
@@ -676,7 +712,7 @@ void	Server::sendClient(int & client_fd, string & method_type,
 			cout << CYAN"build display Index on" << endl;
 			int pos = s_t.full_path.find(s_t.index_file);
 			s_t.full_path = s_t.full_path.substr(0, pos);
-			_serverMsg = buildIndexList(s_t.full_path); 
+			_serverMsg = buildIndexList(); 
 			sendResponse(client_fd); // not defalt, it get index
 		}
 		else if (servers[s_t.s].redirection != "")
