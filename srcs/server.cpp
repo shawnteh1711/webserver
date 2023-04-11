@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 14:49:08 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 14:50:23 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1005,7 +1005,6 @@ void	Server::sendCustomPostResponse(int client_fd, string & full_path, map<strin
 		html_content += "<p>" + it->first + ": " + it->second + "</p>";
 	}
 	html_content += "</body></html>";
-
 	ss 
 	<< "HTTP/1.1 200 OK\r\n"
 	<< "Content-Type: text/html\r\n"
@@ -1013,7 +1012,7 @@ void	Server::sendCustomPostResponse(int client_fd, string & full_path, map<strin
 	<< "\r\n\r\n"
 	<< html_content;
 
-	file.close();
+	// file.close();
 	_serverMsg = ss.str();
 	bytesSent = send(client_fd, _serverMsg.c_str(), _serverMsg.size(), 0);
 	if (bytesSent == -1)
@@ -1030,21 +1029,28 @@ void	Server::sendCustomPostResponse(int client_fd, string & full_path, multimap<
 	ostringstream	ss;
 	int				bytesSent;
 	string			html_content;
-
 	ifstream file(full_path);
 	tmp << file.rdbuf();
 	html_content = tmp.str();
+	html_content += "<html><body>";
+    html_content += "<section>";
+    html_content += "<h1>Posted example</h1>";
+    html_content += "<h1>POST Request Received!</h1>\n";
+    html_content += "<p>The following key-value pairs were received:</p>\n";
+    html_content += "<ul>\n";
 
 	multimap<string, string>::iterator it;
 	for (it = key_value_body.begin(); it != key_value_body.end(); it++)
 	{
-		html_content += "<p>" + it->first + ": " + it->second + "</p>";
+        html_content += "<li>" + it->first + ": " + it->second + "</li>\n";
 	}
+	html_content += "</ul>\n";
+    html_content += "</section>";
 	html_content += "</body></html>";
 
 	ss 
 	<< "HTTP/1.1 200 OK\r\n"
-	<< "Content-Type: text/plain\r\n"
+	<< "Content-Type: text/html\r\n"
 	// << "Content-Type: image/png\r\n"
 	<< "Content-Length: " << html_content.size()
 	<< "\r\n\r\n"
