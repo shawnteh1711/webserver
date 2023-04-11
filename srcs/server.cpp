@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 12:41:51 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 12:42:37 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,20 +173,25 @@ void generate_listing(t_server *s_t, string &listing)
 	DIR				*dir;
 	struct dirent	*ent;
    
+	cout << "s_t->full_path: " << s_t->full_path << endl;
 	if ((dir = opendir(s_t->full_path.c_str())) != NULL)
 	{
 	    listing += "<p>Path: " + s_t->full_path + "</p>";
+		cout << "s_t->root_path: " << s_t->root_path << endl;
 	    while ((ent = readdir(dir)) != NULL)
 	    {
 	 	   string name = ent->d_name;
 	 	   if (name == "." || name == "..")
 	 		   continue;
 	 	   string link = s_t->client_uri;
-	 	   if (s_t->client_uri[s_t->client_uri.length() - 1] != '/')
+	 	   cout << YELLOW << "before link: " << link << RESET << endl;
+		   cout << "s_t->client_uri[s_t->client_uri.length() - 1]: " << s_t->client_uri[s_t->client_uri.length() - 1] << endl;
+	 	   if (s_t->client_uri[s_t->client_uri.length() - 1] != '/') //what is this for? just to add / if last one is not /
 	 		   link += "/";
 	 	   link += name;
-	 	   cout << "link: " << link << endl;
+	 	   cout << YELLOW << "link: " << link << RESET << endl;
 	 	   listing += "<li><a href=\"" + link + "\">" + name + "</a></li>";
+		   cout << RED << "listing: " << listing << RESET << endl;
 	 	  // listing += "<li>" + string(ent->d_name) + "</li>"; //pr
 	    }
 	    closedir(dir);
