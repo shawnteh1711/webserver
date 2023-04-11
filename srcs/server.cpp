@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 14:50:23 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 15:41:38 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -822,13 +822,16 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	else if (method_type == "POST")
 	{
 		cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl;
-		cout << "server client_request:\n" << req.getRequest() << endl;
+		cout << RED << "server client_request:\n" << req.getRequest() << endl;
+		cout << "END" << endl;
 		// how do i get request here or you save request body?
 		if  (isIndexOn(uri_path, s_t.s))
 			sendCustomErrorResponse(client_fd, 500, s_t.s, s_t.root_path);
 		else
 		{
 			map<string, string> key_value_body = req.getKeyValueBody();
+			// cout << "PRINT KEY VALUE BODY" << endl;
+			// printMap(key_value_body);
 			map<string, string>::iterator it = key_value_body.begin();
 			if (it->first == "file" && checkFileExist(it->second))
 				copyFiles(it->second, s_t.root_path);
@@ -1034,11 +1037,9 @@ void	Server::sendCustomPostResponse(int client_fd, string & full_path, multimap<
 	html_content = tmp.str();
 	html_content += "<html><body>";
     html_content += "<section>";
-    html_content += "<h1>Posted example</h1>";
     html_content += "<h1>POST Request Received!</h1>\n";
     html_content += "<p>The following key-value pairs were received:</p>\n";
     html_content += "<ul>\n";
-
 	multimap<string, string>::iterator it;
 	for (it = key_value_body.begin(); it != key_value_body.end(); it++)
 	{
@@ -1065,6 +1066,7 @@ void	Server::sendCustomPostResponse(int client_fd, string & full_path, multimap<
 		N_MY::msg("Server closed the connection with the client");
 	else
 		N_MY::msg("Server sent a response to the client\n\n");
+	// _store_body.clear(); // ndo you know when should we clear this? // if i clear now then the previous post not show
 }
 
 

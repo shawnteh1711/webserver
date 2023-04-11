@@ -38,6 +38,7 @@ void    split(string& str, char delimiter, vector<string>& key_value)
 
 void    Request::ParseReqBody()
 {
+    _key_value.clear();
     size_t black_line_index = _request.find("\r\n\r\n");
     if (black_line_index != string::npos)
     {
@@ -62,7 +63,9 @@ void    Request::ParseReqBody()
         }
     }
     else
+    {
         _req_body  = "";
+    }
 }
 
 string    Request::getReqBody() const //raw body
@@ -856,13 +859,17 @@ int Request::handle_cgi2(int client_socket, string full_path)
     char**      args;
     int         pipes[2];
     Response    res;
+    size_t      pos;
 
     // _pwd = getenv("PWD");
     // const char* cgi_bin_path = "/cgi-bin/";
     // _path_info = _pwd + cgi_bin_path + full_path;
+    pos = full_path.find("?");
+    if (pos != string::npos)
+        full_path = full_path.substr(0, pos);
     this->setCgiPath2(full_path);
-    cout << "paste path info: " << _path_info << endl;
     _extension = full_path.substr(full_path.find_last_of("."));
+    cout << "extension: " << _extension << endl;
     if (pipe(pipes) == -1)
     {
         perror("pipe");

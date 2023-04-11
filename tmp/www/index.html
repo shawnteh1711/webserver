@@ -11,7 +11,7 @@
         }
     </style>
     <head>
-        <h1>Index Page</h1>
+        <h1>Hello i am home at tmp/www</h1>
         <script>
             document.getElementById('file').addEventListener('change', function() {
                 var filename = this.files[0].name;
@@ -22,16 +22,16 @@
     </head>
     <body>
         <section>
-            <p>Thanks for visiting my website! Feel free to look around and explore</p>
+            <p>Index page</p>
             <ul>
                 <li><a href="autoindex">location in Server</a></li>
             </ul>
         </section>
         <section>
             <h1>POST Example</h1>
-            <form action="/home" method="post">
-                <input type="text" id="name" name="name" placeholder="Name">
-                <input type="text" id="email" name="email" placeholder="Email">
+            <form action="/home" method="post" autocomplete="off">
+                <input type="text" id="name" name="name" placeholder="Name" autocomplete="off" required >
+                <input type="text" id="email" name="email" placeholder="Email" autocomplete="off" required>
                 <input type="submit" value="Submit">
             </form>
         </section>
