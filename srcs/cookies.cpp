@@ -1027,6 +1027,7 @@ string  Request::getCookies() const
 
 void    deleteFile(const char *path)
 {
+    cout << RED << "path: " << path << endl;
     int result = remove(path);
     if (result == 0)
         cout << "File deleted successfully" << endl;
