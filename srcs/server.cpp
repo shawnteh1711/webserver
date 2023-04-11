@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 13:11:26 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/11 14:34:45 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -775,6 +775,7 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		cout << GREEN << "it has cgi request" << endl;
 		cout << "cgi_path i give to you: " << s_t.cgi_path << RESET << endl;
 		req.handle_cgi2(client_fd, s_t.cgi_path);
+		cout << "HERE your CGI" << endl;
 	}
 	else if (!isAllowUrlMethod(uri_path, s_t.s, method_type))
 		sendCustomErrorResponse(client_fd, 405, s_t.s, s_t.root_path);
@@ -878,13 +879,19 @@ void	Server::checkFullPath(string & s_uri, const int & svr_id,
 int		Server::isCgiRequest(const string & s_uri, const int & svr_id, string & cgi_path)
 {
 	map<string, string>::iterator it, ite;
-	string newslash = addslash(s_uri);
+	string new_uri = s_uri;
+
+	if (new_uri.find("?") != string::npos)
+		new_uri = new_uri.substr(0, new_uri.find("?"));
+	string newslash = addslash(new_uri);
+
+	cout << "newslash: " << newslash << endl;
 
 	ite = servers[svr_id].urlCgi.end();
 	it = servers[svr_id].urlCgi.find(newslash);
 	if (it != ite)
 	{
-		cgi_path = it->second;
+		cgi_path = s_uri;
 		return (1);
 	}
 	return (0);
@@ -1080,10 +1087,14 @@ void	Server::sendCustomResponse(int client_fd, string & full_path)
 int		Server::isLocationExist(int const & svr_id, const string & s_uri)
 {
 	vector<string>::iterator it, ite;
+	string	new_uri = s_uri;
 
-	int pos = s_uri.find("/");
-	string d_url = s_uri.substr(0, pos);
-	string file_path = s_uri.substr(pos + 1, s_uri.length());
+	if (new_uri.find("?") != string::npos)
+		new_uri = new_uri.substr(0, new_uri.find("?"));
+
+	int pos = new_uri.find("/");
+	string d_url = new_uri.substr(0, pos);
+	string file_path = new_uri.substr(pos + 1, new_uri.length());
 	if (pos == -1)
 		file_path = "";
 	string newslash = addslash(d_url);
@@ -1094,7 +1105,7 @@ int		Server::isLocationExist(int const & svr_id, const string & s_uri)
 
 	string full_path = root_path + file_path;
 	
-	if (s_uri == "")
+	if (new_uri == "")
 		return (1);
 	it = servers[svr_id].urlLocation.begin();
 	ite = servers[svr_id].urlLocation.end();
