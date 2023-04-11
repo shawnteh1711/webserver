@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 17:46:28 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/11 18:59:52 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,8 @@ class Request
         int                             _content_length;
         string                          _req_body;
         map<string, string>             _key_value;
+        vector<char*>                   _envp2;
+        string                          _req_session_id;
 
     public:
         Request();
@@ -81,6 +83,7 @@ class Request
         void    setEnvp();
         int     readRequest(int client_socket);
         char**  getEnvp();
+        vector<char*>   getEnvp2();
         void    printEnvp() const;
         void    freeEnvp(char **envp);
         int     handle_cgi(int client_socket);
@@ -92,7 +95,7 @@ class Request
         string  getReqBody() const;
         void    ParseReqBody();
         map<string, string>    getKeyValueBody() const;
-
+        string  getReqSessionId() const;
 };
 
 class Response
@@ -109,7 +112,7 @@ class Response
         void    sendErrorResponse(int client_socket,  int status_code, string path);
         bool    checkRequestCookies(Request& request);
         string  getRequestCookies(Request& request);
-        string  getSessionId() const;
+        string  getResSessionId() const;
         void    setSessionId(string &session_id);
 
     private:
@@ -118,7 +121,7 @@ class Response
         string                  _content;
         string                  _cookies;
         map<string, string>     _headers;
-        string                  _session_id;
+        string                  _res_session_id;
 
         static string           getReasonPhrase(int code);
 
@@ -127,4 +130,5 @@ class Response
 void	handle_non_cgi(int client_socket, Request & req);
 void    deleteFile(const char* path);
 string  generateSessionId();
+string  extractSessionId(string& cookies);
 #endif

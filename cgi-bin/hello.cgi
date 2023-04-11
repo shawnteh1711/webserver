@@ -25,4 +25,5 @@ print "<li>CONTENT_LENGTH: $ENV{CONTENT_LENGTH}</li>\n";
 print "<li>REMOTE_ADDR: $ENV{REMOTE_ADDR}</li>\n";
 print "<li>SCRIPT_NAME: $ENV{SCRIPT_NAME}</li>\n";
 print "<li>SCRIPT_PATH: $ENV{SCRIPT_PATH}</li>\n";
+print "<li>HTTP_COOKIE: $ENV{HTTP_COOKIE}</li>\n";
 print "</ul>\n";
