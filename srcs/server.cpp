@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 16:45:39 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 16:46:18 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1018,6 +1018,7 @@ void	Server::sendCustomPostResponse(const int client_fd, string & full_path, mul
     html_content += "<h1>POST Request Received!</h1>\n";
     html_content += "<p>The following key-value pairs were received:</p>\n";
     html_content += "<ul>\n";
+
 	multimap<string, string>::iterator it;
 	for (it = key_value_body.begin(); it != key_value_body.end(); it++)
 	{
