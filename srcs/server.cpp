@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 15:54:59 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/11 16:27:15 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1176,8 +1176,10 @@ void	Server::sendDELETE(const int & client_fd, const string & uri_path)
 		sendCustomErrorResponse(client_fd, 500);
 	else
 	{
+		string newfile = uri_path;
 		int pos = uri_path.find("/");
-		string newfile = uri_path.substr(pos);
+		if (pos >= 0)
+			newfile = uri_path.substr(pos);
 		string folderpath = uri_path.substr(0, pos);
 		s_t.root_path = getLocationRoot(folderpath, s_t.s);
 		if (s_t.root_path == "")
