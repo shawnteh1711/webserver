@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 12:49:21 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/11 13:03:40 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,32 +173,23 @@ void generate_listing(t_server *s_t, string &listing)
 	DIR				*dir;
 	struct dirent	*ent;
 
-
-	// where is the host?
-   
-	cout << "s_t->full_path: " << s_t->full_path << endl;
 	if ((dir = opendir(s_t->full_path.c_str())) != NULL)
 	{
 	    listing += "<p>Path: " + s_t->full_path + "</p>";
-		cout << "s_t->root_path: " << s_t->root_path << endl;
 	    while ((ent = readdir(dir)) != NULL)
 	    {
-	 	   string name = ent->d_name;
-	 	   if (name == "." || name == "..")
-	 		   continue;
-	 	   string link = s_t->client_uri;
-	 	   cout << YELLOW << "before link: " << link << RESET << endl;
-		   cout << "s_t->client_uri[s_t->client_uri.length() - 1]: " << s_t->client_uri[s_t->client_uri.length() - 1] << endl;
-	 	   if (s_t->client_uri[s_t->client_uri.length() - 1] != '/') //what is this for? just to add / if last one is not /
-	 		   link += "/";
-	 	   link += name;
-	 	   cout << YELLOW << "link: " << link << RESET << endl;
-			// cout << "hostname: " << s_t->hostname << endl;
-
-	 	   listing += "<li><a href=" + string("http://") + s_t->hostname + "\\" + link + "\">" + name + "</a></li>";
-		   cout << RED << "listing: " << listing << RESET << endl;
-	 	  // listing += "<li>" + string(ent->d_name) + "</li>"; //pr
+			string name = ent->d_name;
+			if (name == "." || name == "..")
+				continue;
+			string link = s_t->client_uri;
+			if (s_t->client_uri[s_t->client_uri.length() - 1] != '/') //what is this for? just to add / if last one is not /
+				link += "/";
+			cout << "link: " << link << endl;
+			link += name;
+			listing += "<li><a href=\"" + string("http://") + s_t->hostname + "/" + link + "\">" + name + "</a></li>";
+			// listing += "<li>" + string(ent->d_name) + "</li>"; //pr
 	    }
+		cout << RED << "listing: " << listing << endl;
 	    closedir(dir);
 	}
 	 else
