@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 21:38:16 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 11:43:38 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ typedef struct s_server
 	string	full_path;
 	string	index_file;
 	string	new_uri;
+	string	client_uri;
 	int		s;
 }	t_server;
 
@@ -56,7 +57,7 @@ class	Server
 	void			closeServer();
 	void			acceptConnection(int &new_socket, int index);
 	string			buildResponse(void);
-	string			buildIndexList(const string & full_path);
+	string			buildIndexList(void);
 	void			sendResponse(int client_fd);
 	void			sendErrorResponse(int client_fd, int statuscode);
 	int				readClient(int fd, string & finalbuffer);
@@ -110,5 +111,6 @@ class	Server
 };
 
 void	generate_listing(const string & path, string & listing);
+void	generate_listing(t_server *s_t, string & listing);
 
 #endif
