@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 16:29:44 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/11 16:46:18 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -742,15 +742,17 @@ void	Server::cleanServer(void)
 	s_t.client_uri.clear();
 	s_t.hostname.clear();
 	s_t.s = -1;
+	s_t.method_type.clear();
 }
 
-void	Server::initServer(const int & client_fd, const string & uri_path)
+void	Server::initServer(const int & client_fd, const string & uri_path, const string & method_type)
 {
 	s_t.s = getServerPoll(client_fd);
 	s_t.index_file = servers[s_t.s].index;
 	s_t.cgi_path = "";
 	s_t.client_uri = uri_path;
 	s_t.hostname = _host;
+	s_t.method_type = method_type;
 	if (s_t.index_file == "")
 		s_t.index_file = "index.html";
 	if (((s_t.root_path = getLocationRoot(uri_path, s_t.s)) == ""))
@@ -763,7 +765,7 @@ void	Server::sendClient(const int & client_fd, string & method_type,
 		const string & uri_path, Request & req)
 {
 	cleanServer();
-	initServer(client_fd, uri_path);
+	initServer(client_fd, uri_path, method_type);
 
 	cout << YELLOW << "method_type: " << method_type << RESET << endl;
 	cout << YELLOW << "servername: " << servers[s_t.s].serverName << RESET << endl;
@@ -1099,12 +1101,14 @@ int		Server::isLocationExist(int const & svr_id, const string & s_uri)
 		root_path = servers[svr_id].root;
 
 	string full_path = root_path + file_path;
-	
+
 	if (new_uri == "")
 		return (1);
 	it = servers[svr_id].urlLocation.begin();
 	ite = servers[svr_id].urlLocation.end();
 	if (::find(it, ite, newslash) != ite && checkPathExist(full_path))
+		return (1);
+	if (s_t.method_type == "DELETE")
 		return (1);
 	return (0);
 }

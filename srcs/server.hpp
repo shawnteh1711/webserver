@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 15:48:52 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 16:43:37 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ typedef struct s_server
 	string	new_uri;
 	string	client_uri;
 	string	hostname;
+	string	method_type;
 	int		s;
 }	t_server;
 
@@ -97,7 +98,7 @@ class	Server
 	int				checkPort(vector<Server_Detail> & servers, string & defaultport);
 	void			copyFiles(string &file_path, string &root_path);
 	void			cleanServer(void);
-	void			initServer(const int & client_fd, const string & uri_path);
+	void			initServer(const int & client_fd, const string & uri_path, const string & method_type);
 	void			sendGET(const int & client_fd, const string & uri_path);
 	void			sendDELETE(const int & client_fd, const string & uri_path);
 
