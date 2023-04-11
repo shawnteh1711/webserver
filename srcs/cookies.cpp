@@ -11,8 +11,14 @@ Request::Request(const string& request, const string & cgi_path)
 	: _request(request), _cgi_path(cgi_path)
 {
     cout << RED <<  "cgi_path: " << _cgi_path << endl;
+    cout << "_cookies: " << _cookies << RESET << endl;
+    _prev_cookies = "";
     if (this->hasCookies())
+    {
         _req_session_id = extractSessionId(_cookies);
+        _prev_cookies = this->getHeader("Cookie");
+    }
+    cout << "after _cookies: " << _cookies << RESET << endl;
     cout << RED << "sessionId: " << _req_session_id << RESET << endl;
     this->ParseReqBody();
     this->is_cgi_request();
@@ -702,6 +708,10 @@ string  Response::getRequestCookies(Request& request)
     return (request.getCookies());
 }
 
+string  Request::getPrevCookies() const
+{
+    return (_prev_cookies);
+}
 
 void    Response::sendCgiResponse(Request& request, int client_socket, const char *buffer, int count)
 {
@@ -713,15 +723,22 @@ void    Response::sendCgiResponse(Request& request, int client_socket, const cha
     setContentType("text/html");
     if (this->checkRequestCookies(request))
     {
+        cout << "Setting cookie: " << this->getRequestCookies(request) << endl;
         setHeader("Set-Cookie", this->getRequestCookies(request));
-        if (request.getReqSessionId().empty())
+        string currentCookies = request.getCookies();
+        cout << "currentCookies: " << currentCookies << endl;
+        cout << "request.getPrevCookies(): " << request.getPrevCookies() << endl;
+        if (request.getReqSessionId().empty() || currentCookies != request.getPrevCookies())
             _res_session_id = generateSessionId();
         else
             _res_session_id = request.getReqSessionId();
+        cout << "After cookie: " << this->getRequestCookies(request) << endl;
     }
     cout << "response _session_id: " << _res_session_id << endl;
     // res.setContent(this->getRequest().c_str(), this->getReadSize());
-    setContent(buffer, count);
+    size_t addCount = strlen("hello, user with session_id: ") + _res_session_id.length() + 2; // add 2 for "\r\n"
+    // setContent(buffer, count);
+    setContent(buffer, count + addCount);
     // res.printCookies();
     response_str = restoString();
     bytes_sent = send(client_socket, response_str.c_str(), response_str.size(), 0);
@@ -1118,7 +1135,7 @@ string  Response::getResSessionId() const
     return (_res_session_id);
 }
 
-
+// i need to create copt for cookies first
 string  extractSessionId(string& cookies)
 {
     string  session_id;

@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 19:42:24 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 19:52:30 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,7 @@ void	Server::startListen()
 	addSocketPoll(fds);
 	while (1)
 	{
-		usleep(2000);
+		//usleep(2000);
 		int rv = poll(&fds[0], fds.size(), -1);
 
 		//cout << "POLLLLLLLLL" << endl;
