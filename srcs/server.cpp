@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 14:34:45 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 14:49:08 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -732,6 +732,13 @@ void	Server::copyFiles(string &file_path, string &root_path)
 // 	fclose(source);
 // 	fclose(dest);
 // }
+//
+void	Server::resetServer(void)
+{
+	s_t.cgi_path = "";
+	s_t.root_path = "";
+	s_t.full_path = "";
+}
 
 
 void	Server::sendClient(int & client_fd, string & method_type,
@@ -891,7 +898,10 @@ int		Server::isCgiRequest(const string & s_uri, const int & svr_id, string & cgi
 	it = servers[svr_id].urlCgi.find(newslash);
 	if (it != ite)
 	{
-		cgi_path = s_uri;
+		if (new_uri.find("?") != string::npos)
+			cgi_path = s_uri;
+		else
+			cgi_path = it->second;
 		return (1);
 	}
 	return (0);
