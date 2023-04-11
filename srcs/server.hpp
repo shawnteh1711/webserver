@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 16:43:37 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 19:34:42 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,6 +101,7 @@ class	Server
 	void			initServer(const int & client_fd, const string & uri_path, const string & method_type);
 	void			sendGET(const int & client_fd, const string & uri_path);
 	void			sendDELETE(const int & client_fd, const string & uri_path);
+	int				isDupPort(void);
 
 	// static non-member
 	static Server		*server_instance;
@@ -117,5 +118,6 @@ class	Server
 
 void	generate_listing(const string & path, string & listing);
 void	generate_listing(t_server *s_t, string & listing);
+bool	is_digits(const string & str);
 
 #endif
