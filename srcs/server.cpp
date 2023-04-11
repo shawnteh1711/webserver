@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 12:48:22 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/11 12:49:21 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -427,6 +427,7 @@ int	Server::sendCustomErrorResponse(int client_fd, int statuscode,
 		   << html_content;
 		_serverMsg = ss.str();
 		bytesSent = send(client_fd, _serverMsg.c_str(), _serverMsg.size(), 0);
+		file.close();
 		if (bytesSent == -1)
 			N_MY::msg("Error sending response to client");
 		else if (bytesSent == 0)
@@ -453,9 +454,11 @@ int	Server::checkPathExist(string & filepath)
 		ifile.read(buffertest, sizeof(buffertest));
 		if (ifile.gcount() > 0)
 			buffertest[ifile.gcount()] = '\0';
-		cout << YELLOW << "buffertest: " << buffertest << RESET << endl;
+	//	cout << YELLOW << "buffertest: " << buffertest << RESET << endl;
+		ifile.close();
 		return (1);
 	}
+	ifile.close();
 	cout << RED << "File not exist" << RESET << endl;
 	return (0);
 }
@@ -471,9 +474,11 @@ int	Server::checkDirectoryExist(const string & filepath)
 		if (S_ISDIR(file_stat.st_mode))
 		{
 			_serverMsg = buildResponse();
+			ifile.close();
 			return (1);
 		}
 	}
+	ifile.close();
 	return (0);
 }
 
@@ -494,13 +499,15 @@ int	Server::checkFileExist(const string & filepath)
 				ifile.read(buffertest, sizeof(buffertest));
 				if (ifile.gcount() > 0)
 					buffertest[ifile.gcount()] = '\0';
-				cout << YELLOW << "buffertest: " << buffertest << RESET << endl;
+	//			cout << YELLOW << "buffertest: " << buffertest << RESET << endl;
+				ifile.close();
 				return (1);
 			}
-			else
-				return (0);
+//			else
+//				return (0);
 		}
 	}
+	ifile.close();
 	cout << "File NOT FOUND" << endl;
 	return (0);
 }
@@ -662,11 +669,12 @@ void	Server::getHostUrl(string & clientRequest)
 	string	tmp;
 	int		pos;
 	string	search = "Host: ";
+	_host.clear();
 	if (clientRequest.find(search) != string::npos)
 	{
 		pos = clientRequest.find(search);
 		tmp = clientRequest.substr(pos + search.length(), clientRequest.size());
-		_host = tmp.substr(0, tmp.find(" "));
+		_host = tmp.substr(0, tmp.find("\n"));
 	}
 }
 
@@ -995,6 +1003,7 @@ void	Server::sendCustomPostResponse(int client_fd, string & full_path, map<strin
 	<< "\r\n\r\n"
 	<< html_content;
 
+	file.close();
 	_serverMsg = ss.str();
 	bytesSent = send(client_fd, _serverMsg.c_str(), _serverMsg.size(), 0);
 	if (bytesSent == -1)
@@ -1033,6 +1042,7 @@ void	Server::sendCustomPostResponse(int client_fd, string & full_path, multimap<
 
 	_serverMsg = ss.str();
 	bytesSent = send(client_fd, _serverMsg.c_str(), _serverMsg.size(), 0);
+	file.close();
 	if (bytesSent == -1)
 		N_MY::msg("Error sending response to client");
 	else if (bytesSent == 0)
@@ -1065,6 +1075,7 @@ void	Server::sendCustomResponse(int client_fd, string & full_path)
 
 	_serverMsg = ss.str();
 	bytesSent = send(client_fd, _serverMsg.c_str(), _serverMsg.size(), 0);
+	file.close();
 	if (bytesSent == -1)
 		N_MY::msg("Error sending response to client");
 	else if (bytesSent == 0)
