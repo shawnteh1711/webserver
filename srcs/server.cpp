@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 11:53:22 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 12:20:08 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -544,6 +544,7 @@ void	Server::clientRequestStage(vector<struct pollfd> & fds)
 				getHostUrl(clientRequest);
 				cout << "bodySize(total bytes): " << total_bytes << endl;
 				cout << "_limit_size: " << _limit_size << " bytes" << RESET << endl;
+				cout << "Hostname: " << _host << RESET << endl;
 				if (total_bytes <= _limit_size)
 				{
 					// here i add check if is cgi request
@@ -602,10 +603,11 @@ void	Server::getHostUrl(string & clientRequest)
 {
 	string	tmp;
 	int		pos;
-	if (clientRequest.find("localhost") != string::npos)
+	string	search = "Host: ";
+	if (clientRequest.find(search) != string::npos)
 	{
-		pos = clientRequest.find("localhost");
-		tmp = clientRequest.substr(pos, clientRequest.size());
+		pos = clientRequest.find(search);
+		tmp = clientRequest.substr(pos + search.length(), clientRequest.size());
 		_host = tmp.substr(0, tmp.find(" "));
 	}
 }
@@ -965,6 +967,7 @@ void	Server::sendCustomResponse(int client_fd, string & full_path)
 	tmp << file.rdbuf();
 	html_content = tmp.str();
 
+	cout << "hostname: " << _host << endl;
 	cout << "ENTER CUSTOM RESPONSE" << endl;
 	ss << "HTTP/1.1 200 Ok\r\n"
 	   << "Content-Type: text/html\r\n"
