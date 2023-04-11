@@ -415,7 +415,6 @@ string  Response::restoString() const
     map<string, string>::const_iterator it;
 
     ostringstream   oss;
-    cout << "session_id:: " << getResSessionId() << endl;
     oss << "HTTP/1.1 " << _status_code << " " << getReasonPhrase(_status_code) << "\r\n";
     oss << "Content-Type: " << _content_type << "\r\n";
     oss << "Set-Cookie: session_id=" + _res_session_id + " ; HttpOnly\r\n";
@@ -425,6 +424,7 @@ string  Response::restoString() const
         oss << it->first << ": " << it->second << "\r\n";
     }
     oss << "\r\n";
+    oss << "hello, user with session_id: " << _res_session_id << "\r\n";
     oss << _content;
     return (oss.str());
 }
