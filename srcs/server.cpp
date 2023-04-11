@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 13:03:40 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/11 13:11:26 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -698,11 +698,13 @@ void	Server::copyFiles(string &file_path, string &root_path)
 	fseek(source, 0, SEEK_END);
 	long file_size = ftell(source);
 	fseek(source, 0L, SEEK_SET);
-	char* buffer = (char*)malloc(file_size * sizeof(char));
+	char* buffer = new char[file_size * sizeof(char)];
+	// char* buffer = (char*)malloc(file_size * sizeof(char));
 	size_t nread;
 	while ((nread = fread(buffer, 1, file_size, source)) > 0)
 		fwrite(buffer, 1, nread, dest);
-	free(buffer);
+	// free(buffer);
+	delete [] buffer;
 	fclose(source);
 	fclose(dest);
 }

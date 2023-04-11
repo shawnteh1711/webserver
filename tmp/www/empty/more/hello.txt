@@ -1,1 +1,0 @@
-hello from /Users/steh/Documents/own_folder/webserver/tmp/www/empty/more/hello.txt
