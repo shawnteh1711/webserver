@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 15:41:38 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/11 15:54:59 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -304,7 +304,7 @@ string Server::buildIndexList(void)
 	return ss.str();
 }
 
-void Server::redirect_Response(int client_fd, const string & url)
+void Server::redirect_Response(const int client_fd, const string & url)
 {
 	long bytesSent;
 
@@ -322,7 +322,7 @@ void Server::redirect_Response(int client_fd, const string & url)
 		N_MY::msg("Server sent a response to the client\n\n");
 }
 
-void Server::sendResponse(int client_fd)
+void Server::sendResponse(const int client_fd)
 {
 	long	bytesSent;
 
@@ -358,7 +358,7 @@ string	Server::getStatusMessage(int statuscode)
 	return (statusMessage);
 }
 
-void Server::sendErrorResponse(int client_fd, int statuscode)
+void Server::sendErrorResponse(const int client_fd, int statuscode)
 {
 	ostringstream ss;
 	stringstream i2s;
@@ -383,8 +383,7 @@ void Server::sendErrorResponse(int client_fd, int statuscode)
 		N_MY::msg("Error sending response to client");
 }
 
-int	Server::sendCustomErrorResponse(int client_fd, int statuscode,
-		int svr_id, const string & root)
+int	Server::sendCustomErrorResponse(const int client_fd, int statuscode)
 {
 	map<int, string>::iterator	it, ite;
 	stringstream				tmp;
@@ -392,12 +391,12 @@ int	Server::sendCustomErrorResponse(int client_fd, int statuscode,
 	int							bytesSent;
 	string						full_path, erroroot, html_content, statusMessage;
 
-	erroroot = root;
-	it = servers[svr_id].errorPageMap.find(statuscode);
-	ite = servers[svr_id].errorPageMap.end();
+	erroroot = s_t.root_path;
+	it = servers[s_t.s].errorPageMap.find(statuscode);
+	ite = servers[s_t.s].errorPageMap.end();
 	if (it != ite)
 	{
-		if (root[root.length() - 1] == '/' && it->second[0] == '/')
+		if (s_t.root_path[s_t.root_path.length() - 1] == '/' && it->second[0] == '/')
 			erroroot.pop_back();
 		full_path = erroroot + it->second;
 		cout << "full path to custom error: " << full_path << endl;
@@ -546,7 +545,7 @@ void	Server::addClientPoll(vector<struct pollfd> & fds)
 	}
 }
 
-int	Server::getServerPoll(int & client_fd)
+int	Server::getServerPoll(const int & client_fd)
 {
 	vector<int>::iterator it, ite;
 	for (size_t i = 0; i < total; i++)
@@ -621,7 +620,7 @@ void	Server::clientRequestStage(vector<struct pollfd> & fds)
 	}
 }
 
-int		Server::unChunkRequest(int client_fd, string & clientBuffer)
+int		Server::unChunkRequest(const int client_fd, string & clientBuffer)
 {
 	char					buffer[BUF_SIZE + 1];
 	string					finalbuffer;
@@ -733,20 +732,20 @@ void	Server::copyFiles(string &file_path, string &root_path)
 // 	fclose(dest);
 // }
 //
-void	Server::resetServer(void)
+void	Server::cleanServer(void)
 {
-	s_t.cgi_path = "";
-	s_t.root_path = "";
-	s_t.full_path = "";
+	s_t.cgi_path.clear();
+	s_t.root_path.clear();
+	s_t.full_path.clear();
+	s_t.index_file.clear();
+	s_t.new_uri.clear();
+	s_t.client_uri.clear();
+	s_t.hostname.clear();
+	s_t.s = -1;
 }
 
-
-void	Server::sendClient(int & client_fd, string & method_type,
-		const string & uri_path, Request & req)
+void	Server::initServer(const int & client_fd, const string & uri_path)
 {
-	bzero(&s_t, sizeof(s_t));
-	//string full_path = servers[s].root + uri_path;
-
 	s_t.s = getServerPoll(client_fd);
 	s_t.index_file = servers[s_t.s].index;
 	s_t.cgi_path = "";
@@ -754,10 +753,18 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	s_t.hostname = _host;
 	if (s_t.index_file == "")
 		s_t.index_file = "index.html";
-	cout << "STARTTTT" << endl;
 	if (((s_t.root_path = getLocationRoot(uri_path, s_t.s)) == ""))
 		s_t.root_path = servers[s_t.s].root;
-	
+	s_t.full_path = s_t.root_path + s_t.index_file;
+}
+
+
+void	Server::sendClient(const int & client_fd, string & method_type,
+		const string & uri_path, Request & req)
+{
+	cleanServer();
+	initServer(client_fd, uri_path);
+
 	cout << YELLOW << "method_type: " << method_type << RESET << endl;
 	cout << YELLOW << "servername: " << servers[s_t.s].serverName << RESET << endl;
 	cout << YELLOW << "uri_path: " << uri_path << RESET << endl;
@@ -767,16 +774,12 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	cout << YELLOW << "AutoIndex: "; isIndexOn(uri_path, s_t.s) ? cout << "ON" : cout << "OFF"; cout << endl;
 	cout << YELLOW << "Is Location Existing?: "; isLocationExist(s_t.s, uri_path) ? cout << "YES" : cout << "NOT EXIST"; cout << endl;
 	cout << RESET << endl;
-
-	s_t.full_path = s_t.root_path + s_t.index_file;
 	cout << YELLOW << "Full path: " << s_t.full_path << RESET << endl;
 	cout << "======Before enter Method=====" << endl;
 	if (!isMethod(method_type))
-		sendCustomErrorResponse(client_fd, 400, s_t.s, s_t.root_path);
+		sendCustomErrorResponse(client_fd, 400);
 	else if (s_t.root_path == "" || !isLocationExist(s_t.s, uri_path))
-	{
-		sendCustomErrorResponse(client_fd, 404, s_t.s, s_t.root_path);
-	}
+		sendCustomErrorResponse(client_fd, 404);
 	else if (isCgiRequest(uri_path, s_t.s, s_t.cgi_path))
 	{
 		cout << GREEN << "it has cgi request" << endl;
@@ -785,40 +788,11 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		cout << "HERE your CGI" << endl;
 	}
 	else if (!isAllowUrlMethod(uri_path, s_t.s, method_type))
-		sendCustomErrorResponse(client_fd, 405, s_t.s, s_t.root_path);
+		sendCustomErrorResponse(client_fd, 405);
 	else if (!checkFileExist(s_t.full_path) && uri_path != "" && !(isIndexOn(uri_path, s_t.s)))
-		sendCustomErrorResponse(client_fd, 404, s_t.s, s_t.root_path);
+		sendCustomErrorResponse(client_fd, 404);
 	else if (method_type == "GET")
-	{
-		cout << "ENTER GET" << endl;
-		cout << "uri_path: " << uri_path << endl;
-		s_t.new_uri = uri_path;
-		checkFullPath(s_t.new_uri, s_t.s, s_t.root_path, s_t.full_path, s_t.index_file);
-		cout << "after check full_path: " << s_t.full_path << endl;
-		if (checkDirectoryExist(s_t.full_path))
-		{
-			if (s_t.full_path[s_t.full_path.length() - 1] != '/')
-				s_t.full_path += "/";
-			s_t.full_path += s_t.index_file;
-		}
-		cout << "new_uri " << s_t.new_uri << endl;
-		cout << "root_path: " << s_t.root_path << endl;
-		cout << "full_path: " << s_t.full_path << endl;
-		if  (isIndexOn(s_t.new_uri, s_t.s))
-		{
-			cout << CYAN"build display Index on" << endl;
-			int pos = s_t.full_path.find(s_t.index_file);
-			s_t.full_path = s_t.full_path.substr(0, pos);
-			_serverMsg = buildIndexList(); 
-			sendResponse(client_fd); // not defalt, it get index
-		}
-		else if (servers[s_t.s].redirection != "")
-			redirect_Response(client_fd, servers[s_t.s].redirection);
-		else if (checkFileExist(s_t.full_path))
-			sendCustomResponse(client_fd, s_t.full_path);
-		else
-			sendCustomErrorResponse(client_fd, 404, s_t.s, s_t.root_path);
-	}
+		sendGET(client_fd, uri_path);
 	else if (method_type == "POST")
 	{
 		cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl;
@@ -826,7 +800,7 @@ void	Server::sendClient(int & client_fd, string & method_type,
 		cout << "END" << endl;
 		// how do i get request here or you save request body?
 		if  (isIndexOn(uri_path, s_t.s))
-			sendCustomErrorResponse(client_fd, 500, s_t.s, s_t.root_path);
+			sendCustomErrorResponse(client_fd, 500);
 		else
 		{
 			map<string, string> key_value_body = req.getKeyValueBody();
@@ -845,21 +819,23 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	}
 	else if (method_type == "DELETE")
 	{
-		if  (isIndexOn(uri_path, s_t.s))
-			sendCustomErrorResponse(client_fd, 500, s_t.s, s_t.root_path);
-		else
-		{
-			int pos = uri_path.find("/");
-			string newfile = uri_path.substr(pos);
-			string folderpath = uri_path.substr(0, pos);
-			s_t.root_path = getLocationRoot(folderpath, s_t.s);
-			if (s_t.root_path == "")
-				s_t.root_path = servers[s_t.s].root;
-			s_t.full_path = s_t.root_path + newfile;
-			deleteFile(s_t.full_path.c_str());
-			cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl; 
-			sendCustomResponse(client_fd, s_t.full_path);
-		}
+		cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl; 
+		sendDELETE(client_fd, uri_path);
+//		if  (isIndexOn(uri_path, s_t.s))
+//			sendCustomErrorResponse(client_fd, 500);
+//		else
+//		{
+//			int pos = uri_path.find("/");
+//			string newfile = uri_path.substr(pos);
+//			string folderpath = uri_path.substr(0, pos);
+//			s_t.root_path = getLocationRoot(folderpath, s_t.s);
+//			if (s_t.root_path == "")
+//				s_t.root_path = servers[s_t.s].root;
+//			s_t.full_path = s_t.root_path + newfile;
+//			deleteFile(s_t.full_path.c_str());
+//			cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl; 
+//			sendCustomResponse(client_fd, s_t.full_path);
+//		}
 	}
 	else
 		sendErrorResponse(client_fd, 400);
@@ -990,7 +966,7 @@ int		Server::isMethod(string & method_type)
 	return (0);
 }
 
-void	Server::sendCustomPostResponse(int client_fd, string & full_path, map<string, string> & key_value_body)
+void	Server::sendCustomPostResponse(const int client_fd, string & full_path, map<string, string> & key_value_body)
 {
 	stringstream	tmp;
 	ostringstream	ss;
@@ -1026,7 +1002,7 @@ void	Server::sendCustomPostResponse(int client_fd, string & full_path, map<strin
 		N_MY::msg("Server sent a response to the client\n\n");
 }
 
-void	Server::sendCustomPostResponse(int client_fd, string & full_path, multimap<string, string> & key_value_body)
+void	Server::sendCustomPostResponse(const int client_fd, string & full_path, multimap<string, string> & key_value_body)
 {
 	stringstream	tmp;
 	ostringstream	ss;
@@ -1070,7 +1046,7 @@ void	Server::sendCustomPostResponse(int client_fd, string & full_path, multimap<
 }
 
 
-void	Server::sendCustomResponse(int client_fd, string & full_path)
+void	Server::sendCustomResponse(const int client_fd, string & full_path)
 {
 	stringstream	tmp;
 	ostringstream	ss;
@@ -1160,6 +1136,56 @@ void	Server::checkServers(vector<Server_Detail> & servers)
 {
 	string	defaultport = "";
 	while (checkPort(servers, defaultport)) ;
+}
+
+void	Server::sendGET(const int & client_fd, const string & uri_path)
+{
+	cout << "ENTER GET" << endl;
+	cout << "uri_path: " << uri_path << endl;
+	s_t.new_uri = uri_path;
+	checkFullPath(s_t.new_uri, s_t.s, s_t.root_path, s_t.full_path, s_t.index_file);
+	cout << "after check full_path: " << s_t.full_path << endl;
+	if (checkDirectoryExist(s_t.full_path))
+	{
+		if (s_t.full_path[s_t.full_path.length() - 1] != '/')
+			s_t.full_path += "/";
+		s_t.full_path += s_t.index_file;
+	}
+	cout << "new_uri " << s_t.new_uri << endl;
+	cout << "root_path: " << s_t.root_path << endl;
+	cout << "full_path: " << s_t.full_path << endl;
+	if  (isIndexOn(s_t.new_uri, s_t.s))
+	{
+		cout << CYAN"build display Index on" << endl;
+		int pos = s_t.full_path.find(s_t.index_file);
+		s_t.full_path = s_t.full_path.substr(0, pos);
+		_serverMsg = buildIndexList(); 
+		sendResponse(client_fd); // not defalt, it get index
+	}
+	else if (servers[s_t.s].redirection != "")
+		redirect_Response(client_fd, servers[s_t.s].redirection);
+	else if (checkFileExist(s_t.full_path))
+		sendCustomResponse(client_fd, s_t.full_path);
+	else
+		sendCustomErrorResponse(client_fd, 404);
+}
+
+void	Server::sendDELETE(const int & client_fd, const string & uri_path)
+{
+	if  (isIndexOn(uri_path, s_t.s))
+		sendCustomErrorResponse(client_fd, 500);
+	else
+	{
+		int pos = uri_path.find("/");
+		string newfile = uri_path.substr(pos);
+		string folderpath = uri_path.substr(0, pos);
+		s_t.root_path = getLocationRoot(folderpath, s_t.s);
+		if (s_t.root_path == "")
+			s_t.root_path = servers[s_t.s].root;
+		s_t.full_path = s_t.root_path + newfile;
+		deleteFile(s_t.full_path.c_str());
+		sendCustomResponse(client_fd, s_t.full_path);
+	}
 }
 
 void	Server::sig_handler(int signo)
