@@ -44,6 +44,11 @@ void    Request::ParseReqBody()
     {
         _req_body = _request.substr(black_line_index + 4);
         cout << "post_body: " << _req_body << endl;
+        if (_req_body.find("&") == string::npos && _req_body.find('=') == string::npos)
+        {
+            _key_value["value"] = _req_body;;
+            return ;
+        }
         vector<string> key_value;
         split(_req_body, '&', key_value);
         for (size_t i = 0; i < key_value.size(); i++)
@@ -407,8 +412,10 @@ string  Response::restoString() const
     map<string, string>::const_iterator it;
 
     ostringstream   oss;
+    cout << "session_id:: " << getSessionId() << endl;
     oss << "HTTP/1.1 " << _status_code << " " << getReasonPhrase(_status_code) << "\r\n";
     oss << "Content-Type: " << _content_type << "\r\n";
+    oss << "Set-Cookie: session_id=" + _session_id + " ; HttpOnly\r\n";
     oss << "Content-Length: " << _content.length() << "\r\n";
     for (it = _headers.begin(); it != _headers.end(); ++it)
     {
@@ -665,18 +672,20 @@ string  Response::getRequestCookies(Request& request)
 
 void    Response::sendCgiResponse(Request& request, int client_socket, const char *buffer, int count)
 {
-    Response    res;
+    // Response    res;
     string      response_str;
     int         bytes_sent;
 
-    res.setStatusCode(200);
-    res.setContentType("text/html");
+    _session_id = generateSessionId();
+    cout << "_session_id: " << _session_id << endl;
+    setStatusCode(200);
+    setContentType("text/html");
     if (this->checkRequestCookies(request))
-        res.setHeader("Set-Cookie", this->getRequestCookies(request));
+        setHeader("Set-Cookie", this->getRequestCookies(request));
     // res.setContent(this->getRequest().c_str(), this->getReadSize());
-    res.setContent(buffer, count);
+    setContent(buffer, count);
     // res.printCookies();
-    response_str = res.restoString();
+    response_str = restoString();
     bytes_sent = send(client_socket, response_str.c_str(), response_str.size(), 0);
     if (bytes_sent == -1)
     {
@@ -1035,6 +1044,32 @@ void    deleteFile(const char *path)
         cout << "Error: unable to delete the file" << endl;
 }
 
+string  generateSessionId()
+{
+    srand(time(NULL));
+    stringstream ss;
+    for (int i = 0; i < 16; i++)
+    {
+        int r = rand() % 16;
+        ss << hex << r;
+    }
+    return (ss.str());
+}
+
+void    Response::setSessionId(string &session_id)
+{
+    _session_id = session_id;
+}
+
+
+string  Response::getSessionId() const
+{
+    return (_session_id);
+}
+
+
+
+// curl -X DELETE localhost:1024/abc.cpp
 //  curl --cookie "name=shawn; name2=alec" http://localhost:80
 //  curl -b "name=shawn; name2=alec" http://localhost:80
 // curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "name=shawn&age=30" "127.0.0.1/cgi-bin/hello.cgi?name=shawn&age=23&hobby=sport"

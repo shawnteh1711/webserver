@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 13:35:04 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/11 17:46:28 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,6 +109,8 @@ class Response
         void    sendErrorResponse(int client_socket,  int status_code, string path);
         bool    checkRequestCookies(Request& request);
         string  getRequestCookies(Request& request);
+        string  getSessionId() const;
+        void    setSessionId(string &session_id);
 
     private:
         int                     _status_code;
@@ -116,6 +118,7 @@ class Response
         string                  _content;
         string                  _cookies;
         map<string, string>     _headers;
+        string                  _session_id;
 
         static string           getReasonPhrase(int code);
 
@@ -123,4 +126,5 @@ class Response
 
 void	handle_non_cgi(int client_socket, Request & req);
 void    deleteFile(const char* path);
+string  generateSessionId();
 #endif
