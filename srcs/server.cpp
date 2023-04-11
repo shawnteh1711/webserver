@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 12:23:40 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/11 12:48:22 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,6 +172,9 @@ void generate_listing(t_server *s_t, string &listing)
 {
 	DIR				*dir;
 	struct dirent	*ent;
+
+
+	// where is the host?
    
 	cout << "s_t->full_path: " << s_t->full_path << endl;
 	if ((dir = opendir(s_t->full_path.c_str())) != NULL)
@@ -190,7 +193,9 @@ void generate_listing(t_server *s_t, string &listing)
 	 		   link += "/";
 	 	   link += name;
 	 	   cout << YELLOW << "link: " << link << RESET << endl;
-	 	   listing += "<li><a href=\"" + link + "\">" + name + "</a></li>";
+			// cout << "hostname: " << s_t->hostname << endl;
+
+	 	   listing += "<li><a href=" + string("http://") + s_t->hostname + "\\" + link + "\">" + name + "</a></li>";
 		   cout << RED << "listing: " << listing << RESET << endl;
 	 	  // listing += "<li>" + string(ent->d_name) + "</li>"; //pr
 	    }
@@ -199,6 +204,54 @@ void generate_listing(t_server *s_t, string &listing)
 	 else
 	     cerr << "Error opening directory: " << s_t->full_path << endl;
 }
+
+// void generate_listing(t_server *s_t, string &listing)
+// {
+// 	DIR				*dir;
+// 	struct dirent	*ent;
+
+
+// 	// where is the host?
+   
+// 	cout << "s_t->full_path: " << s_t->full_path << endl;
+// 	if ((dir = opendir(s_t->full_path.c_str())) != NULL)
+// 	{
+// 	    listing += "<p>Path: " + s_t->full_path + "</p>";
+// 		cout << "s_t->root_path: " << s_t->root_path << endl;
+// 	    while ((ent = readdir(dir)) != NULL)
+// 	    {
+// 	 	   	string name = ent->d_name;
+// 	 	   	if (name == "." || name == "..")
+// 	 			continue;
+// 	 	   	string link = s_t->client_uri;
+// 		   	cout << "link: " << link << endl;
+// 	 	   	if (s_t->client_uri[s_t->client_uri.length() - 1] != '/') //what is this for? just to add / if last one is not /
+// 	 			link += "/";
+// 	 	   	link += name;
+// 	 	   	cout << "after add name link: " << link << endl;
+// 			// string path = s_t->full_path + "/" + name;
+// 			listing += "<li><a href=\"" + link + "\">" + name + "</a></li>";
+
+// 			struct stat st;
+
+// 			if (stat(link.c_str(), &st) == -1) {
+//                 cerr << "Error getting file info: " << link << endl;
+//                 continue;
+//             }
+
+// 			if (S_ISDIR(st.st_mode)) {
+//                 generate_listing(s_t, listing);
+//             }
+// 			else if (S_ISREG(st.st_mode))
+// 			{
+// 	 	   		listing += "<li><a href=\"" + link + "\">" + name + "</a></li>";
+// 			}
+// 	    }
+// 	    closedir(dir);
+// 	}
+// 	 else
+// 	     cerr << "Error opening directory: " << s_t->full_path << endl;
+// }
 
 string Server::buildResponse(void)
 {
@@ -690,6 +743,7 @@ void	Server::sendClient(int & client_fd, string & method_type,
 	s_t.index_file = servers[s_t.s].index;
 	s_t.cgi_path = "";
 	s_t.client_uri = uri_path;
+	s_t.hostname = _host;
 	if (s_t.index_file == "")
 		s_t.index_file = "index.html";
 	cout << "STARTTTT" << endl;

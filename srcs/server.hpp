@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 12:14:29 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 12:26:00 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ typedef struct s_server
 	string	index_file;
 	string	new_uri;
 	string	client_uri;
+	string	hostname;
 	int		s;
 }	t_server;
 
