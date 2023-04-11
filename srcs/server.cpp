@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 18:37:12 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 19:42:24 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ Server::Server(vector<Server_Detail> & d_servers)
 	_one_mb(1024), _limit_size(_one_mb), _index(0),
 	tracker(new vector<int>[total]), s_t()
 {
-	// cout << "seervers: " << total << endl;
+//	cout << "seervers: " << total << endl;
 	checkServers(servers);
 	vector<Server_Detail>::iterator it, ite;
 	it = servers.begin();
@@ -123,7 +123,7 @@ void	Server::startListen()
 	addSocketPoll(fds);
 	while (1)
 	{
-		//usleep(2000);
+		usleep(2000);
 		int rv = poll(&fds[0], fds.size(), -1);
 
 		//cout << "POLLLLLLLLL" << endl;
@@ -1123,6 +1123,11 @@ int		Server::isLocationExist(int const & svr_id, const string & s_uri)
 	return (0);
 }
 
+bool is_digits(const string & str)
+{
+    return (str.find_first_not_of("0123456789") == string::npos);
+}
+
 int		Server::checkPort(vector<Server_Detail> & servers, string & defaultport)
 {
 	vector<Server_Detail>::iterator it, ite;
@@ -1132,7 +1137,8 @@ int		Server::checkPort(vector<Server_Detail> & servers, string & defaultport)
 	int findefault = 0;
 	while (it != ite)
 	{
-		if ((it->port == "" || defaultport == it->port) && findefault)
+		cout << it->port << endl;
+		if ((it->port == "" || defaultport == it->port || !is_digits(it->port)) && findefault)
 		{
 			servers.erase(it);
 			total--;
@@ -1140,8 +1146,26 @@ int		Server::checkPort(vector<Server_Detail> & servers, string & defaultport)
 		}
 		else if (defaultport == "")
 			defaultport = it->port;
-		if (defaultport == it->port)
+		if (defaultport == it->port && findefault == 0)
 			findefault = 1;
+		it++;
+	}
+	return (0);
+}
+
+int		Server::isDupPort(void)
+{
+	vector<Server_Detail>::iterator it, it2, ite;
+	string	d_port;
+
+	it = servers.begin(), ite = servers.end();
+	while (it != ite)
+	{
+		d_port = it->port;
+		it2 = it;
+		while (++it2 != ite)
+			if (d_port == it2->port)
+				return (1);
 		it++;
 	}
 	return (0);
@@ -1150,6 +1174,9 @@ int		Server::checkPort(vector<Server_Detail> & servers, string & defaultport)
 void	Server::checkServers(vector<Server_Detail> & servers)
 {
 	string	defaultport = "";
+
+	if (isDupPort())
+		N_MY::ErrorExit("Duplicate Ports!!");
 	while (checkPort(servers, defaultport)) ;
 }
 
