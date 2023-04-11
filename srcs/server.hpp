@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 19:34:42 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 20:25:13 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,8 @@ class	Server
 	void			sendGET(const int & client_fd, const string & uri_path);
 	void			sendDELETE(const int & client_fd, const string & uri_path);
 	int				isDupPort(void);
+	void			display(const string & uri_path);
+	int				markCgiRequest(const string & s_uri);
 
 	// static non-member
 	static Server		*server_instance;

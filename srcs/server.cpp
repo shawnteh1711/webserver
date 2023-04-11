@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 19:52:30 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/11 21:05:50 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -768,14 +768,9 @@ void	Server::initServer(const int & client_fd, const string & uri_path, const st
 	s_t.full_path = s_t.root_path + s_t.index_file;
 }
 
-
-void	Server::sendClient(const int & client_fd, string & method_type,
-		const string & uri_path, Request & req)
+void	Server::display(const string & uri_path)
 {
-	cleanServer();
-	initServer(client_fd, uri_path, method_type);
-
-	cout << YELLOW << "method_type: " << method_type << RESET << endl;
+	cout << YELLOW << "method_type: " << s_t.method_type << RESET << endl;
 	cout << YELLOW << "servername: " << servers[s_t.s].serverName << RESET << endl;
 	cout << YELLOW << "uri_path: " << uri_path << RESET << endl;
 	cout << YELLOW << "root_path: " << s_t.root_path << RESET << endl;
@@ -786,13 +781,25 @@ void	Server::sendClient(const int & client_fd, string & method_type,
 	cout << RESET << endl;
 	cout << YELLOW << "Full path: " << s_t.full_path << RESET << endl;
 	cout << "======Before enter Method=====" << endl;
+}
+
+
+void	Server::sendClient(const int & client_fd, string & method_type,
+		const string & uri_path, Request & req)
+{
+	cleanServer();
+	initServer(client_fd, uri_path, method_type);
+	display(uri_path);
+
+	int markCgi = markCgiRequest(uri_path);
+	if (markCgi)
+		cout << "IT HAS CGI!!!!!" << endl;
+
 	if (!isMethod(method_type))
 		sendCustomErrorResponse(client_fd, 400);
-	else if (s_t.root_path == "" || !isLocationExist(s_t.s, uri_path))
-	{
+	else if ((s_t.root_path == "" || !isLocationExist(s_t.s, uri_path)) && !markCgi)
 		sendCustomErrorResponse(client_fd, 404);
-	}
-	else if (isCgiRequest(uri_path, s_t.s, s_t.cgi_path))
+	else if (isCgiRequest(uri_path, s_t.s, s_t.cgi_path) || markCgi)
 	{
 		cout << GREEN << "it has cgi request" << endl;
 		cout << "cgi_path i give to you: " << s_t.cgi_path << RESET << endl;
@@ -874,6 +881,15 @@ void	Server::checkFullPath(string & s_uri, const int & svr_id,
 		full_path = new_path;
 }
 
+int		Server::markCgiRequest(const string & s_uri)
+{
+	int pos = s_uri.find("/");
+	string new_key = s_uri;
+	if (pos >= 0)
+		new_key = new_key.substr(0, pos);
+	return isCgiRequest(new_key, s_t.s, s_t.cgi_path);
+}
+
 int		Server::isCgiRequest(const string & s_uri, const int & svr_id, string & cgi_path)
 {
 	map<string, string>::iterator it, ite;
@@ -883,6 +899,8 @@ int		Server::isCgiRequest(const string & s_uri, const int & svr_id, string & cgi
 		new_uri = new_uri.substr(0, new_uri.find("?"));
 	string newslash = addslash(new_uri);
 
+	if (newslash[newslash.length() - 1] == '/')
+		newslash.pop_back();
 	cout << "newslash: " << newslash << endl;
 
 	ite = servers[svr_id].urlCgi.end();
