@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 22:03:39 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/11 11:41:39 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -596,19 +596,46 @@ void	Server::copyFiles(string &file_path, string &root_path)
 	cout << "root_path: " << root_path << endl;
 	FILE* source = fopen(file_path.c_str(), "rb");
 	FILE* dest = fopen(root_path.c_str(), "ab");
-
 	if (source == NULL || dest == NULL)
 	{
 		printf("Failed to open files for copying.\n");
 	 	return ;	
 	}
-	char buffer[BUFSIZ + 100000];
+	fseek(source, 0, SEEK_END);
+	long file_size = ftell(source);
+	fseek(source, 0L, SEEK_SET);
+	char* buffer = (char*)malloc(file_size * sizeof(char));
 	size_t nread;
-	while ((nread = fread(buffer, 1, BUFSIZ, source)) > 0)
+	while ((nread = fread(buffer, 1, file_size, source)) > 0)
 		fwrite(buffer, 1, nread, dest);
+	free(buffer);
 	fclose(source);
 	fclose(dest);
 }
+
+// void	Server::copyFiles(string &file_path, string &root_path)
+// {
+// 	cout << "it->second: " << file_path << endl;
+// 	size_t pos = file_path.find_last_of('/');
+// 	string filename = (pos == string::npos) ? file_path : file_path.substr(pos + 1);
+// 	cout << "filename: " << filename << endl;
+// 	root_path += filename;
+// 	cout << "root_path: " << root_path << endl;
+// 	FILE* source = fopen(file_path.c_str(), "rb");
+// 	FILE* dest = fopen(root_path.c_str(), "ab");
+
+// 	if (source == NULL || dest == NULL)
+// 	{
+// 		printf("Failed to open files for copying.\n");
+// 	 	return ;	
+// 	}
+// 	char buffer[BUFSIZ + 100000];
+// 	size_t nread;
+// 	while ((nread = fread(buffer, 1, BUFSIZ, source)) > 0)
+// 		fwrite(buffer, 1, nread, dest);
+// 	fclose(source);
+// 	fclose(dest);
+// }
 
 
 void	Server::sendClient(int & client_fd, string & method_type,
