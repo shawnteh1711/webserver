@@ -11,6 +11,9 @@ Request::Request(const string& request, const string & cgi_path)
 	: _request(request), _cgi_path(cgi_path)
 {
     cout << RED <<  "cgi_path: " << _cgi_path << endl;
+    if (this->hasCookies())
+        _req_session_id = extractSessionId(_cookies);
+    cout << RED << "sessionId: " << _req_session_id << RESET << endl;
     this->ParseReqBody();
     this->is_cgi_request();
     return ;
@@ -412,10 +415,10 @@ string  Response::restoString() const
     map<string, string>::const_iterator it;
 
     ostringstream   oss;
-    cout << "session_id:: " << getSessionId() << endl;
+    cout << "session_id:: " << getResSessionId() << endl;
     oss << "HTTP/1.1 " << _status_code << " " << getReasonPhrase(_status_code) << "\r\n";
     oss << "Content-Type: " << _content_type << "\r\n";
-    oss << "Set-Cookie: session_id=" + _session_id + " ; HttpOnly\r\n";
+    oss << "Set-Cookie: session_id=" + _res_session_id + " ; HttpOnly\r\n";
     oss << "Content-Length: " << _content.length() << "\r\n";
     for (it = _headers.begin(); it != _headers.end(); ++it)
     {
@@ -531,52 +534,77 @@ int Request::readRequest(int client_socket)
 
 void Request::setEnvp()
 {
-    string request_method = "REQUEST_METHOD=" + this->getMethod();
-    string query_string = "QUERY_STRING=" + this->getQueryString();
-    string content_type = "CONTENT_TYPE=" + this->getHeader("Content-Type");
-    string content_length = "CONTENT_LENGTH=" + this->getHeader("Content-Length");
-    string remote_addr = "REMOTE_ADDR=" + this->getAddress();
-    string script_name = "SCRIPT_NAME=" + this->parseRequestedFile();
-    string script_path = "SCRIPT_PATH=" + _path_info;
+    vector<string> env_vars;
+    env_vars.push_back("REQUEST_METHOD=" + this->getMethod());
+    env_vars.push_back("QUERY_STRING=" + this->getQueryString());
+    env_vars.push_back("CONTENT_TYPE=" + this->getHeader("Content-Type"));
+    env_vars.push_back("CONTENT_LENGTH=" + this->getHeader("Content-Length"));
+    env_vars.push_back("REMOTE_ADDR=" + this->getAddress());
+    env_vars.push_back("SCRIPT_NAME=" + this->parseRequestedFile());
+    env_vars.push_back("SCRIPT_PATH=" + _path_info);
+    env_vars.push_back("HTTP_COOKIE=" + this->getHeader("Cookie"));
 
-    // char** envp = (char**) malloc((ENV_SIZE + 1) * sizeof(char*));
-    vector<char *> envp2(8);
+    vector<char*> envp2(env_vars.size() + 1, NULL);
 
-    if (envp2.size() == 0)
+    for (int i = 0; i < (int)env_vars.size(); i++)
     {
-        cerr << "Error: Failed to allocate memory to envp." << endl;
-        exit(EXIT_FAILURE);
+        envp2[i] = new char[env_vars[i].size() + 1];
+        strcpy(envp2[i], env_vars[i].c_str());
     }
-    // envp[0] = strdup(request_method.c_str());
-    // envp[1] = strdup(query_string.c_str());
-    // envp[2] = strdup(content_type.c_str());
-    // envp[3] = strdup(content_length.c_str());
-    // envp[4] = strdup(remote_addr.c_str());
-    // envp[5] = strdup(script_name.c_str());
-    // envp[6] = strdup(script_path.c_str());
-    // envp[7] = NULL;
 
-    envp2[0] = strdup(request_method.c_str());
-    envp2[1] = strdup(query_string.c_str());
-    envp2[2] = strdup(content_type.c_str());
-    envp2[3] = strdup(content_length.c_str());
-    envp2[4] = strdup(remote_addr.c_str());
-    envp2[5] = strdup(script_name.c_str());
-    envp2[6] = strdup(script_path.c_str());
-    envp2[7] = NULL;
-
-    // for (int i = 0; i < ENV_SIZE; i++)
-    // {
-    //     _envp[i] = envp[i];
-    // }
-    // _envp[ENV_SIZE - 1] = NULL;
-    for (int i = 0; i < (int)envp2.size(); i++)
-    {
-        _envp[i] = envp2[i];
-    }
-    _envp[envp2.size() - 1] = NULL;
-    // this->freeEnvp(envp);
+    _envp2 = envp2;
 }
+
+
+// void Request::setEnvp()
+// {
+//     string request_method = "REQUEST_METHOD=" + this->getMethod();
+//     string query_string = "QUERY_STRING=" + this->getQueryString();
+//     string content_type = "CONTENT_TYPE=" + this->getHeader("Content-Type");
+//     string content_length = "CONTENT_LENGTH=" + this->getHeader("Content-Length");
+//     string remote_addr = "REMOTE_ADDR=" + this->getAddress();
+//     string script_name = "SCRIPT_NAME=" + this->parseRequestedFile();
+//     string script_path = "SCRIPT_PATH=" + _path_info;
+//     string cookies = "HTTP_COOKIE=" + this->getHeader("Cookie");
+
+//     // char** envp = (char**) malloc((ENV_SIZE + 1) * sizeof(char*));
+//     vector<char *> envp2(8);
+
+//     if (envp2.size() == 0)
+//     {
+//         cerr << "Error: Failed to allocate memory to envp." << endl;
+//         exit(EXIT_FAILURE);
+//     }
+//     // envp[0] = strdup(request_method.c_str());
+//     // envp[1] = strdup(query_string.c_str());
+//     // envp[2] = strdup(content_type.c_str());
+//     // envp[3] = strdup(content_length.c_str());
+//     // envp[4] = strdup(remote_addr.c_str());
+//     // envp[5] = strdup(script_name.c_str());
+//     // envp[6] = strdup(script_path.c_str());
+//     // envp[7] = NULL;
+
+//     envp2[0] = strdup(request_method.c_str());
+//     envp2[1] = strdup(query_string.c_str());
+//     envp2[2] = strdup(content_type.c_str());
+//     envp2[3] = strdup(content_length.c_str());
+//     envp2[4] = strdup(remote_addr.c_str());
+//     envp2[5] = strdup(script_name.c_str());
+//     envp2[6] = strdup(script_path.c_str());
+//     envp2[7] = NULL;
+
+//     // for (int i = 0; i < ENV_SIZE; i++)
+//     // {
+//     //     _envp[i] = envp[i];
+//     // }
+//     // _envp[ENV_SIZE - 1] = NULL;
+//     for (int i = 0; i < (int)envp2.size(); i++)
+//     {
+//         _envp[i] = envp2[i];
+//     }
+//     _envp[envp2.size() - 1] = NULL;
+//     // this->freeEnvp(envp);
+// }
 
 void Request::freeEnvp(char **envp)
 {
@@ -593,6 +621,11 @@ void Request::freeEnvp(char **envp)
 char**  Request::getEnvp()
 {
     return (_envp);
+}
+
+vector<char*> Request::getEnvp2()
+{
+    return (_envp2);
 }
 
 void    Request::printEnvp() const
@@ -676,12 +709,17 @@ void    Response::sendCgiResponse(Request& request, int client_socket, const cha
     string      response_str;
     int         bytes_sent;
 
-    _session_id = generateSessionId();
-    cout << "_session_id: " << _session_id << endl;
     setStatusCode(200);
     setContentType("text/html");
     if (this->checkRequestCookies(request))
+    {
         setHeader("Set-Cookie", this->getRequestCookies(request));
+        if (request.getReqSessionId().empty())
+            _res_session_id = generateSessionId();
+        else
+            _res_session_id = request.getReqSessionId();
+    }
+    cout << "response _session_id: " << _res_session_id << endl;
     // res.setContent(this->getRequest().c_str(), this->getReadSize());
     setContent(buffer, count);
     // res.printCookies();
@@ -861,6 +899,12 @@ int Request::handle_cgi(int client_socket)
     return (client_socket);
 }
 
+string  Request::getReqSessionId() const
+{
+    return (_req_session_id);
+}
+
+
 int Request::handle_cgi2(int client_socket, string full_path)
 {
     pid_t       pid;
@@ -878,7 +922,6 @@ int Request::handle_cgi2(int client_socket, string full_path)
         full_path = full_path.substr(0, pos);
     this->setCgiPath2(full_path);
     _extension = full_path.substr(full_path.find_last_of("."));
-    cout << "extension: " << _extension << endl;
     if (pipe(pipes) == -1)
     {
         perror("pipe");
@@ -901,11 +944,19 @@ int Request::handle_cgi2(int client_socket, string full_path)
         close(pipes[1]);
         this->setEnvp();
         args = handleArgs();
-        if (execve(args[0], args, this->getEnvp()) == -1)
+        vector<char*> envp = this->getEnvp2();
+        char **envp_array = new char *[envp.size() + 1];
+        for (size_t i = 0; i < envp.size(); ++i)
+            envp_array[i] = envp[i];
+        envp_array[envp.size()] = nullptr;
+        // if (execve(args[0], args, this->getEnvp()) == -1)
+        // if (execve(args[0], args, this->getEnvp2()) == -1)
+        if (execve(args[0], args, envp_array) == -1)
         {
             cerr <<  "Error: " << strerror(errno) << endl;
             exit(EXIT_FAILURE);
         }
+        delete[] envp_array;
     }
     else
     {
@@ -1058,15 +1109,30 @@ string  generateSessionId()
 
 void    Response::setSessionId(string &session_id)
 {
-    _session_id = session_id;
+    _res_session_id = session_id;
 }
 
 
-string  Response::getSessionId() const
+string  Response::getResSessionId() const
 {
-    return (_session_id);
+    return (_res_session_id);
 }
 
+
+string  extractSessionId(string& cookies)
+{
+    string  session_id;
+    size_t start = cookies.find("session_id=");
+    if (start != string::npos)
+    {
+        start += sizeof("session_id=") - 1;
+        size_t end = cookies.find(";", start);
+        if (end == string::npos)
+            end = cookies.size();
+        session_id = cookies.substr(start, end - start);
+    }
+    return (session_id);
+}
 
 
 // curl -X DELETE localhost:1024/abc.cpp
