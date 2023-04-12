@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/12 14:01:43 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/12 14:45:02 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -796,7 +796,16 @@ void	Server::sendClient(const int & client_fd, string & method_type,
 
 	int markCgi = markCgiRequest(uri_path);
 	if (markCgi)
+	{
+		cout << CYAN;
 		cout << "IT HAS CGI!!!!!" << endl;
+		cout << "cgi_path: " << s_t.cgi_path << endl;
+		cout << "full_path: " << s_t.full_path << endl;
+		cout << "root_path: " << s_t.root_path << endl;
+		cout << "index_file: " << s_t.index_file << endl;
+		cout << "client_uri: " << s_t.client_uri << endl;
+		cout << RESET;
+	}
 
 	if (!isMethod(method_type))
 		sendCustomErrorResponse(client_fd, 400);
@@ -887,10 +896,29 @@ void	Server::checkFullPath(string & s_uri, const int & svr_id,
 int		Server::markCgiRequest(const string & s_uri)
 {
 	int pos = s_uri.find("/");
+	int slash = 0;
 	string new_key = s_uri;
 	if (pos >= 0)
+	{
 		new_key = new_key.substr(0, pos);
-	return isCgiRequest(new_key, s_t.s, s_t.cgi_path);
+		slash = 1;
+	}
+	if (isCgiRequest(new_key, s_t.s, s_t.cgi_path))
+	{
+		if (slash)
+			new_key += "/";
+		if (new_key == s_uri)
+			return (1);
+		new_key = s_t.client_uri.substr(new_key.length(), s_t.client_uri.length());
+		s_t.root_path = "cgi-bin/";
+		s_t.full_path = s_t.root_path + new_key;
+		if (!checkFileExist(s_t.full_path))
+			s_t.cgi_path = "error.cgi";
+		else
+			s_t.cgi_path = s_t.full_path.substr(s_t.full_path.find("/") + 1, s_t.full_path.length());
+		return (1);
+	}
+	return (0);
 }
 
 int		Server::isCgiRequest(const string & s_uri, const int & svr_id, string & cgi_path)
