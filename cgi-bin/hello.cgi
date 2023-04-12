@@ -27,3 +27,10 @@ print "<li>SCRIPT_NAME: $ENV{SCRIPT_NAME}</li>\n";
 print "<li>SCRIPT_PATH: $ENV{SCRIPT_PATH}</li>\n";
 print "<li>HTTP_COOKIE: $ENV{HTTP_COOKIE}</li>\n";
 print "</ul>\n";
+
+
+print "<h1>Enter session ID:</h1>\n";
+print "<form method=\"post\" action=\"hello.cgi\">\n";
+print "<input type=\"text\" name=\"session_id\" />\n";
+print "<input type=\"submit\" value=\"Submit\" />\n";
+print "</form>\n";

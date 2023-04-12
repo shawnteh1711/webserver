@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/20 12:53:24 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/10 15:34:55 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/12 16:12:40 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@
 #include <fcntl.h>
 #include <dirent.h> //  for dirent struct autoindex
 #include <filesystem> // check if file is existing
+#include <sstream> //isstringstream
 
 #define RESET   "\033[0m"
 #define RED		"\033[31m"

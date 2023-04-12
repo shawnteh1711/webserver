@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/12 14:09:26 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/12 17:06:26 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,11 +56,12 @@ class Request
         map<string, string>             _key_value;
         vector<char*>                   _envp2;
         string                          _req_session_id;
+        map<string, string>             _session_cookies;
 
     public:
         Request();
         Request(const string& request, const string & cgi_path);
-        Request(const string& request, const string & cgi_path, const string & cookies);
+        Request(const string& request, const string & cgi_path, string & cookies);
         Request(const string& request, const string & cgi_path, map<string, string> & cgi_url_location);
         Request(string& request, int num_read);
         ~Request();
@@ -135,4 +136,5 @@ void    deleteFile(const char* path);
 string  generateSessionId();
 string  extractSessionId(string& cookies);
 string  extractCookies(string& request);
+bool    compare_cookies(const string& cookies, const string& prev_cookies);
 #endif
