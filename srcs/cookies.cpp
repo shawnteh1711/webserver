@@ -50,11 +50,13 @@ Request::Request(const string& request, const string & cgi_path)
 // }
 
 Request::Request(const string& request, const string & cgi_path, string & cookies)
-	: _request(request), _cgi_path(cgi_path)
+	: _request(request), _cgi_path(cgi_path), _cookies(cookies)
 {
     istringstream iss(cookies);
     string           cookie;
     bool session_id_found = false;
+    bool    result;
+    
 
     cout << RED << "cookies: " << cookies << RESET << endl;
     while (getline(iss, cookie, ';'))
@@ -66,20 +68,29 @@ Request::Request(const string& request, const string & cgi_path, string & cookie
             string          cookieName, cookieValue;
             if (getline(cookieIss, cookieName, '=') && getline(cookieIss, cookieValue))
             {
-                if (cookieName == "session_id")
+                cout << "prev: " << _prev_cookies << endl;
+                cout << "_session_cookies: " << _session_cookies[_req_session_id] << endl;
+                result = compare_cookies(_session_cookies[_req_session_id], _prev_cookies);
+                cout << "result:  "    << result << endl;
+                cout << "cookieName: " << cookieName << endl;
+                if (cookieName == "session_id" && result)
                 {
+                    cout << RED << "enter 1" << endl;
                     session_id_found = true;
+                    _req_session_id = cookieValue;
                     _session_cookies[cookieValue] = cookie;
                 }
                 else
                 {
+                    cout << GREEN << "enter 2" << endl;
                     if (!session_id_found)
                     {
                         string session_id = generateSessionId();
                         _session_cookies[session_id] = "session_id=" + session_id;
                         session_id_found = true;
+                        _req_session_id = session_id;
                     }
-                    _session_cookies[_session_cookies.begin()->first] += "; " + cookie;
+                    _session_cookies[_req_session_id] += "; " + cookie;
                 }
             }
     }
@@ -89,13 +100,14 @@ Request::Request(const string& request, const string & cgi_path, string & cookie
         _prev_cookies = _session_cookies[_req_session_id];
     else
         _prev_cookies = "";
+    cout << "prev_cookies: " << _prev_cookies << endl;
 
-    bool    result;
-    result = compare_cookies(_session_cookies[_req_session_id], _prev_cookies);
-    if (result && _session_cookies[_req_session_id] != "")
-        _req_session_id = generateSessionId();
-    else if (!result && _session_cookies[_req_session_id] != "")
-        _req_session_id = extractSessionId(_session_cookies[_req_session_id]);
+    // bool    result;
+    // result = compare_cookies(_session_cookies[_req_session_id], _prev_cookies);
+    // if (result && _session_cookies[_req_session_id] != "")
+    //     _req_session_id = generateSessionId();
+    // else if (!result && _session_cookies[_req_session_id] != "")
+    //     _req_session_id = extractSessionId(_session_cookies[_req_session_id]);
     
     this->ParseReqBody();
     this->is_cgi_request();
@@ -502,8 +514,8 @@ string  Response::restoString() const
     ostringstream   oss;
     oss << "HTTP/1.1 " << _status_code << " " << getReasonPhrase(_status_code) << "\r\n";
     oss << "Content-Type: " << _content_type << "\r\n";
-    // if (_res_session_id != "")
-    //     oss << "Set-Cookie: session_id=" + _res_session_id + " ; HttpOnly\r\n";
+    if (_res_session_id != "")
+        oss << "Set-Cookie: session_id=" + _res_session_id + " ; HttpOnly\r\n";
     // oss << "Set-Cookie: session_id=" + _res_session_id + " ; HttpOnly\r\n";
     oss << "Content-Length: " << _content.length() << "\r\n";
     for (it = _headers.begin(); it != _headers.end(); ++it)
@@ -816,6 +828,7 @@ void    Response::sendCgiResponse(Request& request, int client_socket, const cha
         //     _res_session_id = generateSessionId();
         // else
             _res_session_id = request.getReqSessionId();
+            cout << "res_session_id: " << _res_session_id << endl;
     //     cout << "After cookie: " << this->getRequestCookies(request) << endl;
             addCount = strlen("hello, user with session_id: ") + _res_session_id.length() + 2; // add 2 for "\r\n"
     }
