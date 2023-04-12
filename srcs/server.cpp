@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/12 14:40:02 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/12 16:15:56 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -806,6 +806,8 @@ void	Server::sendClient(const int & client_fd, string & method_type,
 
 	if (!isMethod(method_type))
 		sendCustomErrorResponse(client_fd, 400);
+	else if (!isAllowUrlMethod(uri_path, s_t.s, method_type))
+		sendCustomErrorResponse(client_fd, 405);
 	else if ((s_t.root_path == "" || !isLocationExist(s_t.s, uri_path)) && !markCgi)
 		sendCustomErrorResponse(client_fd, 404);
 	else if (isCgiRequest(uri_path, s_t.s, s_t.cgi_path) || markCgi)
@@ -815,8 +817,6 @@ void	Server::sendClient(const int & client_fd, string & method_type,
 		req.handle_cgi2(client_fd, s_t.cgi_path);
 		cout << "HERE your CGI" << endl;
 	}
-	else if (!isAllowUrlMethod(uri_path, s_t.s, method_type))
-		sendCustomErrorResponse(client_fd, 405);
 	else if (!checkFileExist(s_t.full_path) && uri_path != "" && !(isIndexOn(uri_path, s_t.s)))
 		sendCustomErrorResponse(client_fd, 404);
 	else if (method_type == "GET")
@@ -972,7 +972,11 @@ string	Server::addslash(const string & s_uri)
 int		Server::isIndexOn(const string & s_uri, const int & svr_id)
 {
 	vector<string>::iterator it, ite;
-	string newslash = addslash(s_uri);
+	string new_key = s_uri;
+	int pos = s_uri.find("/");
+	if (pos >= 0)
+		new_key = s_uri.substr(0, pos);
+	string newslash = addslash(new_key);
 
 	ite = servers[svr_id].urlIndexOn.end();
 	it = servers[svr_id].urlIndexOn.begin();
@@ -984,7 +988,11 @@ int		Server::isIndexOn(const string & s_uri, const int & svr_id)
 int	Server::isAllowUrlMethod(const string & s_uri, const int & svr_id, string & method_type)
 {
 	map<string, string>::iterator it, ite;
-	string newslash = addslash(s_uri);
+	int pos = s_uri.find("/");
+	string new_key = s_uri;
+	if (pos >= 0)
+		new_key = s_uri.substr(0, pos);
+	string newslash = addslash(new_key);
 	vector<string> method_list;
 	vector<string>::iterator vit, vite;
 
@@ -1156,7 +1164,10 @@ int		Server::isLocationExist(int const & svr_id, const string & s_uri)
 	if (((root_path = getLocationRoot(d_url, svr_id)) == ""))
 		root_path = servers[svr_id].root;
 
-	string full_path = root_path + file_path;
+	string full_path = root_path;
+	if (root_path[root_path.length() - 1] != '/' && file_path[file_path.length() - 1] != '/')
+		full_path += "/";
+	full_path += file_path;
 
 	if (new_uri == "")
 		return (1);
