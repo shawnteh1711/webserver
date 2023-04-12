@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 21:01:21 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/12 14:09:26 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ class Request
         char*                           _envp[ENV_SIZE];
         map<string, vector<string> >    _extension_map;
         string                          _cookies;
-        string                          _prev_cookies;
+        static string                   _prev_cookies;
         string                          _query;
         string                          _pwd;
         int                             _content_length;
@@ -60,6 +60,7 @@ class Request
     public:
         Request();
         Request(const string& request, const string & cgi_path);
+        Request(const string& request, const string & cgi_path, const string & cookies);
         Request(const string& request, const string & cgi_path, map<string, string> & cgi_url_location);
         Request(string& request, int num_read);
         ~Request();
@@ -133,4 +134,5 @@ void	handle_non_cgi(int client_socket, Request & req);
 void    deleteFile(const char* path);
 string  generateSessionId();
 string  extractSessionId(string& cookies);
+string  extractCookies(string& request);
 #endif

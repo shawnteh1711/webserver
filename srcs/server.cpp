@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 21:05:50 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/12 14:01:43 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -608,7 +608,10 @@ void	Server::clientRequestStage(vector<struct pollfd> & fds)
 					// coz check is cgi request is my task to do here server
 					// the server need check cgi request or not before send to you
 					setMethodUrl(method_type, uri_path, clientRequest);
-					Request req(clientRequest, uri_path);
+					string cookies = extractCookies(clientRequest);
+					cout << "cookies: " << cookies << endl;
+					// Request req(clientRequest, uri_path);
+					Request req(clientRequest, uri_path, cookies);
 					sendClient(fds[i].fd, method_type, uri_path, req);
 				}
 				else

@@ -1,5 +1,6 @@
 #include "cookies.hpp"
 
+string  Request::_prev_cookies = "";
 
 Request::Request() : _request()
 {
@@ -10,16 +11,26 @@ Request::Request() : _request()
 Request::Request(const string& request, const string & cgi_path)
 	: _request(request), _cgi_path(cgi_path)
 {
+    this->ParseReqBody();
+    this->is_cgi_request();
+    return ;
+}
+
+Request::Request(const string& request, const string & cgi_path, const string & cookies)
+	: _request(request), _cgi_path(cgi_path), _cookies(cookies)
+{
     cout << RED <<  "cgi_path: " << _cgi_path << endl;
-    cout << "_cookies: " << _cookies << RESET << endl;
-    _prev_cookies = "";
-    if (this->hasCookies())
-    {
+    cout << RED << "_prev_cookies: " << _prev_cookies << endl;
+    cout << RED << "_cookies: " << _cookies << RESET << endl;
+
+    if (_cookies != _prev_cookies)
+        _req_session_id = generateSessionId();
+    else
         _req_session_id = extractSessionId(_cookies);
-        _prev_cookies = this->getHeader("Cookie");
-    }
-    cout << "after _cookies: " << _cookies << RESET << endl;
-    cout << RED << "sessionId: " << _req_session_id << RESET << endl;
+    _prev_cookies = _cookies;
+    cout << "_req_session_id: " << _req_session_id << endl;
+    cout << YELLOW << "_prev_cookies: " << _prev_cookies << endl;
+    cout << YELLOW << "_cookies: " << _cookies << endl;
     this->ParseReqBody();
     this->is_cgi_request();
     return ;
@@ -548,7 +559,7 @@ void Request::setEnvp()
     env_vars.push_back("REMOTE_ADDR=" + this->getAddress());
     env_vars.push_back("SCRIPT_NAME=" + this->parseRequestedFile());
     env_vars.push_back("SCRIPT_PATH=" + _path_info);
-    env_vars.push_back("HTTP_COOKIE=" + this->getHeader("Cookie"));
+    env_vars.push_back("HTTP_COOKIE=" + this->getCookies());
 
     vector<char*> envp2(env_vars.size() + 1, NULL);
 
@@ -689,15 +700,15 @@ string    Response::getContent() const
 
 bool       Response::checkRequestCookies(Request& request)
 {
-    _cookies = request.getHeader("Cookie");
-    if (_cookies.empty())
+    string cookies = request.getHeader("Cookie");
+    if (cookies.empty())
     {
         cout << "No cookies found" << endl;
         return (false);
     }
     else
     {
-        cout << "Cookies found: " << _cookies << endl;
+        cout << "Cookies found: " << cookies << endl;
         return (true);
     }
 
@@ -721,18 +732,18 @@ void    Response::sendCgiResponse(Request& request, int client_socket, const cha
 
     setStatusCode(200);
     setContentType("text/html");
+    (void)request;
     if (this->checkRequestCookies(request))
     {
-        cout << "Setting cookie: " << this->getRequestCookies(request) << endl;
-        setHeader("Set-Cookie", this->getRequestCookies(request));
-        string currentCookies = request.getCookies();
-        cout << "currentCookies: " << currentCookies << endl;
-        cout << "request.getPrevCookies(): " << request.getPrevCookies() << endl;
-        if (request.getReqSessionId().empty() || currentCookies != request.getPrevCookies())
-            _res_session_id = generateSessionId();
-        else
+        // setHeader("Set-Cookie", this->getRequestCookies(request));
+    //     string currentCookies = request.getCookies();
+    //     cout << "currentCookies: " << currentCookies << endl;
+    //     cout << "request.getPrevCookies(): " << request.getPrevCookies() << endl;
+        // if (request.getCookies() != request.getPrevCookies() && request.getPrevCookies() != "")
+        //     _res_session_id = generateSessionId();
+        // else
             _res_session_id = request.getReqSessionId();
-        cout << "After cookie: " << this->getRequestCookies(request) << endl;
+    //     cout << "After cookie: " << this->getRequestCookies(request) << endl;
     }
     cout << "response _session_id: " << _res_session_id << endl;
     // res.setContent(this->getRequest().c_str(), this->getReadSize());
@@ -1084,15 +1095,23 @@ void handle_non_cgi(int client_socket, Request& req)
 
 bool Request::hasCookies()
 {
-    _cookies = this->getHeader("Cookie");
-    if (_cookies.empty())
+    string cookies = this->getHeader("Cookie");
+    cout << "has cookies function cookies: " << cookies << endl;
+    cout << "has cookies function _cookies: " << _cookies << endl;
+    cout << "has cookies function _prev_cookies: " << _prev_cookies << endl;
+    if (cookies.empty())
     {
         cout << "No cookies found" << endl;
         return (false);
     }
     else
     {
-        cout << "Cookies found: " << _cookies << endl;
+        cout << "Cookies found: " << cookies << endl;
+        if (_cookies != cookies)
+        {
+            _prev_cookies = _cookies;
+            _cookies = cookies;
+        }
         return (true);
     }
 }
@@ -1149,6 +1168,21 @@ string  extractSessionId(string& cookies)
         session_id = cookies.substr(start, end - start);
     }
     return (session_id);
+}
+
+string  extractCookies(string& request)
+{
+    string  cookies;
+    size_t start = request.find("Cookie: ");
+    if (start != string::npos)
+    {
+        start += sizeof("Cookie: ") - 1;
+        size_t end = request.find("\r\n", start);
+        if (end == string::npos)
+            end = request.size();
+        cookies = request.substr(start, end - start);
+    }
+    return (cookies);
 }
 
 
