@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 
-
 print "<html>\n";
 print "<head>\n";
 print "<title>Environment Variables</title>\n";
@@ -26,11 +25,28 @@ print "<li>REMOTE_ADDR: $ENV{REMOTE_ADDR}</li>\n";
 print "<li>SCRIPT_NAME: $ENV{SCRIPT_NAME}</li>\n";
 print "<li>SCRIPT_PATH: $ENV{SCRIPT_PATH}</li>\n";
 print "<li>HTTP_COOKIE: $ENV{HTTP_COOKIE}</li>\n";
+print "<li>HTTP_COOKIES_MAP: $ENV{HTTP_COOKIES_MAP}</li>\n";
 print "</ul>\n";
 
 
+my $session_id = "";
+if ($ENV{'REQUEST_METHOD'} eq 'POST') {
+    my $form_data = $ENV{'QUERY_STRING'};
+    $session_id = $form_data =~ /session_id=(.*?)(&|$)/ ? $1 : '';
+}
+# my $session_id = $ENV{'HTTP_COOKIES_MAP'}; # use HTTP_COOKIE instead of QUERY_STRING
+# $session_id =~ s/.*session_id=([^;]+).*/$1/;
+
+
 print "<h1>Enter session ID:</h1>\n";
-print "<form method=\"post\" action=\"hello.cgi\">\n";
-print "<input type=\"text\" name=\"session_id\" />\n";
+print "<form method=\"post\" action=\"hello\">\n";
+print "<input type=\"text\" name=\"session_id\" value=\"$session_id\"/>\n";
 print "<input type=\"submit\" value=\"Submit\" />\n";
+
+if ($session_id) {
+    print "<h1>Session ID submitted:</h1>\n";
+    print "<p>$session_id</p>\n";
+}
 print "</form>\n";
+print "</html>\n";
+

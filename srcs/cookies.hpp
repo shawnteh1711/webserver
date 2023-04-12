@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 19:28:36 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/12 17:06:26 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/12 23:00:44 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ class Request
         map<string, string>             _key_value;
         vector<char*>                   _envp2;
         string                          _req_session_id;
-        map<string, string>             _session_cookies;
+        static map<string, string>      _session_cookies;
 
     public:
         Request();
@@ -100,6 +100,7 @@ class Request
         map<string, string>    getKeyValueBody() const;
         string  getReqSessionId() const;
         string  getPrevCookies() const;
+        map<string, string>    getSessionCookies() const;
 };
 
 class Response
@@ -126,6 +127,8 @@ class Response
         string                  _cookies;
         map<string, string>     _headers;
         string                  _res_session_id;
+        string                  _entered_session_id;
+        string                  _ret_cookies;
 
         static string           getReasonPhrase(int code);
 

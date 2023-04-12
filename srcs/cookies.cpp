@@ -1,6 +1,7 @@
 #include "cookies.hpp"
 
 string  Request::_prev_cookies = "";
+map<string, string> Request::_session_cookies;
 
 Request::Request() : _request()
 {
@@ -16,106 +17,53 @@ Request::Request(const string& request, const string & cgi_path)
     return ;
 }
 
-// Request::Request(const string& request, const string & cgi_path, const string & cookies)
-// 	: _request(request), _cgi_path(cgi_path), _cookies(cookies)
-// {
-//     cout << RED <<  "cgi_path: " << _cgi_path << endl;
-//     cout << RED << "_prev_cookies: " << _prev_cookies << endl;
-//     cout << RED << "_cookies: " << _cookies << RESET << endl;
-//     bool    result;
-
-//     result = compare_cookies(_cookies, _prev_cookies);
-//     cout << RED << "result: " << result << RESET << endl;
-//     if (result && _cookies != "")
-//     {
-       
-//         cout << RED << "generateSessionId" << RESET << endl;
-//         _req_session_id = generateSessionId();
-//     }
-//     else if (!result && _cookies != "")
-//     {
-//         cout << RED << "extractSessionid" << RESET << endl;
-//         _req_session_id = extractSessionId(_cookies);
-
-//     }
-//     // else
-//     //     _req_session_id = "";
-//     _prev_cookies = _cookies;
-//     cout << "_req_session_id: " << _req_session_id << endl;
-//     cout << YELLOW << "_prev_cookies: " << _prev_cookies << endl;
-//     cout << YELLOW << "_cookies: " << _cookies << endl;
-//     this->ParseReqBody();
-//     this->is_cgi_request();
-//     return ;
-// }
-
 Request::Request(const string& request, const string & cgi_path, string & cookies)
 	: _request(request), _cgi_path(cgi_path), _cookies(cookies)
 {
-    istringstream iss(cookies);
-    string           cookie;
-    bool session_id_found = false;
-    bool    result;
-    
+    istringstream       iss(_cookies);
+    string              cookie;
+    bool                session_id_found = false;
+    bool                result;
+    string              session_id;
 
-    cout << RED << "cookies: " << cookies << RESET << endl;
     while (getline(iss, cookie, ';'))
     {
-            cookie.erase(0, cookie.find_first_not_of(' '));
-            cookie.erase(cookie.find_last_not_of(' ') + 1);
+        cookie.erase(0, cookie.find_first_not_of(' '));
+        cookie.erase(cookie.find_last_not_of(' ') + 1);
 
-            istringstream   cookieIss(cookie);
-            string          cookieName, cookieValue;
-            if (getline(cookieIss, cookieName, '=') && getline(cookieIss, cookieValue))
+        istringstream   cookieIss(cookie);
+        string          cookieName, cookieValue;
+        if (getline(cookieIss, cookieName, '=') && getline(cookieIss, cookieValue))
+        {
+            result = compare_cookies(_cookies, _prev_cookies);
+            cout << "_cookies: " << _cookies << endl;
+            cout << "_prev_cookies: " << _prev_cookies << endl;
+            cout << "result: " << result << endl;
+            if (cookieName == "session_id" && !result)
             {
-                cout << "prev: " << _prev_cookies << endl;
-                cout << "_session_cookies: " << _session_cookies[_req_session_id] << endl;
-                result = compare_cookies(_session_cookies[_req_session_id], _prev_cookies);
-                cout << "result:  "    << result << endl;
-                cout << "cookieName: " << cookieName << endl;
-                if (cookieName == "session_id" && result)
+                session_id_found = true;
+                _req_session_id = "";
+            }
+            else
+            {
+                cout << "_ccokies: " << _cookies << endl;
+                if (!session_id_found && result)
                 {
-                    cout << RED << "enter 1" << endl;
+                    session_id = generateSessionId();
+                    _session_cookies[session_id] = _cookies; 
+                    // _session_cookies.insert(make_pair(session_id, _cookies));
                     session_id_found = true;
-                    _req_session_id = cookieValue;
-                    _session_cookies[cookieValue] = cookie;
-                }
-                else
-                {
-                    cout << GREEN << "enter 2" << endl;
-                    if (!session_id_found)
-                    {
-                        string session_id = generateSessionId();
-                        _session_cookies[session_id] = "session_id=" + session_id;
-                        session_id_found = true;
-                        _req_session_id = session_id;
-                    }
-                    _session_cookies[_req_session_id] += "; " + cookie;
+                    _req_session_id = session_id;
+                    _prev_cookies = _cookies;
                 }
             }
+        }
     }
-
     printMap(_session_cookies);
-    if (_session_cookies.find(_req_session_id) != _session_cookies.end())
-        _prev_cookies = _session_cookies[_req_session_id];
-    else
-        _prev_cookies = "";
-    cout << "prev_cookies: " << _prev_cookies << endl;
-
-    // bool    result;
-    // result = compare_cookies(_session_cookies[_req_session_id], _prev_cookies);
-    // if (result && _session_cookies[_req_session_id] != "")
-    //     _req_session_id = generateSessionId();
-    // else if (!result && _session_cookies[_req_session_id] != "")
-    //     _req_session_id = extractSessionId(_session_cookies[_req_session_id]);
-    
     this->ParseReqBody();
     this->is_cgi_request();
     return ;
 }
-
-
-
 
 Request::Request(string& request, int num_read)
 {
@@ -523,8 +471,7 @@ string  Response::restoString() const
         oss << it->first << ": " << it->second << "\r\n";
     }
     oss << "\r\n";
-    if (_res_session_id != "")
-        oss << "hello, user with session_id: " << _res_session_id << "\r\n";
+    oss << "hello, user with session_id: " << _res_session_id << "\r\n";
     oss << _content;
     return (oss.str());
 }
@@ -644,6 +591,11 @@ void Request::setEnvp()
     env_vars.push_back("SCRIPT_PATH=" + _path_info);
     env_vars.push_back("HTTP_COOKIE=" + this->getCookies());
 
+    string session_cookies;
+    for (map<string, string>::const_iterator it = _session_cookies.begin(); it != _session_cookies.end(); ++it)
+        session_cookies += it->first + "=" + it->second + ";";
+    env_vars.push_back("HTTP_COOKIES_MAP=" + session_cookies);
+
     vector<char*> envp2(env_vars.size() + 1, NULL);
 
     for (int i = 0; i < (int)env_vars.size(); i++)
@@ -739,6 +691,13 @@ void    Request::printEnvp() const
     }
 }
 
+map<string, string>    Request::getSessionCookies() const
+{
+    return (_session_cookies);
+}
+
+
+
 char** Request::handleArgs()
 {
     vector<string>              commandArgs;
@@ -814,26 +773,41 @@ void    Response::sendCgiResponse(Request& request, int client_socket, const cha
     int         bytes_sent;
     size_t      addCount;
 
+    addCount = 0;
+    _entered_session_id = "";
     setStatusCode(200);
     setContentType("text/html");
-    addCount = 0;
-    (void)request;
     if (request.getCookies() != "" && request.getReqSessionId() != "")
     {
-        // setHeader("Set-Cookie", this->getReqmakeuestCookies(request));
-    //     string currentCookies = request.getCookies();
-    //     cout << "currentCookies: " << currentCookies << endl;
-    //     cout << "request.getPrevCookies(): " << request.getPrevCookies() << endl;
-        // if (request.getCookies() != request.getPrevCookies() && request.getPrevCookies() != "")
-        //     _res_session_id = generateSessionId();
-        // else
-            _res_session_id = request.getReqSessionId();
-            cout << "res_session_id: " << _res_session_id << endl;
-    //     cout << "After cookie: " << this->getRequestCookies(request) << endl;
-            addCount = strlen("hello, user with session_id: ") + _res_session_id.length() + 2; // add 2 for "\r\n"
+        _res_session_id = request.getReqSessionId();
+        cout << "res_session_id: " << _res_session_id << endl;
+        addCount = strlen("hello, user with session_id: ") + _res_session_id.length() + 2; // add 2 for "\r\n"
     }
-    // res.setContent(this->getRequest().c_str(), this->getReadSize());
-    // setContent(buffer, count);
+    if (request.getReqBody() != "")
+    {
+        size_t pos = request.getReqBody().find("session_id=");
+        if (pos != string::npos)
+        {
+            _entered_session_id = request.getReqBody().substr(pos + strlen("session_id="));
+        }
+        addCount += _entered_session_id.length() + 2; // add 2 for "\r\n"
+        addCount += strlen("<h1>Session ID submitted:</h1>\n");
+        addCount += strlen("<p>$session_id</p>\n");
+        map<string, string> session_cookies_map = request.getSessionCookies();
+        string session_cookie;
+        printMap(session_cookies_map);
+        if (session_cookies_map.find(_entered_session_id) != session_cookies_map.end())
+        {
+            cout << "found" << endl;
+            session_cookie = session_cookies_map[_entered_session_id];
+        }
+        else
+        {
+            cout << "not found" << endl;
+            session_cookie = "";
+        }
+        cout << "session_cookie: " << session_cookie << endl;
+    }
     setContent(buffer, count + addCount);
     // res.printCookies();
     response_str = restoString();
