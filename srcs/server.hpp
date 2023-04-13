@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/11 20:25:13 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/13 14:25:55 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 //#define BUF_SIZE	1048576
 //#define BUF_SIZE	10
 #define BUF_SIZE	1024
-#define LIMIT_SIZE	1000 // for limit client body size
+#define ONE_MB	1024 // for limit client body size
 
 typedef struct s_server
 {

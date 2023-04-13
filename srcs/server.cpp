@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/12 16:19:05 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/13 14:26:08 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ Server::Server(vector<Server_Detail> & d_servers)
 	: servers(d_servers), total(d_servers.size()), _sockfds(total),
 	_clientfd(), _serverMsg(buildResponse()), _socketAddrs(total), 
 	_socketAddr_len(sizeof(_socketAddrs[0])), _pwd(getenv("PWD")), _host(),
-	_one_mb(1024), _limit_size(_one_mb), _index(0),
+	_one_mb(ONE_MB), _limit_size(_one_mb), _index(0),
 	tracker(new vector<int>[total]), s_t()
 {
 //	cout << "seervers: " << total << endl;
@@ -695,6 +695,16 @@ void	Server::copyFiles(string &file_path, string &root_path)
 	cout << "root_path: " << root_path << endl;
 	FILE* source = fopen(file_path.c_str(), "rb");
 	FILE* dest = fopen(root_path.c_str(), "ab");
+	if (dest == NULL)
+	{
+		cout << "dest is NULL" << endl;
+		return ;
+	}
+	if (source == NULL)
+	{
+		cout << "source is NULL" << endl;
+		return ;
+	}
 	if (source == NULL || dest == NULL)
 	{
 		printf("Failed to open files for copying.\n");
