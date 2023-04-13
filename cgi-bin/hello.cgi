@@ -33,6 +33,7 @@ print "<li>HTTP_COOKIES_MAP: <br><br><table>\n";
 print "<tr><th>Session ID</th><th style='text-align: right;'>Values</th></tr>\n";
 
 my $values = "";
+my $session_id = "";
 
 my $http_cookies_map = $ENV{'HTTP_COOKIES_MAP'};
 my @cookies = split /\n/, $http_cookies_map;
@@ -44,25 +45,30 @@ foreach my $cookie (@cookies) {
 print "</table></li>\n";
 print "</ul>\n";
 
-
-my $session_id = "";
-if ($ENV{'REQUEST_METHOD'} eq 'POST') {
-    my $form_data = $ENV{'HTTP_COOKIES_MAP'};
-    $session_id = $form_data =~ /session_id=(.*?)(&|$)/ ? $1 : '';
-}
-$session_id = $ENV{'HTTP_COOKIES_MAP'}; # use HTTP_COOKIE instead of QUERY_STRING
-$session_id =~ s/.*session_id=([^;]+).*/$1/;
-
-
 print "<h1>Enter session ID:</h1>\n";
 print "<form method=\"post\" action=\"hello\">\n";
 print "<input type=\"text\" name=\"session_id\" value=\"$session_id\"/>\n";
 print "<input type=\"submit\" value=\"Submit\" />\n";
 
-if ($session_id) {
-    print "<h1>Session ID submitted:</h1>\n";
-    print "<p>$session_id</p>\n";
-}
+# if ($session_id)
+# {
+#     print "<h1>Session ID submitted:</h1>\n";
+#     print "<p>$session_id</p>\n";
+#     foreach my $cookie (@cookies)
+#     {
+#         my ($cookie_session_id, $cookie_value) = split /:/, $cookie;
+#         if ($cookie_session_id eq $session_id)
+#         {
+#             print "<ul>\n";
+#             my @values = split /,/, $cookie_value;
+#             foreach my $value (@values) {
+#                 print "<li>$value</li>\n";
+#             }
+#             print "</ul>\n";
+            
+#         }
+#     }
+# }
 print "</form>\n";
 print "</html>\n";
 

@@ -3,8 +3,6 @@ while true; do
     echo "Enter command to execute:"
     read command
 
-
-    #404
     if [ "$command" == "exit" ]; then
         break
     elif [ "$command" == "404" ]; then

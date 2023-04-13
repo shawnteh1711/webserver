@@ -37,26 +37,21 @@ Request::Request(const string& request, const string & cgi_path, string & cookie
         if (getline(cookieIss, cookieName, '=') && getline(cookieIss, cookieValue))
         {
             result = compare_cookies(_cookies, _prev_cookies);
-            cout << "_cookies: " << _cookies << endl;
-            cout << "_prev_cookies: " << _prev_cookies << endl;
-            cout << "result: " << result << endl;
-            cout << "cookieName: " << cookieName << endl;
             if (cookieName == "session_id" && !result)
             {
                 session_id_found = true;
                 _req_session_id = "";
+                _prev_cookies = _cookies;
             }
             else
             {
                 if (!session_id_found && result)
                 {
                     session_id = generateSessionId();
-                    cout << "generate again: " << session_id << endl;
                     _session_cookies[session_id] = _cookies + ";"; 
                     // _session_cookies.insert(make_pair(session_id, _cookies));
                     session_id_found = true;
                     _req_session_id = session_id;
-                    _prev_cookies = _cookies;
                 }
             }
         }
@@ -93,7 +88,6 @@ void    Request::ParseReqBody()
     if (black_line_index != string::npos)
     {
         _req_body = _request.substr(black_line_index + 4);
-        cout << "post_body: " << _req_body << endl;
         if (_req_body.find("&") == string::npos && _req_body.find('=') == string::npos)
         {
             _key_value["value"] = _req_body;;
@@ -111,11 +105,11 @@ void    Request::ParseReqBody()
             }
             // _key_value[key_value2[0]] = key_value2[1];
         }
-        map<string, string>::iterator _key_value_it;
-        for (_key_value_it = _key_value.begin(); _key_value_it != _key_value.end(); _key_value_it++)
-        {
-            cout << "key: " << _key_value_it->first << " value: " << _key_value_it->second << endl;
-        }
+        // map<string, string>::iterator _key_value_it;
+        // for (_key_value_it = _key_value.begin(); _key_value_it != _key_value.end(); _key_value_it++)
+        // {
+        //     cout << "key: " << _key_value_it->first << " value: " << _key_value_it->second << endl;
+        // }
     }
     else
     {
@@ -154,7 +148,6 @@ bool    Request::isCgiRequest() const
     size_t uri_pos;
     size_t cgi_pos;
 
-    cout << _request << endl;
     method_pos = _request.find("POST");
     if (method_pos == string::npos)
         return (false);
@@ -197,11 +190,7 @@ bool Request::is_cgi_request()
     size_t          dot_pos;
 
     val = false;
-    // it keep running?
-    cout << GREEN << "request: " << _request << endl;
-	cout << CYAN << "Enter is cgi-request" << endl;
     uri = getRequestUrl();
-    cout << "uri: " << uri << endl;
     dot_pos = uri.rfind('.');
     if (dot_pos != string::npos)
     {
@@ -217,8 +206,6 @@ bool Request::is_cgi_request()
             }
         }
     }
-	cout << RESET << endl;
-    cout << "val: " << val << endl;
     return (val);
 }
 
@@ -231,7 +218,6 @@ string  Request::getRequestUrl() const
     string  url;
     size_t  header_end_pos;
 
-    // cout << "Request:" << _request << endl;
     space_pos = _request.find(' ');
     if (space_pos != string::npos)
     {
@@ -241,7 +227,6 @@ string  Request::getRequestUrl() const
             header_end_pos = _request.find("\r\n");
             if (header_end_pos != string::npos)
             {
-                // query_pos = _request.find('?');
                 query_pos = _request.substr(0, header_end_pos).find('?');
                 if (query_pos != string::npos)
                 {
@@ -372,7 +357,6 @@ string    Request::setCgiPath()
     _pwd = getenv("PWD");
     const char* cgi_bin_path = "/cgi-bin/";
     _path_info = _pwd + cgi_bin_path + this->parseRequestedFile();
-    cout << "path_info: " << _path_info << endl;
     return (_path_info);
 }
 
@@ -466,6 +450,7 @@ string  Response::restoString() const
     oss << "Content-Type: " << _content_type << "\r\n";
     // if (_res_session_id != "")
     //     oss << "Set-Cookie: session_id=" + _res_session_id + " ; HttpOnly\r\n";
+    // oss << "Set-Cookie:  " + this->getRequestCookies() + "\r\n";
     // oss << "Set-Cookie: session_id=" + _res_session_id + " ; HttpOnly\r\n";
     oss << "Content-Length: " << _content.length() << "\r\n";
     for (it = _headers.begin(); it != _headers.end(); ++it)
@@ -780,7 +765,8 @@ void    Response::sendCgiResponse(Request& request, int client_socket, const cha
     _entered_session_id = "";
     setStatusCode(200);
     setContentType("text/html");
-    (void)request; // all this ok after comment
+    if (request.hasCookies())
+        setHeader("Set-Cookie", request.getCookies());
     if (request.getCookies() != "" && request.getReqSessionId() != "")
     {
         _res_session_id = request.getReqSessionId();
@@ -792,42 +778,27 @@ void    Response::sendCgiResponse(Request& request, int client_socket, const cha
         size_t pos = request.getReqBody().find("session_id=");
         if (pos != string::npos)
         {
+            map<string, string> session_cookies_map;
+            
+            session_cookies_map = request.getSessionCookies();
             _entered_session_id = request.getReqBody().substr(pos + strlen("session_id="));
+            addCount += _entered_session_id.length() + 2; // add 2 for "\r\n"
+            // addCount += strlen("<h1>Session ID submitted:</h1>\n");
+            // addCount += strlen("<p>$session_id</p>\n");
+            printMap(session_cookies_map);
+            _entered_session_id.resize(16);     
+            if (session_cookies_map.find(_entered_session_id) != session_cookies_map.end())
+                _ret_cookies = session_cookies_map[_entered_session_id];
+            cout << "session_cookie: " << _ret_cookies << endl;
         }
-        cout << "entered_session_id: " << _entered_session_id.length() << endl;
-        cout << "addCount: " << addCount << endl;
-        addCount += _entered_session_id.length() + 2; // add 2 for "\r\n"
-        cout << "addCount: " << addCount << endl;
-        // addCount += strlen("<h1>Session ID submitted:</h1>\n");
-        // addCount += strlen("<p>$session_id</p>\n");
-        // map<string, string> session_cookies_map = request.getSessionCookies();
-        // string session_cookie;
-        // printMap(session_cookies_map);
-        // cout << "entered_session_id: " << _entered_session_id << endl;
-        // if (session_cookies_map.count(_entered_session_id) > 0)
-        // {
-        //     // cout << "found" << endl;
-
-        // }
-        // else
-        // {
-        //     //a2c80a9b775679e9
-        //     //9543925a30990edf
-        //     // cout << "not found" << endl;
-        // }
-        // if (session_cookies_map.find(_entered_session_id) != session_cookies_map.end())
-        // {
-        //     // cout << "found" << endl;
-        //     session_cookie = session_cookies_map[_entered_session_id];
-        // }
-        // else
-        // {
-        //     // cout << "not found" << endl;
-        //     session_cookie = "";
-        // }
-        // cout << "session_cookie: " << session_cookie << endl;
     }
-    setContent(buffer, count + addCount);
+    if (_ret_cookies != "")
+    {
+        string content = string(buffer, count) + _ret_cookies;
+        setContent(content.c_str(), content.length());
+    }
+    else
+        setContent(buffer, count + addCount);
     // res.printCookies();
     response_str = restoString();
     bytes_sent = send(client_socket, response_str.c_str(), response_str.size(), 0);
@@ -1174,17 +1145,12 @@ void handle_non_cgi(int client_socket, Request& req)
 bool Request::hasCookies()
 {
     string cookies = this->getHeader("Cookie");
-    cout << "has cookies function cookies: " << cookies << endl;
-    cout << "has cookies function _cookies: " << _cookies << endl;
-    cout << "has cookies function _prev_cookies: " << _prev_cookies << endl;
     if (cookies.empty())
     {
-        cout << "No cookies found" << endl;
         return (false);
     }
     else
     {
-        cout << "Cookies found: " << cookies << endl;
         if (_cookies != cookies)
         {
             _prev_cookies = _cookies;
@@ -1293,13 +1259,15 @@ bool    compare_cookies(const string& cookies, const string& prev_cookies)
             prev_cookies_map[key] = value;
         }
     }
-
     if (cookies_map.size() != prev_cookies_map.size())
         return (true);
     for (map<string, string>::const_iterator it = cookies_map.begin(); it != cookies_map.end(); it++)
     {
         if (it->first != "session_id" && prev_cookies_map[it->first] != it->second)
+        {
+            cout << "enter here " << endl;
             return (true);
+        }
     }
     return (false);
 }

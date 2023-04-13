@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/20 12:53:24 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/12 16:12:40 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/13 15:58:52 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,7 @@ void    printMap(map<T, U> & pmap)
     while (it != pmap.end())
     {
         cout << YELLOW << it->first << " : " << it->second << RESET << endl;
+        cout << "first size" << it->first.length() << endl;
         it++;
     }
 }
