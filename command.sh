@@ -1,6 +1,15 @@
 #!bin/sh
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
 while true; do
-    echo "Enter command to execute:"
+	echo -e "${YELLOW}"
+	echo "COMMAND LIST:"
+	echo "exit | 404 | 400 | 405 | 500 | get | post | upload | delete"
+	echo "limit | cgi get | cgi post | cgi get loop | siege"
+    echo -e "${CYAN}Enter command to execute:"
+	echo -e "${NC}"
     read command
 
     if [ "$command" == "exit" ]; then
@@ -64,7 +73,7 @@ while true; do
     elif [ "$command" == "post" ]; then
         curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something shorter or longer than body limit" http://localhost:1024/home --output -
     elif [ "$command" == "upload" ]; then
-        curl -d "file=/Users/steh/Documents/own_folder/webserver/test.txt" localhost:1024/upload
+        curl -d "file=test.txt" localhost:1024/upload
     elif [ "$command" == "delete" ] ; then
         curl -X DELETE localhost:1024/test.txt
     elif [ "$command" == "limit" ]; then
@@ -75,7 +84,9 @@ while true; do
         curl -X POST http://localhost:1024/hello\?name=shawn --output -
     elif [ "$command" == "siege" ] ; then
         ./siege/bin/siege -b http://localhost:1024/empty
+	elif [ "$command" == "cgi get loop" ]; then
+		bash cgitest.sh
     else
-        echo "Invalid command."
+        echo -e "${RED}Invalid command.${NC}"
     fi
 done

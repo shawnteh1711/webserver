@@ -74,7 +74,7 @@ Directive parseDirective(string& line, int lineNum) // i think here got issue
         line.clear();
     }
     directive.args.push_back(line);
-	cout << RESET << endl;
+	cout << RESET;
     return (directive);
 }
 

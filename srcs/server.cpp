@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/13 14:26:08 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/13 16:42:43 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1207,7 +1207,6 @@ int		Server::checkPort(vector<Server_Detail> & servers, string & defaultport)
 	int findefault = 0;
 	while (it != ite)
 	{
-		cout << it->port << endl;
 		if ((it->port == "" || defaultport == it->port || !is_digits(it->port)) && findefault)
 		{
 			servers.erase(it);
