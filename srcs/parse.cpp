@@ -1,4 +1,16 @@
-#include "parse8.hpp"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parse.cpp                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/04/13 20:29:55 by leng-chu          #+#    #+#             */
+/*   Updated: 2023/04/13 20:40:04 by leng-chu         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "parse.hpp"
 
 string trimLine(const string &str)
 {
@@ -19,9 +31,7 @@ vector<string> splitLine(string str, char delimiter)
     stringstream    ss(str);
     string          token;
     while (getline(ss, token, delimiter))
-    {
         result.push_back(token);
-    }
     return (result);
 }
 
@@ -59,22 +69,13 @@ Directive parseDirective(string& line, int lineNum) // i think here got issue
     }
     else
     {
-		cout << "line: " << line << endl;
-		cout << "line size: " << line.size() << endl;
-		cout << "line num: " << lineNum << endl;
-        //if ((line.size() > 0) && line.back() == ';') // <---- got issue
         if (line.back() == ';') // <---- got issue
-		{
             line = line.substr(0, line.size() - 1);
-		}
         if (line == "internal")
-		{
             directive.directive = "internal";
-		}
         line.clear();
     }
     directive.args.push_back(line);
-	cout << RESET;
     return (directive);
 }
 
@@ -106,9 +107,7 @@ vector<Directive> parseBlock(ifstream& file, int& lineNum, Directive& parentDire
         if (line[0] == '}')
         {
             if (blockStack.empty())
-            {
                 throw runtime_error("Unmatched closing brace on line " + to_string(lineNum));
-            }
             currentBlock = blockStack.top();
             blockStack.pop();
             if (parentDirective.directive == "http")
@@ -132,7 +131,6 @@ vector<Directive> parseBlock(ifstream& file, int& lineNum, Directive& parentDire
         // handle location
         if (blockStart != string::npos)
         {
-
             directive = parseDirective(line, lineNum);
             directive.block = parseBlock(file, lineNum, directive);
         }
@@ -333,8 +331,6 @@ Server_Detail Config::createServer(const Directive& directive)
 
             for (nested_directive_it = block_directive_it->block.begin(); nested_directive_it != block_directive_it->block.end(); ++nested_directive_it)
             {
-                // if (nested_directive_it->directive == "autoindex")
-                //     new_server.autoIndex = nested_directive_it->args[0];
                 if (nested_directive_it->directive == "autoindex" && nested_directive_it->args[0] == "on")
                         new_server.urlIndexOn.push_back(location_directive.args[0]);
                 if (nested_directive_it->directive == "limit_except")
@@ -369,7 +365,6 @@ void    Config::printServer(vector<Server_Detail>& servers)
         cout << endl;
         cout << "\troot " << server_it->root << ";" << endl;
         cout << "\tindex " << server_it->index << ";" << endl;
-        // cout << "\tautoindex " << server_it->autoIndex << ";" << endl;
         cout << "\treturn  " << server_it->redirection << ";" << endl;
 
         cout << RESET << BLUE;
@@ -394,18 +389,13 @@ void	Server_Detail::search(string search)
     string	location;
 	string	value;
 
-	// cout << RED << "Server: " << this->id << endl;
 	for (multimap<string, multimap<string, string> >::iterator mit = this->mylocations.begin(); mit != this->mylocations.end(); ++mit)
 	{
-		// cout << RED << "Location: " << mit->first << endl;
 		for (multimap<string, string>::iterator sit = mit->second.begin(); sit != mit->second.end(); ++sit)
 		{
-			// cout << RED << "Directive: " << sit->first << ", Argument: " << sit->second << RESET<< endl;
 			if (sit->first == search)
 			{
 				location = mit->first;
-				// cout << RED << "Location: " << mit->first << endl;
-				// cout << RED << "Directive:|" << sit->first << "|, Argument: " << sit->second << RESET<< endl;
 				value = sit->second;
 	            urlSearch.insert(make_pair(location, value));
 			}
