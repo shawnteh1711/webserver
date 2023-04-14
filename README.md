@@ -39,6 +39,53 @@ Steps to build a web server in C++99,
 5. Send HTTP response: Send the HTTP response back to the client over the socket connection.
 6. Close the socket connection: When the response has been sent, close the socket connection with the client.
 
+# What is HTTP Server?
+
+[![http server](https://www.oreilly.com/api/v2/epubs/9781789349863/files/assets/5d678947-2cad-44df-a4a4-5e78fd50fb52.png)](image)
+An HTTP server is a software program that runs on a computer and is responsible for handling incoming requests from clients over the HTTP (Hypertext Transfer Protocol) protocol. The server processes these requests and sends back the requested resources or data to the client in the form of an HTTP response. Typically, HTTP servers are used to host and serve websites, web applications, and other digital content over the internet. Examples of popular HTTP servers include Apache, Nginx, and Microsoft IIS. HTTP servers typically listen on a designated TCP port (usually port 80 or 443 for secure connections) and are accessed by clients using a web browser or other HTTP client software.<br>
+[More info on http server](https://medium.com/@gabriellamedas/the-http-server-explained-c41380307917)
+
+# I/O Multiplexing
+. It's a system call that allows a program to monitor multiple file descriptors for events, such as incoming data or a connection being closed, without blocking. This enables the program to efficiently handle I/O operations on multiple sockets or files at the same time, improving performance and scalability. Other forms of I/O multiplexing include select() and epoll(), which serve similar purposes but with different performance characteristics and limitations. We are using poll() for our webserv project.
+
+# How poll work - Our poll workflow
+
+![poll workflow](https://user-images.githubusercontent.com/83198556/231974162-bac78efc-cedc-4ed6-8fe0-9e5594aed7b8.jpg)
+
+# How to manage multiple servers to read and write
+Using loops. 
+
+# explain The select() (or equivalent) should be in the main loop and should check file descriptors for read and write AT THE SAME TIME. 
+Refer to our poll workflow picture for the main loop. 
+<img width="935" alt="Screenshot 2023-04-14 at 15 33 21" src="https://user-images.githubusercontent.com/83198556/231975836-a256222f-b958-490a-a294-8a43a1aebb80.png">
+
+
+# only one read or one write per client per select() (or equivalent). show you the code from the select() (or equivalent) to the read and write of a client.<img width="650" alt="Screenshot 2023-04-14 at 15 40 05" src="https://user-images.githubusercontent.com/83198556/231977317-17970fea-12db-49ec-aff3-9795e6abd125.png">
+
+# Search for all read/recv/write/send on a socket and check that, if an error is returned, the client is removed.
+<img width="955" alt="Screenshot 2023-04-14 at 15 53 33" src="https://user-images.githubusercontent.com/83198556/231980807-dee1c343-2d10-4c12-9d12-6025c652b629.png">
+
+# The project must compile without any re-link issue. If not, use the 'Invalid compilation' flag.
+it will output "make: Nothing to be done for `all'." on 2nd attempt after first success atempt "make"
+
+# Setup routes in a server to different directories.
+root outside location is known as global root in our own configuration format. Set root path to main directory for a server
+
+# If errno is checked after read/recv/write/send, the grade is 0 and the evaluation process ends now
+```c++
+if (bytesSent == -1)
+		N_MY::msg("Error sending response to client");
+	else if (bytesSent == 0)
+		N_MY::msg("Server closed the connection with the client");
+	else
+		N_MY::msg("Server sent a response to the client\n\n");
+```
+# Writing or reading ANY file descriptor without going through the select() (or equivalent) is strictly FORBIDDEN.
+Our recv and send is after poll(). Refer to our poll workflow
+
+# Setup a default file to search for if you ask for a directory.
+It will show index file by default. In our configuration, keyword "index" is our default file. 
+
 # Socket
 In networking, a socket is a software endpoint that enables communication between two networked devices. It is an abstration layer that provides a consistent interface for communication over different type of networks, such as internet or a local area network(LAN).
 
