@@ -6,12 +6,9 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/20 12:53:24 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/13 15:58:52 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/13 20:37:35 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-// this header contains all libraries and using std. easy to track.
-// our files only need to include this file once enough.
 
 #ifndef LIB_HPP
 # define LIB_HPP
@@ -32,7 +29,7 @@
 #include <map>
 #include <fcntl.h>
 #include <dirent.h> //  for dirent struct autoindex
-#include <filesystem> // check if file is existing
+#include <filesystem>
 #include <sstream> //isstringstream
 
 #define RESET   "\033[0m"
@@ -48,9 +45,8 @@ using namespace std;
 
 #define PWD getenv("PWD")
 
-// make a template function to print map
 template<typename T, typename U>
-void    printMap(map<T, U> & pmap)
+void printMap(map<T, U> & pmap)
 {
     cout << YELLOW << "map size: " << pmap.size() << RESET << endl;
     typename std::map<T, U>::iterator it = pmap.begin();
@@ -63,7 +59,7 @@ void    printMap(map<T, U> & pmap)
 }
 
 template<typename T, typename U>
-void    printMap(multimap<T, U> & pmap)
+void printMap(multimap<T, U> & pmap)
 {
     cout << YELLOW << "map size: " << pmap.size() << RESET << endl;
     typename std::multimap<T, U>::iterator it = pmap.begin();

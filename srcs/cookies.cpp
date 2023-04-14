@@ -8,7 +8,6 @@ Request::Request() : _request()
     return ;
 }
 
-// do you put this in your other than cgi request
 Request::Request(const string& request, const string & cgi_path)
 	: _request(request), _cgi_path(cgi_path)
 {
@@ -49,7 +48,6 @@ Request::Request(const string& request, const string & cgi_path, string & cookie
                 {
                     session_id = generateSessionId();
                     _session_cookies[session_id] = _cookies + ";"; 
-                    // _session_cookies.insert(make_pair(session_id, _cookies));
                     session_id_found = true;
                     _req_session_id = session_id;
                 }
@@ -103,13 +101,7 @@ void    Request::ParseReqBody()
             {
                 _key_value[key_value2[0]] = key_value2[1];
             }
-            // _key_value[key_value2[0]] = key_value2[1];
         }
-        // map<string, string>::iterator _key_value_it;
-        // for (_key_value_it = _key_value.begin(); _key_value_it != _key_value.end(); _key_value_it++)
-        // {
-        //     cout << "key: " << _key_value_it->first << " value: " << _key_value_it->second << endl;
-        // }
     }
     else
     {
@@ -200,7 +192,6 @@ bool Request::is_cgi_request()
         {
             if (getEntensionType(_extension) == static_cast<cgi_extension>(i))
             {
-                // if (uri.find("/cgi-bin/") != std::string::npos) 
                 val = true;
                 break;
             }
@@ -253,19 +244,6 @@ string  Request::getMethod() const
         return "";
     return (_request.substr(0, method_pos));
 }
-
-// string  Request::getQueryString() const
-// {
-//     size_t query_pos = _request.find("?");
-//     if (query_pos == string::npos)
-//         return "";
-
-//     size_t end_query_pos = _request.find(" ", query_pos + 1);
-//     if (end_query_pos == string::npos)
-//         return "";
-
-//     return _request.substr(query_pos + 1, end_query_pos - query_pos - 1);
-// }
 
 void    Request::setQuery(string& query)
 {
@@ -404,13 +382,11 @@ string Request::parseRequestedFile()
     path_start = _request.find(" ");
     header_end = _request.find("\r\n");
     path_end = _request.substr(0, header_end).find('?');
-    // path_end = _request.find("?", path_start + 1);
     if (path_end == string::npos)
         path_end = _request.find(" ", path_start + 1);
     if (path_end == string::npos)
         return "";
     string path = _request.substr(path_start + 1, path_end - path_start - 1);
-    // cout << RED << "path: " << path << endl;
     if (path.front() == '/')
         cgi_file = path.erase(0, 1);
     if (path.find("cgi-bin/") != string::npos)
@@ -419,12 +395,6 @@ string Request::parseRequestedFile()
         if (cgi_file.back() == '/')
             cgi_file.pop_back();
     }
-    // else
-    // {
-    //     cout << "Request is not a CGI request" << endl;
-    // }
-    // cout << BLUE << "cgi_file: " << cgi_file << endl;
-    // cout << RESET << endl;
     return (cgi_file);
 }
 
@@ -448,17 +418,12 @@ string  Response::restoString() const
     ostringstream   oss;
     oss << "HTTP/1.1 " << _status_code << " " << getReasonPhrase(_status_code) << "\r\n";
     oss << "Content-Type: " << _content_type << "\r\n";
-    // if (_res_session_id != "")
-    //     oss << "Set-Cookie: session_id=" + _res_session_id + " ; HttpOnly\r\n";
-    // oss << "Set-Cookie:  " + this->getRequestCookies() + "\r\n";
-    // oss << "Set-Cookie: session_id=" + _res_session_id + " ; HttpOnly\r\n";
     oss << "Content-Length: " << _content.length() << "\r\n";
     for (it = _headers.begin(); it != _headers.end(); ++it)
     {
         oss << it->first << ": " << it->second << "\r\n";
     }
     oss << "\r\n";
-    // oss << "hello, user with session_id: " << _res_session_id << "\r\n";
     oss << _content;
     return (oss.str());
 }
@@ -479,7 +444,6 @@ int create_server_socket()
 {
     int server_socket;
 
-    // struct sockaddr_in server_address;
     struct sockaddr_in server_address;
 
     // configure server address
@@ -595,57 +559,6 @@ void Request::setEnvp()
     _envp2 = envp2;
 }
 
-
-// void Request::setEnvp()
-// {
-//     string request_method = "REQUEST_METHOD=" + this->getMethod();
-//     string query_string = "QUERY_STRING=" + this->getQueryString();
-//     string content_type = "CONTENT_TYPE=" + this->getHeader("Content-Type");
-//     string content_length = "CONTENT_LENGTH=" + this->getHeader("Content-Length");
-//     string remote_addr = "REMOTE_ADDR=" + this->getAddress();
-//     string script_name = "SCRIPT_NAME=" + this->parseRequestedFile();
-//     string script_path = "SCRIPT_PATH=" + _path_info;
-//     string cookies = "HTTP_COOKIE=" + this->getHeader("Cookie");
-
-//     // char** envp = (char**) malloc((ENV_SIZE + 1) * sizeof(char*));
-//     vector<char *> envp2(8);
-
-//     if (envp2.size() == 0)
-//     {
-//         cerr << "Error: Failed to allocate memory to envp." << endl;
-//         exit(EXIT_FAILURE);
-//     }
-//     // envp[0] = strdup(request_method.c_str());
-//     // envp[1] = strdup(query_string.c_str());
-//     // envp[2] = strdup(content_type.c_str());
-//     // envp[3] = strdup(content_length.c_str());
-//     // envp[4] = strdup(remote_addr.c_str());
-//     // envp[5] = strdup(script_name.c_str());
-//     // envp[6] = strdup(script_path.c_str());
-//     // envp[7] = NULL;
-
-//     envp2[0] = strdup(request_method.c_str());
-//     envp2[1] = strdup(query_string.c_str());
-//     envp2[2] = strdup(content_type.c_str());
-//     envp2[3] = strdup(content_length.c_str());
-//     envp2[4] = strdup(remote_addr.c_str());
-//     envp2[5] = strdup(script_name.c_str());
-//     envp2[6] = strdup(script_path.c_str());
-//     envp2[7] = NULL;
-
-//     // for (int i = 0; i < ENV_SIZE; i++)
-//     // {
-//     //     _envp[i] = envp[i];
-//     // }
-//     // _envp[ENV_SIZE - 1] = NULL;
-//     for (int i = 0; i < (int)envp2.size(); i++)
-//     {
-//         _envp[i] = envp2[i];
-//     }
-//     _envp[envp2.size() - 1] = NULL;
-//     // this->freeEnvp(envp);
-// }
-
 void Request::freeEnvp(char **envp)
 {
     for (int i = 0; i < ENV_SIZE; i++)
@@ -741,7 +654,6 @@ bool       Response::checkRequestCookies(Request& request)
         cout << "Cookies found: " << cookies << endl;
         return (true);
     }
-
 }
 
 string  Response::getRequestCookies(Request& request)
@@ -756,7 +668,6 @@ string  Request::getPrevCookies() const
 
 void    Response::sendCgiResponse(Request& request, int client_socket, const char *buffer, int count)
 {
-    // Response    res;
     string      response_str;
     int         bytes_sent;
     size_t      addCount;
@@ -770,7 +681,6 @@ void    Response::sendCgiResponse(Request& request, int client_socket, const cha
     if (request.getCookies() != "" && request.getReqSessionId() != "")
     {
         _res_session_id = request.getReqSessionId();
-        // cout << "res_session_id: " << _res_session_id << endl;
         addCount = strlen("hello, user with session_id: ") + _res_session_id.length() + 2; // add 2 for "\r\n"
     }
     if (request.getReqBody() != "")
@@ -783,8 +693,6 @@ void    Response::sendCgiResponse(Request& request, int client_socket, const cha
             session_cookies_map = request.getSessionCookies();
             _entered_session_id = request.getReqBody().substr(pos + strlen("session_id="));
             addCount += _entered_session_id.length() + 2; // add 2 for "\r\n"
-            // addCount += strlen("<h1>Session ID submitted:</h1>\n");
-            // addCount += strlen("<p>$session_id</p>\n");
             printMap(session_cookies_map);
             _entered_session_id.resize(16);     
             if (session_cookies_map.find(_entered_session_id) != session_cookies_map.end())
@@ -799,7 +707,6 @@ void    Response::sendCgiResponse(Request& request, int client_socket, const cha
     }
     else
         setContent(buffer, count + addCount);
-    // res.printCookies();
     response_str = restoString();
     bytes_sent = send(client_socket, response_str.c_str(), response_str.size(), 0);
     if (bytes_sent == -1)
@@ -870,7 +777,6 @@ int Request::handle_cgi(int client_socket)
     Response    res;
 
     _path_info = this->setCgiPath();
-    // if u pass path_info ok
     if (pipe(pipes) == -1)
     {
         perror("pipe");
@@ -932,7 +838,6 @@ int Request::handle_cgi(int client_socket)
                     t_count += count;
                     if (buffer[BUFF_SIZE - 1] == EOF)
 						break ;
-                    // this->readPipe(count, buffer);
                     memset(buffer, 0, BUFF_SIZE + 1);
                 }
             }
@@ -947,11 +852,8 @@ int Request::handle_cgi(int client_socket)
                         break ;
                     t_count += count;
                     memset(buffer, 0, BUFF_SIZE + 1);
-                    // this->readPipe(count, buffer);
                 }
             }
-            // count = read(pipes[0], buffer, BUFF_SIZE);
-            // cout << RED << final_buffer << endl;
             result = stat(_cgi_path.c_str(), &file_stat);
             if (exit_status != 0)
             {
@@ -970,7 +872,6 @@ int Request::handle_cgi(int client_socket)
             }
             else
                 res.sendCgiResponse(*this, client_socket, final_buffer.c_str(), t_count);
-            // system("leaks webserv");
         }
     }
     return (client_socket);
@@ -991,9 +892,6 @@ int Request::handle_cgi2(int client_socket, string full_path)
     Response    res;
     size_t      pos;
 
-    // _pwd = getenv("PWD");
-    // const char* cgi_bin_path = "/cgi-bin/";
-    // _path_info = _pwd + cgi_bin_path + full_path;
     pos = full_path.find("?");
     if (pos != string::npos)
         full_path = full_path.substr(0, pos);
@@ -1026,8 +924,6 @@ int Request::handle_cgi2(int client_socket, string full_path)
         for (size_t i = 0; i < envp.size(); ++i)
             envp_array[i] = envp[i];
         envp_array[envp.size()] = nullptr;
-        // if (execve(args[0], args, this->getEnvp()) == -1)
-        // if (execve(args[0], args, this->getEnvp2()) == -1)
         if (execve(args[0], args, envp_array) == -1)
         {
             cerr <<  "Error: " << strerror(errno) << endl;
@@ -1068,7 +964,6 @@ int Request::handle_cgi2(int client_socket, string full_path)
                     t_count += count;
                     if (buffer[BUFF_SIZE - 1] == EOF)
 						break ;
-                    // this->readPipe(count, buffer);
                     memset(buffer, 0, BUFF_SIZE + 1);
                 }
             }
@@ -1081,7 +976,6 @@ int Request::handle_cgi2(int client_socket, string full_path)
                     t_count += count;
                     if (buffer[BUFF_SIZE - 1] == EOF)
 						break ;
-                    // this->readPipe(count, buffer);
                     memset(buffer, 0, BUFF_SIZE + 1);
                 }
             }
@@ -1096,11 +990,8 @@ int Request::handle_cgi2(int client_socket, string full_path)
                         break ;
                     t_count += count;
                     memset(buffer, 0, BUFF_SIZE + 1);
-                    // this->readPipe(count, buffer);
                 }
             }
-            // count = read(pipes[0], buffer, BUFF_SIZE);
-            // cout << RED << final_buffer << endl;
             result = stat(_cgi_path.c_str(), &file_stat);
             if (exit_status != 0)
             {
@@ -1119,7 +1010,6 @@ int Request::handle_cgi2(int client_socket, string full_path)
             }
             else
                 res.sendCgiResponse(*this, client_socket, final_buffer.c_str(), t_count);
-            // system("leaks webserv");
         }
     }
     return (client_socket);
@@ -1137,10 +1027,7 @@ void handle_non_cgi(int client_socket, Request& req)
     string response_str = res.restoString();
 	cout << "response_str : " << response_str << endl;
     send(client_socket, response_str.c_str(), response_str.size(), 0);
-	// non-cgi dont need pipe, mine works. 
 }
-
-//  curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "name=shawn&age=30" http://localhost:8080/cgi-bin/hello.cgi
 
 bool Request::hasCookies()
 {
@@ -1198,7 +1085,6 @@ string  Response::getResSessionId() const
     return (_res_session_id);
 }
 
-// i need to create copt for cookies first
 string  extractSessionId(string& cookies)
 {
     string  session_id;
@@ -1271,34 +1157,3 @@ bool    compare_cookies(const string& cookies, const string& prev_cookies)
     }
     return (false);
 }
-
-
-// curl -X DELETE localhost:1024/abc.cpp
-//  curl --cookie "name=shawn; name2=alec" http://localhost:80
-//  curl -b "name=shawn; name2=alec" http://localhost:80
-// curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "name=shawn&age=30" "127.0.0.1/cgi-bin/hello.cgi?name=shawn&age=23&hobby=sport"
-//int main()
-//{
-//   int     client_socket;
-//   int     server_socket;
-//   Request req;
-//
-//   server_socket = create_server_socket();
-//   while (true)
-//   {
-//       cout << "+++++++Waiting for new connection+++++++" << endl;
-//       client_socket = accept_connection(server_socket);
-//       req.readRequest(client_socket);
-//       req.hasCookies();
-//       if (req.is_cgi_request())
-//           client_socket = req.handle_cgi(client_socket);
-//       else
-//       {
-//           handle_non_cgi(client_socket, req);
-//       }
-//       close(client_socket);
-//    //    system("leaks a.out");
-//       cout << "++++++++Done+++++++" << endl;
-//   }
-//   close(server_socket);
-//}

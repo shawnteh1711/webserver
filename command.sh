@@ -71,13 +71,15 @@ while true; do
     elif [ "$command" == "get" ]; then
         curl -X GET localhost:1024/home 
     elif [ "$command" == "post" ]; then
-        curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something shorter or longer than body limit" http://localhost:1024/home --output -
+        curl -X POST -H "Content-Type: plain/text" --data "42KL is the best school forever and ever!! Lalalalalala" http://localhost:1024/home --output -
     elif [ "$command" == "upload" ]; then
-        curl -d "file=test.txt" localhost:1024/upload
+        curl -d "file=stuffs/test.txt" localhost:1024/upload
+        curl -d "file=stuffs/test.png" localhost:1024/upload
     elif [ "$command" == "delete" ] ; then
         curl -X DELETE localhost:1024/test.txt
+        curl -X DELETE localhost:1024/test.png
     elif [ "$command" == "limit" ]; then
-        curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something shorter or longer than body limit" http://localhost:3333 --output -
+        curl -X POST -H "Content-Type: plain/text" --data "Hhihihiihihi testing for limit body size salkdfjdsklfjsldkfjsldfkjlfkfjwejrdsjfsd" http://localhost:3333 --output -
     elif [ "$command" == "cgi get" ]; then
         curl -X GET localhost:1024/hello --output -
     elif [ "$command" == "cgi post" ]; then

@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/13 18:10:58 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/14 14:45:38 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,11 +31,6 @@ namespace N_MY
 
 Server *Server::server_instance = NULL;
 
-//Server::Server(void)
-//	: servers(), _port(-1), _sockfd(-1), _clientfd(-1), _serverMsg(),
-//	_ip(), _socketAddr(), _socketAddr_len(){}
-
-// d_servers's port is string type
 Server::Server(vector<Server_Detail> & d_servers)
 	: servers(d_servers), total(d_servers.size()), _sockfds(total),
 	_clientfd(), _serverMsg(buildResponse()), _socketAddrs(total), 
@@ -43,7 +38,6 @@ Server::Server(vector<Server_Detail> & d_servers)
 	_one_mb(ONE_MB), _limit_size(_one_mb), _index(0),
 	tracker(new vector<int>[total]), s_t()
 {
-//	cout << "seervers: " << total << endl;
 	checkServers(servers);
 	vector<Server_Detail>::iterator it, ite;
 	it = servers.begin();
@@ -65,26 +59,8 @@ Server::Server(vector<Server_Detail> & d_servers)
 		it++;
 		i++;
 	}
-//	map<string, string>::iterator tryit = servers[0].urlCgi.begin();
-//	(void)tryit;
-//	_socketAddr.sin_family = AF_INET;
-//	_socketAddr.sin_port = htons(stoi(servers[0].port));
-//	_socketAddr.sin_addr.s_addr = INADDR_ANY;
-
-//	if (startServer() != 0)
-//	{
-//		ostringstream ss;
-//		ss << "Failed to start server with PORT: " << ntohs(_socketAddr.sin_port);
-//		N_MY::msg(ss.str());
-//	}
 	server_instance = this;
 }
-
-//Server::Server(const Server & src)
-//: _port(src._port), _sockfd(src._sockfd), _clientfd(src._clientfd),
-//	_serverMsg(src._serverMsg), _ip(src._ip),
-//	_socketAddr(src._socketAddr), _socketAddr_len(src._socketAddr_len)
-//{}
 
 Server::~Server()
 {
@@ -123,10 +99,9 @@ void	Server::startListen()
 	addSocketPoll(fds);
 	while (1)
 	{
-		//usleep(2000);
+		usleep(2000);
 		int rv = poll(&fds[0], fds.size(), -1);
 
-		//cout << "POLLLLLLLLL" << endl;
 		if (rv == -1)
 			N_MY::ErrorExit("poll() failed");
 		addClientPoll(fds);
@@ -148,26 +123,6 @@ void	Server::acceptConnection(int &new_client, int index)
 	}
 }
 
-//void generate_listing(const string & path, string &listing)
-//{
-//    DIR				*dir;
-//    struct dirent	*ent;
-//
-//    // Open the directory
-//    if ((dir = opendir(path.c_str())) != NULL)
-//	{
-//        // Iterate through the directory entries
-//		listing += "<p>Path: " + path + "</p>";
-//        while ((ent = readdir(dir)) != NULL)
-//		{
-//            listing += "<li>" + string(ent->d_name) + "</li>";
-//        }
-//        closedir(dir);
-//    } else {
-//        cerr << "Error opening directory: " << path << endl;
-//    }
-//}
-
 void generate_listing(t_server *s_t, string &listing)
 {
 	DIR				*dir;
@@ -182,67 +137,16 @@ void generate_listing(t_server *s_t, string &listing)
 			if (name == "." || name == "..")
 				continue;
 			string link = s_t->client_uri;
-			if (s_t->client_uri[s_t->client_uri.length() - 1] != '/') //what is this for? just to add / if last one is not /
+			if (s_t->client_uri[s_t->client_uri.length() - 1] != '/')
 				link += "/";
-			cout << "link: " << link << endl;
 			link += name;
 			listing += "<li><a href=\"" + string("http://") + s_t->hostname + "/" + link + "\">" + name + "</a></li>";
-			// listing += "<li>" + string(ent->d_name) + "</li>"; //pr
 	    }
-		cout << RED << "listing: " << listing << endl;
 	    closedir(dir);
 	}
 	 else
 	     cerr << "Error opening directory: " << s_t->full_path << endl;
 }
-
-// void generate_listing(t_server *s_t, string &listing)
-// {
-// 	DIR				*dir;
-// 	struct dirent	*ent;
-
-
-// 	// where is the host?
-   
-// 	cout << "s_t->full_path: " << s_t->full_path << endl;
-// 	if ((dir = opendir(s_t->full_path.c_str())) != NULL)
-// 	{
-// 	    listing += "<p>Path: " + s_t->full_path + "</p>";
-// 		cout << "s_t->root_path: " << s_t->root_path << endl;
-// 	    while ((ent = readdir(dir)) != NULL)
-// 	    {
-// 	 	   	string name = ent->d_name;
-// 	 	   	if (name == "." || name == "..")
-// 	 			continue;
-// 	 	   	string link = s_t->client_uri;
-// 		   	cout << "link: " << link << endl;
-// 	 	   	if (s_t->client_uri[s_t->client_uri.length() - 1] != '/') //what is this for? just to add / if last one is not /
-// 	 			link += "/";
-// 	 	   	link += name;
-// 	 	   	cout << "after add name link: " << link << endl;
-// 			// string path = s_t->full_path + "/" + name;
-// 			listing += "<li><a href=\"" + link + "\">" + name + "</a></li>";
-
-// 			struct stat st;
-
-// 			if (stat(link.c_str(), &st) == -1) {
-//                 cerr << "Error getting file info: " << link << endl;
-//                 continue;
-//             }
-
-// 			if (S_ISDIR(st.st_mode)) {
-//                 generate_listing(s_t, listing);
-//             }
-// 			else if (S_ISREG(st.st_mode))
-// 			{
-// 	 	   		listing += "<li><a href=\"" + link + "\">" + name + "</a></li>";
-// 			}
-// 	    }
-// 	    closedir(dir);
-// 	}
-// 	 else
-// 	     cerr << "Error opening directory: " << s_t->full_path << endl;
-// }
 
 string Server::buildResponse(void)
 {
@@ -375,7 +279,6 @@ void Server::sendErrorResponse(const int client_fd, int statuscode)
 	   << "\r\n\r\n"
 	   << htmlFile;
 	string response = ss.str();
-	cout << response << endl;
 	bytesSent = send(client_fd, response.c_str(), response.size(), 0);
 	if (bytesSent == (long)response.size())
 		N_MY::msg("---- Server Error Response sent to client ---- \n\n");
@@ -399,10 +302,8 @@ int	Server::sendCustomErrorResponse(const int client_fd, int statuscode)
 		if (s_t.root_path[s_t.root_path.length() - 1] == '/' && it->second[0] == '/')
 			erroroot.pop_back();
 		full_path = erroroot + it->second;
-		cout << "full path to custom error: " << full_path << endl;
 		if (!checkFileExist(full_path))
 		{
-			cout << "Custom Error path not exist!!" << endl;
 			sendErrorResponse(client_fd, statuscode);
 			return (0);
 		}
@@ -432,30 +333,24 @@ int	Server::sendCustomErrorResponse(const int client_fd, int statuscode)
 
 int	Server::checkPathExist(string & filepath)
 {
-	cout << "filepath in checkPathExist: " << filepath << endl;
 	ifstream	ifile(filepath);
 	char 		buffertest[BUF_SIZE + 100000];
 	
-	// ifile.read(buffertest, sizeof(buffertest));
-	// cout << YELLOW << "buffertest: " << buffertest << RESET << endl;
-	memset(buffertest, 0, sizeof(buffertest)); // initialize buffer with zeros
+	memset(buffertest, 0, sizeof(buffertest));
 	if (ifile.good()) 
 	{
 		ifile.read(buffertest, sizeof(buffertest));
 		if (ifile.gcount() > 0)
 			buffertest[ifile.gcount()] = '\0';
-	//	cout << YELLOW << "buffertest: " << buffertest << RESET << endl;
 		ifile.close();
 		return (1);
 	}
 	ifile.close();
-	cout << RED << "File not exist" << RESET << endl;
 	return (0);
 }
 
 int	Server::checkDirectoryExist(const string & filepath)
 {
-	cout << "filepath in checkDirectoryExist: " << filepath << endl;
 	ifstream	ifile(filepath);
 	struct stat	file_stat;
 
@@ -474,7 +369,6 @@ int	Server::checkDirectoryExist(const string & filepath)
 
 int	Server::checkFileExist(const string & filepath)
 {
-	cout << "filepath in checkFileExist: " << filepath << endl;
 	ifstream	ifile(filepath);
 	char 		buffertest[BUF_SIZE + 100000];
 	struct stat file_stat;
@@ -489,16 +383,12 @@ int	Server::checkFileExist(const string & filepath)
 				ifile.read(buffertest, sizeof(buffertest));
 				if (ifile.gcount() > 0)
 					buffertest[ifile.gcount()] = '\0';
-	//			cout << YELLOW << "buffertest: " << buffertest << RESET << endl;
 				ifile.close();
 				return (1);
 			}
-//			else
-//				return (0);
 		}
 	}
 	ifile.close();
-	cout << "File NOT FOUND" << endl;
 	return (0);
 }
 
@@ -529,7 +419,6 @@ void	Server::addClientPoll(vector<struct pollfd> & fds)
 	{
 		if (fds[i].revents & POLLIN)
 		{
-			cout << YELLOW << "NEW CLIENT FD" << RESET << endl;
 			acceptConnection(_clientfd, i);
 			tracker[i].push_back(_clientfd);
 			new_poll.fd = _clientfd;
@@ -582,35 +471,18 @@ void	Server::clientRequestStage(vector<struct pollfd> & fds)
 	for (size_t i = total; i < fds.size(); i++)
 	{
 		if (fds[i].revents & (POLLERR | POLLHUP))
-		{
-			cout << "Enter POLLER || POLLHUP!!" << endl;
 			removeClientPoll(fds, i--);
-		}
 		else if (fds[i].revents & POLLIN)
 		{ 
-			std::cout << "client in POLLIN" << std::endl;
 			total_bytes = unChunkRequest(fds[i].fd, clientRequest);
 			if (total_bytes > 0)
 			{
-				cout << CYAN"BYTES from client: " << total_bytes << endl;
-				cout << "clientRequest: " << clientRequest << endl;
-				
 				// get url from client
 				getHostUrl(clientRequest);
-				cout << "bodySize(total bytes): " << total_bytes << endl;
-				cout << "_limit_size: " << _limit_size << " bytes" << RESET << endl;
-				cout << "Hostname: " << _host << RESET << endl;
-				cout << "LIMIT BODY: " << _limit_size << endl;
-				cout << "TOTAL_BYTES: " << total_bytes << endl;
 				if (total_bytes <= _limit_size)
 				{
-					// here i add check if is cgi request
-					// coz check is cgi request is my task to do here server
-					// the server need check cgi request or not before send to you
 					setMethodUrl(method_type, uri_path, clientRequest);
 					string cookies = extractCookies(clientRequest);
-					cout << "cookies: " << cookies << endl;
-					// Request req(clientRequest, uri_path);
 					Request req(clientRequest, uri_path, cookies);
 					sendClient(fds[i].fd, method_type, uri_path, req);
 				}
@@ -639,7 +511,6 @@ int		Server::unChunkRequest(const int client_fd, string & clientBuffer)
 		buffer[bytes] = '\0';
 		finalbuffer += string(buffer, BUF_SIZE);
 		total_bytes += bytes;
-		cout << YELLOW << buffer << RESET << endl;
 		if (buffer[BUF_SIZE - 1] == '\0')
 			break ;
 		bzero(buffer, BUF_SIZE);
@@ -687,13 +558,11 @@ void	Server::setMethodUrl(string & method_type, string & uri_path, string & clie
 
 void	Server::copyFiles(string &file_path, string &root_path)
 {
-	cout << "it->second: " << file_path << endl;
 	size_t pos = file_path.find_last_of('/');
 	string filename = (pos == string::npos) ? file_path : file_path.substr(pos + 1);
 	cout << "file_path: " << file_path << endl;
 	cout << "filename: " << filename << endl;
 	root_path += filename;
-	cout << "root_path: " << root_path << endl;
 	FILE* source = fopen(file_path.c_str(), "rb");
 	FILE* dest = fopen(root_path.c_str(), "ab");
 	if (dest == NULL)
@@ -708,47 +577,21 @@ void	Server::copyFiles(string &file_path, string &root_path)
 	}
 	if (source == NULL || dest == NULL)
 	{
-		printf("Failed to open files for copying.\n");
+		cout << "Failed to open files for copying.\n" << endl;
 	 	return ;	
 	}
 	fseek(source, 0, SEEK_END);
 	long file_size = ftell(source);
 	fseek(source, 0L, SEEK_SET);
 	char* buffer = new char[file_size * sizeof(char)];
-	// char* buffer = (char*)malloc(file_size * sizeof(char));
 	size_t nread;
 	while ((nread = fread(buffer, 1, file_size, source)) > 0)
 		fwrite(buffer, 1, nread, dest);
-	// free(buffer);
 	delete [] buffer;
 	fclose(source);
 	fclose(dest);
 }
 
-// void	Server::copyFiles(string &file_path, string &root_path)
-// {
-// 	cout << "it->second: " << file_path << endl;
-// 	size_t pos = file_path.find_last_of('/');
-// 	string filename = (pos == string::npos) ? file_path : file_path.substr(pos + 1);
-// 	cout << "filename: " << filename << endl;
-// 	root_path += filename;
-// 	cout << "root_path: " << root_path << endl;
-// 	FILE* source = fopen(file_path.c_str(), "rb");
-// 	FILE* dest = fopen(root_path.c_str(), "ab");
-
-// 	if (source == NULL || dest == NULL)
-// 	{
-// 		printf("Failed to open files for copying.\n");
-// 	 	return ;	
-// 	}
-// 	char buffer[BUFSIZ + 100000];
-// 	size_t nread;
-// 	while ((nread = fread(buffer, 1, BUFSIZ, source)) > 0)
-// 		fwrite(buffer, 1, nread, dest);
-// 	fclose(source);
-// 	fclose(dest);
-// }
-//
 void	Server::cleanServer(void)
 {
 	s_t.cgi_path.clear();
@@ -774,11 +617,9 @@ void	Server::initServer(const int & client_fd, const string & uri_path, const st
 		s_t.index_file = "index.html";
 	if (((s_t.root_path = getLocationRoot(uri_path, s_t.s)) == ""))
 		s_t.root_path = servers[s_t.s].root;
-	cout << "ROOT_PATH: " << s_t.root_path << endl;
 	int len = s_t.root_path.length() - 1;
 	if (s_t.root_path[len] != '/')
 		s_t.root_path += "/";
-	cout << "INDEX: " << s_t.index_file << endl;
 	s_t.full_path = s_t.root_path + s_t.index_file;
 }
 
@@ -803,20 +644,9 @@ void	Server::sendClient(const int & client_fd, string & method_type,
 {
 	cleanServer();
 	initServer(client_fd, uri_path, method_type);
-	display(uri_path);
+	//display(uri_path);
 
 	int markCgi = markCgiRequest(uri_path);
-	if (markCgi)
-	{
-		cout << CYAN;
-		cout << "IT HAS CGI!!!!!" << endl;
-		cout << "cgi_path: " << s_t.cgi_path << endl;
-		cout << "full_path: " << s_t.full_path << endl;
-		cout << "root_path: " << s_t.root_path << endl;
-		cout << "index_file: " << s_t.index_file << endl;
-		cout << "client_uri: " << s_t.client_uri << endl;
-		cout << RESET;
-	}
 
 	if (!isMethod(method_type))
 		sendCustomErrorResponse(client_fd, 400);
@@ -825,29 +655,18 @@ void	Server::sendClient(const int & client_fd, string & method_type,
 	else if ((s_t.root_path == "" || !isLocationExist(s_t.s, uri_path)) && !markCgi)
 		sendCustomErrorResponse(client_fd, 404);
 	else if (isCgiRequest(uri_path, s_t.s, s_t.cgi_path) || markCgi)
-	{
-		cout << GREEN << "it has cgi request" << endl;
-		cout << "cgi_path i give to you: " << s_t.cgi_path << RESET << endl;
 		req.handle_cgi2(client_fd, s_t.cgi_path);
-		cout << "HERE your CGI" << endl;
-	}
 	else if (!checkFileExist(s_t.full_path) && uri_path != "" && !(isIndexOn(uri_path, s_t.s)))
 		sendCustomErrorResponse(client_fd, 404);
 	else if (method_type == "GET")
 		sendGET(client_fd, uri_path);
 	else if (method_type == "POST")
 	{
-		cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl;
-		cout << RED << "server client_request:\n" << req.getRequest() << endl;
-		cout << "END" << endl;
-		// how do i get request here or you save request body?
 		if  (isIndexOn(uri_path, s_t.s))
 			sendCustomErrorResponse(client_fd, 500);
 		else
 		{
 			map<string, string> key_value_body = req.getKeyValueBody();
-			// cout << "PRINT KEY VALUE BODY" << endl;
-			// printMap(key_value_body);
 			map<string, string>::iterator it = key_value_body.begin();
 			if (it->first == "file" && checkFileExist(it->second))
 				copyFiles(it->second, s_t.root_path);
@@ -860,25 +679,7 @@ void	Server::sendClient(const int & client_fd, string & method_type,
 		}
 	}
 	else if (method_type == "DELETE")
-	{
-		cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl; 
 		sendDELETE(client_fd, uri_path);
-//		if  (isIndexOn(uri_path, s_t.s))
-//			sendCustomErrorResponse(client_fd, 500);
-//		else
-//		{
-//			int pos = uri_path.find("/");
-//			string newfile = uri_path.substr(pos);
-//			string folderpath = uri_path.substr(0, pos);
-//			s_t.root_path = getLocationRoot(folderpath, s_t.s);
-//			if (s_t.root_path == "")
-//				s_t.root_path = servers[s_t.s].root;
-//			s_t.full_path = s_t.root_path + newfile;
-//			deleteFile(s_t.full_path.c_str());
-//			cout << GREEN << "METHOD_TYPE: " << YELLOW << method_type << RESET << endl; 
-//			sendCustomResponse(client_fd, s_t.full_path);
-//		}
-	}
 	else
 		sendErrorResponse(client_fd, 400);
 }
@@ -943,7 +744,6 @@ int		Server::isCgiRequest(const string & s_uri, const int & svr_id, string & cgi
 
 	if (newslash[newslash.length() - 1] == '/')
 		newslash.pop_back();
-	cout << "newslash: " << newslash << endl;
 
 	ite = servers[svr_id].urlCgi.end();
 	it = servers[svr_id].urlCgi.find(newslash);
@@ -969,7 +769,6 @@ string	Server::getLocationRoot(const string & s_uri, const int & svr_id)
 	it = servers[svr_id].urlRoot.find(newslash);
 	if (it != ite)
 	{
-		cout << RED << it->second << RESET << endl;
 		if (it->second[it->second.length() - 1] != '/')
 			return (it->second + "/");
 		else
@@ -1014,7 +813,6 @@ int	Server::isAllowUrlMethod(const string & s_uri, const int & svr_id, string & 
 	ite = servers[svr_id].urlLimitExcept.end();
 	if (it != ite)
 	{
-		cout << it->first << " --- " << it->second << endl;
 		string tmp = it->second;
 		while (tmp.find(" ") != string::npos)
 		{
@@ -1030,12 +828,8 @@ int	Server::isAllowUrlMethod(const string & s_uri, const int & svr_id, string & 
 	while (vit != vite)
 	{
 		if (*vit++ == method_type)
-		{
-			cout << method_type << "is allowed!" << endl;
 			return (1);
-		}
 	}
-	cout << method_type << " is not allowed sad" << endl;
 	return (0);
 }
 
@@ -1071,7 +865,7 @@ void	Server::sendCustomPostResponse(const int client_fd, string & full_path, map
 	<< "\r\n\r\n"
 	<< html_content;
 
-	// file.close();
+	file.close();
 	_serverMsg = ss.str();
 	bytesSent = send(client_fd, _serverMsg.c_str(), _serverMsg.size(), 0);
 	if (bytesSent == -1)
@@ -1109,7 +903,6 @@ void	Server::sendCustomPostResponse(const int client_fd, string & full_path, mul
 	ss 
 	<< "HTTP/1.1 200 OK\r\n"
 	<< "Content-Type: text/html\r\n"
-	// << "Content-Type: image/png\r\n"
 	<< "Content-Length: " << html_content.size()
 	<< "\r\n\r\n"
 	<< html_content;
@@ -1123,7 +916,6 @@ void	Server::sendCustomPostResponse(const int client_fd, string & full_path, mul
 		N_MY::msg("Server closed the connection with the client");
 	else
 		N_MY::msg("Server sent a response to the client\n\n");
-	// _store_body.clear(); // ndo you know when should we clear this? // if i clear now then the previous post not show
 }
 
 
@@ -1138,8 +930,6 @@ void	Server::sendCustomResponse(const int client_fd, string & full_path)
 	tmp << file.rdbuf();
 	html_content = tmp.str();
 
-	cout << "hostname: " << _host << endl;
-	cout << "ENTER CUSTOM RESPONSE" << endl;
 	ss << "HTTP/1.1 200 Ok\r\n"
 	   << "Content-Type: text/html\r\n"
 	   << "Content-Length: " << html_content.size() << "\r\n";
@@ -1252,27 +1042,20 @@ void	Server::checkServers(vector<Server_Detail> & servers)
 
 void	Server::sendGET(const int & client_fd, const string & uri_path)
 {
-	cout << "ENTER GET" << endl;
-	cout << "uri_path: " << uri_path << endl;
 	s_t.new_uri = uri_path;
 	checkFullPath(s_t.new_uri, s_t.s, s_t.root_path, s_t.full_path, s_t.index_file);
-	cout << "after check full_path: " << s_t.full_path << endl;
 	if (checkDirectoryExist(s_t.full_path))
 	{
 		if (s_t.full_path[s_t.full_path.length() - 1] != '/')
 			s_t.full_path += "/";
 		s_t.full_path += s_t.index_file;
 	}
-	cout << "new_uri " << s_t.new_uri << endl;
-	cout << "root_path: " << s_t.root_path << endl;
-	cout << "full_path: " << s_t.full_path << endl;
 	if  (isIndexOn(s_t.new_uri, s_t.s))
 	{
-		cout << CYAN"build display Index on" << endl;
 		int pos = s_t.full_path.find(s_t.index_file);
 		s_t.full_path = s_t.full_path.substr(0, pos);
 		_serverMsg = buildIndexList(); 
-		sendResponse(client_fd); // not defalt, it get index
+		sendResponse(client_fd);
 	}
 	else if (servers[s_t.s].redirection != "")
 		redirect_Response(client_fd, servers[s_t.s].redirection);
