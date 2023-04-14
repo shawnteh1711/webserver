@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/13 16:42:43 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/13 18:10:58 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -690,6 +690,7 @@ void	Server::copyFiles(string &file_path, string &root_path)
 	cout << "it->second: " << file_path << endl;
 	size_t pos = file_path.find_last_of('/');
 	string filename = (pos == string::npos) ? file_path : file_path.substr(pos + 1);
+	cout << "file_path: " << file_path << endl;
 	cout << "filename: " << filename << endl;
 	root_path += filename;
 	cout << "root_path: " << root_path << endl;
