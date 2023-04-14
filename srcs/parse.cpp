@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parse.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: leng-chu <-chu@student.42kl.edu.my>        +#+  +:+       +#+        */
+/*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/13 20:29:55 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/13 20:40:04 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/14 16:13:55 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,27 @@ string      removeComment(string line)
     return (line);
 }
 
+bool    isValidDirective(string directive)
+{
+    vector<string> acceptedDirectives;
+    acceptedDirectives.push_back("http");
+    acceptedDirectives.push_back("server");
+    acceptedDirectives.push_back("listen");
+    acceptedDirectives.push_back("server_name");
+    acceptedDirectives.push_back("index");
+    acceptedDirectives.push_back("location");
+    acceptedDirectives.push_back("root");
+    acceptedDirectives.push_back("autoindex");
+    acceptedDirectives.push_back("proxy_pass");
+    acceptedDirectives.push_back("limit_except");
+    acceptedDirectives.push_back("fastcgi_pass");
+    acceptedDirectives.push_back("client_max_body_size");
+    acceptedDirectives.push_back("internal");
+    acceptedDirectives.push_back("error_page");
+    acceptedDirectives.push_back("return");
+    acceptedDirectives.push_back("deny");
+    return (find(acceptedDirectives.begin(), acceptedDirectives.end(), directive) != acceptedDirectives.end());
+}
 
 Directive parseDirective(string& line, int lineNum) // i think here got issue
 {
@@ -53,6 +74,12 @@ Directive parseDirective(string& line, int lineNum) // i think here got issue
     if (argStart != string::npos)
     {
         directive.directive = line.substr(0, argStart);
+        bool valid = isValidDirective(directive.directive);
+        if (valid == false)
+        {
+            printf("Invalid directive \"%s\" on line %d\n", directive.directive.c_str(), lineNum);
+            exit(EXIT_FAILURE);
+        }
         if (directive.directive == "location" || directive.directive == "limit_except" || directive.directive == "upstream")
         {
             size_t  argEnd = line.find_last_not_of("{", line.size() - 2);
