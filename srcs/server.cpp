@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/13 20:59:15 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/14 15:48:59 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,9 +97,10 @@ void	Server::startListen()
 	vector<struct pollfd>	fds;
 
 	addSocketPoll(fds);
+	//main loop
 	while (1)
 	{
-		usleep(2000);
+		//usleep(2000);
 		int rv = poll(&fds[0], fds.size(), -1);
 
 		if (rv == -1)
@@ -282,8 +283,10 @@ void Server::sendErrorResponse(const int client_fd, int statuscode)
 	bytesSent = send(client_fd, response.c_str(), response.size(), 0);
 	if (bytesSent == (long)response.size())
 		N_MY::msg("---- Server Error Response sent to client ---- \n\n");
-	else
+	else if (bytesSent == -1)
 		N_MY::msg("Error sending response to client");
+	else
+		N_MY::msg("Server closed the connection with the client");
 }
 
 int	Server::sendCustomErrorResponse(const int client_fd, int statuscode)
@@ -474,6 +477,7 @@ void	Server::clientRequestStage(vector<struct pollfd> & fds)
 			removeClientPoll(fds, i--);
 		else if (fds[i].revents & POLLIN)
 		{ 
+			// recv
 			total_bytes = unChunkRequest(fds[i].fd, clientRequest);
 			if (total_bytes > 0)
 			{
@@ -484,6 +488,7 @@ void	Server::clientRequestStage(vector<struct pollfd> & fds)
 					setMethodUrl(method_type, uri_path, clientRequest);
 					string cookies = extractCookies(clientRequest);
 					Request req(clientRequest, uri_path, cookies);
+					//send
 					sendClient(fds[i].fd, method_type, uri_path, req);
 				}
 				else
