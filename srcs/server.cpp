@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/17 11:24:44 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/17 11:33:39 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,7 +101,7 @@ void	Server::startListen()
 	//main loop
 	while (1)
 	{
-		//usleep(2000);
+		usleep(2000);
 		int rv = poll(&fds[0], fds.size(), -1);
 
 		if (rv == -1)
@@ -679,7 +679,6 @@ void	Server::sendClient(const int & client_fd, string & method_type,
 			else
 			{
 				_store_body.insert(key_value_body.begin(), key_value_body.end());
-				printMap(_store_body);
 				sendCustomPostResponse(client_fd, s_t.full_path, _store_body);
 			}
 		}
