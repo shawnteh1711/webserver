@@ -79,6 +79,7 @@ while true; do
     elif [ "$command" == "delete" ] ; then
         curl -X DELETE localhost:1024/test.txt
         curl -X DELETE localhost:1024/test.png
+        curl -X DELETE localhost:1024/test2.jpeg
     elif [ "$command" == "limit" ]; then
         curl -X POST -H "Content-Type: plain/text" --data "Hhihihiihihi testing for limit body size salkdfjdsklfjsldkfjsldfkjlfkfjwejrdsjfsd" http://localhost:3333 --output -
     elif [ "$command" == "cgi get" ]; then

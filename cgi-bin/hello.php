@@ -1,5 +1,5 @@
 <?php
-// header("Content-Type: text/html");
+header("Content-Type: text/html");
 echo "\nHello, World from PHP!\n";
 echo "<li>REQUEST_METHOD: {$_SERVER['REQUEST_METHOD']}</li>\n";
 echo "<li>QUERY_STRING: {$_SERVER['QUERY_STRING']}</li>\n";
