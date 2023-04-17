@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/17 12:32:58 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/17 12:43:39 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -385,6 +385,12 @@ int	Server::checkFileExist(const string & filepath)
 			if (ifile.good()) 
 			{
 				ifile.read(buffertest, FILEBUF);
+				if (ifile.fail() && !ifile.eof())
+				{
+            		cerr << "Error: File Error" << endl;
+					ifile.close();
+            		return (0);
+        		}
 				if (ifile.gcount() > 0)
 					buffertest[FILEBUF] = '\0';
 				ifile.close();
@@ -678,6 +684,8 @@ void	Server::sendClient(const int & client_fd, string & method_type,
 			map<string, string>::iterator it = key_value_body.begin();
 			if (it->first == "file" && checkFileExist(it->second))
 				copyFiles(it->second, s_t.root_path);
+			else if (!checkFileExist(it->second))
+				sendCustomErrorResponse(client_fd, 400);
 			else
 			{
 				_store_body.insert(key_value_body.begin(), key_value_body.end());
