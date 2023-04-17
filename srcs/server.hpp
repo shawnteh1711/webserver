@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:50:12 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/13 20:36:23 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/17 12:21:45 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,9 @@
 
 #include "parse.hpp"
 
-#define BUF_SIZE	1024
-#define ONE_MB		1024
+# define BUF_SIZE	1024
+# define ONE_MB		1024
+# define FILEBUF	100000
 
 typedef struct s_server
 {

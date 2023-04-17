@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/17 12:22:56 by steh             ###   ########.fr       */
+/*   Updated: 2023/04/17 12:32:58 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -374,19 +374,19 @@ int	Server::checkDirectoryExist(const string & filepath)
 int	Server::checkFileExist(const string & filepath)
 {
 	ifstream	ifile(filepath);
-	char 		buffertest[BUF_SIZE + 100000];
+	char 		buffertest[FILEBUF + 1];
 	struct stat file_stat;
 	
 	if (stat(filepath.c_str(), &file_stat) == 0)
 	{
 		if (!S_ISDIR(file_stat.st_mode)) // only check is not directory
 		{
-			memset(buffertest, 0, sizeof(buffertest));
+			memset(buffertest, 0, FILEBUF + 1);
 			if (ifile.good()) 
 			{
-				ifile.read(buffertest, sizeof(buffertest));
+				ifile.read(buffertest, FILEBUF);
 				if (ifile.gcount() > 0)
-					buffertest[ifile.gcount()] = '\0';  
+					buffertest[FILEBUF] = '\0';
 				ifile.close();
 				return (1);
 			}
@@ -572,7 +572,7 @@ void	Server::copyFiles(string &file_path, string &root_path)
 	cout << "filename: " << filename << endl;
 	root_path += filename;
 	FILE* source = fopen(file_path.c_str(), "rb");
-	FILE* dest = fopen(root_path.c_str(), "ab");
+	FILE* dest = fopen(root_path.c_str(), "wb");
 	if (dest == NULL)
 	{
 		cout << "dest is NULL" << endl;

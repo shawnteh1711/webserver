@@ -75,6 +75,7 @@ while true; do
     elif [ "$command" == "upload" ]; then
         curl -d "file=stuffs/test.txt" localhost:1024/upload
         curl -d "file=stuffs/test.png" localhost:1024/upload
+        curl -d "file=stuffs/test2.jpeg" localhost:1024/upload
     elif [ "$command" == "delete" ] ; then
         curl -X DELETE localhost:1024/test.txt
         curl -X DELETE localhost:1024/test.png
