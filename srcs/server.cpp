@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/14 16:05:18 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/17 11:24:44 by leng-chu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,7 @@ Server::Server(vector<Server_Detail> & d_servers)
 Server::~Server()
 {
 	cout << RED << "Server close" << RESET << endl;
+	delete [] tracker;
 	closeServer();
 }
 
