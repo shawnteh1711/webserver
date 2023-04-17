@@ -6,7 +6,7 @@
 /*   By: steh <steh@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 17:51:13 by leng-chu          #+#    #+#             */
-/*   Updated: 2023/04/14 16:05:18 by leng-chu         ###   ########.fr       */
+/*   Updated: 2023/04/17 12:20:28 by steh             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -385,7 +385,7 @@ int	Server::checkFileExist(const string & filepath)
 			{
 				ifile.read(buffertest, sizeof(buffertest));
 				if (ifile.gcount() > 0)
-					buffertest[ifile.gcount()] = '\0';
+					buffertest[ifile.gcount()] = '\0';  
 				ifile.close();
 				return (1);
 			}
@@ -456,12 +456,14 @@ int	Server::getServerPoll(const int & client_fd)
 
 void	Server::removeClientPoll(vector<struct pollfd> & fds, int pos)
 {
-	int	cfd = fds[pos].fd;
-	int s = getServerPoll(cfd);
+	int	cfd = fds[pos].fd; // get current client fd int
+	int s = getServerPoll(cfd); // get server index
 	
 	tracker[s].erase(::find(tracker[s].begin(), tracker[s].end(), cfd));
-	close(cfd);
-	fds.erase(fds.begin() + pos);
+	// remove current client fd linked with server fd id
+
+	close(cfd); // close current client fd but not remove client poll
+	fds.erase(fds.begin() + pos); // remove current client poll from struct poll list
 }
 
 void	Server::clientRequestStage(vector<struct pollfd> & fds)
