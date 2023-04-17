@@ -54,7 +54,6 @@ Request::Request(const string& request, const string & cgi_path, string & cookie
             }
         }
     }
-    printMap(_session_cookies);
     this->ParseReqBody();
     this->is_cgi_request();
     return ;
@@ -693,7 +692,6 @@ void    Response::sendCgiResponse(Request& request, int client_socket, const cha
             session_cookies_map = request.getSessionCookies();
             _entered_session_id = request.getReqBody().substr(pos + strlen("session_id="));
             addCount += _entered_session_id.length() + 2; // add 2 for "\r\n"
-            printMap(session_cookies_map);
             _entered_session_id.resize(16);     
             if (session_cookies_map.find(_entered_session_id) != session_cookies_map.end())
                 _ret_cookies = session_cookies_map[_entered_session_id];
